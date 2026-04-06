@@ -1,8 +1,16 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import usersRouter from "./users";
+import sleepLogsRouter from "./sleep-logs";
+import nightCompletionsRouter from "./night-completions";
+import progressRouter from "./progress";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(usersRouter);
+router.use(sleepLogsRouter);
+router.use(nightCompletionsRouter);
+router.use(progressRouter);
 
 export default router;

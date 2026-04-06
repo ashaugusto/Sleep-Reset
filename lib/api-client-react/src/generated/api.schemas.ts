@@ -8,3 +8,168 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface CreateUserBody {
+  email: string;
+  name?: string;
+}
+
+export type UpdateSleepProfileBodySleepDisruptorPrimary =
+  (typeof UpdateSleepProfileBodySleepDisruptorPrimary)[keyof typeof UpdateSleepProfileBodySleepDisruptorPrimary];
+
+export const UpdateSleepProfileBodySleepDisruptorPrimary = {
+  racing_thoughts: "racing_thoughts",
+  work_stress: "work_stress",
+  partying_alcohol: "partying_alcohol",
+  anxiety: "anxiety",
+  phone_screens: "phone_screens",
+  unknown: "unknown",
+} as const;
+
+export type UpdateSleepProfileBodySleepDisruptorFrequency =
+  (typeof UpdateSleepProfileBodySleepDisruptorFrequency)[keyof typeof UpdateSleepProfileBodySleepDisruptorFrequency];
+
+export const UpdateSleepProfileBodySleepDisruptorFrequency = {
+  every_night: "every_night",
+  most_nights: "most_nights",
+  few_times_week: "few_times_week",
+  weekends_mostly: "weekends_mostly",
+} as const;
+
+export interface UpdateSleepProfileBody {
+  sleepDisruptorPrimary?: UpdateSleepProfileBodySleepDisruptorPrimary;
+  sleepDisruptorFrequency?: UpdateSleepProfileBodySleepDisruptorFrequency;
+  /** Minutes from midnight (e.g. 22:30 = 22*60+30=1350) */
+  usualBedtimeMinutes?: number;
+  /** Minutes from midnight */
+  neededWakeUpMinutes?: number;
+  /** e.g. [melatonin, herbal_supplements, sleep_apps, alcohol, nothing, other] */
+  triedSolutions?: string[];
+  /** Derived type like The Overthinker, The Party Recoverer, etc. */
+  sleepProfileType?: string;
+  /** Evening reminder time in minutes from midnight */
+  reminderNightMinutes?: number;
+  /** Morning reminder time in minutes from midnight */
+  reminderMorningMinutes?: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  sleepDisruptorPrimary?: string | null;
+  sleepDisruptorFrequency?: string | null;
+  usualBedtimeMinutes?: number | null;
+  neededWakeUpMinutes?: number | null;
+  triedSolutions?: string[] | null;
+  sleepProfileType?: string | null;
+  onboardingComplete: boolean;
+  reminderNightMinutes?: number | null;
+  reminderMorningMinutes?: number | null;
+  /** Current night number (1-7) */
+  currentNight: number;
+  createdAt: string;
+}
+
+export interface CreateSleepLogBody {
+  /** Date of the log (YYYY-MM-DD) */
+  logDate: string;
+  /** Bed time in minutes from midnight */
+  bedtimeMinutes: number;
+  /** When they tried to fall asleep (mins from midnight) */
+  sleepAttemptMinutes: number;
+  /** 1-5 scale (1=Wired/Anxious, 5=Very Relaxed) */
+  eveningMood: number;
+  eveningNotes?: string | null;
+}
+
+export interface MorningCheckInBody {
+  /** Last wake time in minutes from midnight */
+  finalWakeTimeMinutes: number;
+  /** When they got out of bed in minutes from midnight */
+  outOfBedMinutes: number;
+  /** How long to fall asleep in minutes (7, 10, 22, 45, 75) */
+  sleepLatencyMinutes: number;
+  /** 0=No, 1=Once, 2=2-3 times, 3=More than 3 times */
+  wakeCount: number;
+  /** Total awake time during night in minutes (5, 20, 45, 75) */
+  wakeDurationMinutes?: number;
+  /** 1-5 (1=Very Poor, 5=Very Good) */
+  sleepQuality: number;
+  /** 1-5 (1=Not at all, 5=Very Well Rested) */
+  restfulness: number;
+}
+
+export interface SleepLog {
+  id: number;
+  userId: string;
+  logDate: string;
+  bedtimeMinutes?: number | null;
+  sleepAttemptMinutes?: number | null;
+  eveningMood?: number | null;
+  eveningNotes?: string | null;
+  finalWakeTimeMinutes?: number | null;
+  outOfBedMinutes?: number | null;
+  sleepLatencyMinutes?: number | null;
+  wakeCount?: number | null;
+  wakeDurationMinutes?: number | null;
+  sleepQuality?: number | null;
+  restfulness?: number | null;
+  /** Calculated TIB */
+  timeInBedMinutes?: number | null;
+  /** Calculated TST */
+  totalSleepMinutes?: number | null;
+  /** Calculated SE (0-100) */
+  sleepEfficiencyPct?: number | null;
+  /** Overall score 0-100 */
+  sleepScore?: number | null;
+  morningComplete: boolean;
+  createdAt: string;
+}
+
+export type NightCompletionChecklistItemsItem = {
+  key: string;
+  checked: boolean;
+};
+
+export interface NightCompletion {
+  id: number;
+  userId: string;
+  nightNumber: number;
+  checklistItems: NightCompletionChecklistItemsItem[];
+  completed: boolean;
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export type UpdateNightCompletionBodyChecklistItemsItem = {
+  key: string;
+  checked: boolean;
+};
+
+export interface UpdateNightCompletionBody {
+  checklistItems: UpdateNightCompletionBodyChecklistItemsItem[];
+  completed?: boolean;
+}
+
+export interface DailySleepStat {
+  date: string;
+  sleepScore?: number | null;
+  totalSleepMinutes?: number | null;
+  sleepEfficiencyPct?: number | null;
+}
+
+export interface ProgressSummary {
+  currentSleepScore?: number | null;
+  firstSleepScore?: number | null;
+  logsCount: number;
+  currentStreak: number;
+  nightsCompleted: number;
+  dailyStats: DailySleepStat[];
+  avgSleepLatencyMinutes?: number | null;
+  avgTotalSleepMinutes?: number | null;
+  avgSleepEfficiencyPct?: number | null;
+  avgWakeCount?: number | null;
+  avgSleepQuality?: number | null;
+  insights: string[];
+}

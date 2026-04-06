@@ -5,18 +5,32 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  CreateSleepLogBody,
+  CreateUserBody,
+  HealthStatus,
+  MorningCheckInBody,
+  NightCompletion,
+  ProgressSummary,
+  SleepLog,
+  UpdateNightCompletionBody,
+  UpdateSleepProfileBody,
+  User,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -92,6 +106,809 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update user profile
+ */
+export const getCreateUserUrl = () => {
+  return `/api/users`;
+};
+
+export const createUser = async (
+  createUserBody: CreateUserBody,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getCreateUserUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createUserBody),
+  });
+};
+
+export const getCreateUserMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createUser>>,
+    TError,
+    { data: BodyType<CreateUserBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createUser>>,
+  TError,
+  { data: BodyType<CreateUserBody> },
+  TContext
+> => {
+  const mutationKey = ["createUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createUser>>,
+    { data: BodyType<CreateUserBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createUser(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createUser>>
+>;
+export type CreateUserMutationBody = BodyType<CreateUserBody>;
+export type CreateUserMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update user profile
+ */
+export const useCreateUser = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createUser>>,
+    TError,
+    { data: BodyType<CreateUserBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createUser>>,
+  TError,
+  { data: BodyType<CreateUserBody> },
+  TContext
+> => {
+  return useMutation(getCreateUserMutationOptions(options));
+};
+
+/**
+ * @summary Get user by ID
+ */
+export const getGetUserUrl = (userId: string) => {
+  return `/api/users/${userId}`;
+};
+
+export const getUser = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getGetUserUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUserQueryKey = (userId: string) => {
+  return [`/api/users/${userId}`] as const;
+};
+
+export const getGetUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUser>>,
+  TError = ErrorType<void>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUserQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUser>>> = ({
+    signal,
+  }) => getUser(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
+};
+
+export type GetUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUser>>
+>;
+export type GetUserQueryError = ErrorType<void>;
+
+/**
+ * @summary Get user by ID
+ */
+
+export function useGetUser<
+  TData = Awaited<ReturnType<typeof getUser>>,
+  TError = ErrorType<void>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetUserQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update sleep profile (onboarding answers)
+ */
+export const getUpdateSleepProfileUrl = (userId: string) => {
+  return `/api/users/${userId}/profile`;
+};
+
+export const updateSleepProfile = async (
+  userId: string,
+  updateSleepProfileBody: UpdateSleepProfileBody,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getUpdateSleepProfileUrl(userId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateSleepProfileBody),
+  });
+};
+
+export const getUpdateSleepProfileMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSleepProfile>>,
+    TError,
+    { userId: string; data: BodyType<UpdateSleepProfileBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSleepProfile>>,
+  TError,
+  { userId: string; data: BodyType<UpdateSleepProfileBody> },
+  TContext
+> => {
+  const mutationKey = ["updateSleepProfile"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSleepProfile>>,
+    { userId: string; data: BodyType<UpdateSleepProfileBody> }
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return updateSleepProfile(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSleepProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSleepProfile>>
+>;
+export type UpdateSleepProfileMutationBody = BodyType<UpdateSleepProfileBody>;
+export type UpdateSleepProfileMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update sleep profile (onboarding answers)
+ */
+export const useUpdateSleepProfile = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSleepProfile>>,
+    TError,
+    { userId: string; data: BodyType<UpdateSleepProfileBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSleepProfile>>,
+  TError,
+  { userId: string; data: BodyType<UpdateSleepProfileBody> },
+  TContext
+> => {
+  return useMutation(getUpdateSleepProfileMutationOptions(options));
+};
+
+/**
+ * @summary List all sleep logs for a user
+ */
+export const getListSleepLogsUrl = (userId: string) => {
+  return `/api/users/${userId}/sleep-logs`;
+};
+
+export const listSleepLogs = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<SleepLog[]> => {
+  return customFetch<SleepLog[]>(getListSleepLogsUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSleepLogsQueryKey = (userId: string) => {
+  return [`/api/users/${userId}/sleep-logs`] as const;
+};
+
+export const getListSleepLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSleepLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSleepLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSleepLogsQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSleepLogs>>> = ({
+    signal,
+  }) => listSleepLogs(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSleepLogs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSleepLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSleepLogs>>
+>;
+export type ListSleepLogsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all sleep logs for a user
+ */
+
+export function useListSleepLogs<
+  TData = Awaited<ReturnType<typeof listSleepLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSleepLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSleepLogsQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new sleep log entry (night check-in)
+ */
+export const getCreateSleepLogUrl = (userId: string) => {
+  return `/api/users/${userId}/sleep-logs`;
+};
+
+export const createSleepLog = async (
+  userId: string,
+  createSleepLogBody: CreateSleepLogBody,
+  options?: RequestInit,
+): Promise<SleepLog> => {
+  return customFetch<SleepLog>(getCreateSleepLogUrl(userId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createSleepLogBody),
+  });
+};
+
+export const getCreateSleepLogMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSleepLog>>,
+    TError,
+    { userId: string; data: BodyType<CreateSleepLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createSleepLog>>,
+  TError,
+  { userId: string; data: BodyType<CreateSleepLogBody> },
+  TContext
+> => {
+  const mutationKey = ["createSleepLog"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSleepLog>>,
+    { userId: string; data: BodyType<CreateSleepLogBody> }
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return createSleepLog(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSleepLogMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSleepLog>>
+>;
+export type CreateSleepLogMutationBody = BodyType<CreateSleepLogBody>;
+export type CreateSleepLogMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new sleep log entry (night check-in)
+ */
+export const useCreateSleepLog = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSleepLog>>,
+    TError,
+    { userId: string; data: BodyType<CreateSleepLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createSleepLog>>,
+  TError,
+  { userId: string; data: BodyType<CreateSleepLogBody> },
+  TContext
+> => {
+  return useMutation(getCreateSleepLogMutationOptions(options));
+};
+
+/**
+ * @summary Update sleep log with morning check-in data
+ */
+export const getUpdateSleepLogMorningUrl = (userId: string, logId: number) => {
+  return `/api/users/${userId}/sleep-logs/${logId}/morning`;
+};
+
+export const updateSleepLogMorning = async (
+  userId: string,
+  logId: number,
+  morningCheckInBody: MorningCheckInBody,
+  options?: RequestInit,
+): Promise<SleepLog> => {
+  return customFetch<SleepLog>(getUpdateSleepLogMorningUrl(userId, logId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(morningCheckInBody),
+  });
+};
+
+export const getUpdateSleepLogMorningMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSleepLogMorning>>,
+    TError,
+    { userId: string; logId: number; data: BodyType<MorningCheckInBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSleepLogMorning>>,
+  TError,
+  { userId: string; logId: number; data: BodyType<MorningCheckInBody> },
+  TContext
+> => {
+  const mutationKey = ["updateSleepLogMorning"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSleepLogMorning>>,
+    { userId: string; logId: number; data: BodyType<MorningCheckInBody> }
+  > = (props) => {
+    const { userId, logId, data } = props ?? {};
+
+    return updateSleepLogMorning(userId, logId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSleepLogMorningMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSleepLogMorning>>
+>;
+export type UpdateSleepLogMorningMutationBody = BodyType<MorningCheckInBody>;
+export type UpdateSleepLogMorningMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update sleep log with morning check-in data
+ */
+export const useUpdateSleepLogMorning = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSleepLogMorning>>,
+    TError,
+    { userId: string; logId: number; data: BodyType<MorningCheckInBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSleepLogMorning>>,
+  TError,
+  { userId: string; logId: number; data: BodyType<MorningCheckInBody> },
+  TContext
+> => {
+  return useMutation(getUpdateSleepLogMorningMutationOptions(options));
+};
+
+/**
+ * @summary List all night completions for a user
+ */
+export const getListNightCompletionsUrl = (userId: string) => {
+  return `/api/users/${userId}/night-completions`;
+};
+
+export const listNightCompletions = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<NightCompletion[]> => {
+  return customFetch<NightCompletion[]>(getListNightCompletionsUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListNightCompletionsQueryKey = (userId: string) => {
+  return [`/api/users/${userId}/night-completions`] as const;
+};
+
+export const getListNightCompletionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listNightCompletions>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listNightCompletions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListNightCompletionsQueryKey(userId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listNightCompletions>>
+  > = ({ signal }) =>
+    listNightCompletions(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listNightCompletions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListNightCompletionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listNightCompletions>>
+>;
+export type ListNightCompletionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all night completions for a user
+ */
+
+export function useListNightCompletions<
+  TData = Awaited<ReturnType<typeof listNightCompletions>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listNightCompletions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListNightCompletionsQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update checklist items for a night
+ */
+export const getUpdateNightCompletionUrl = (
+  userId: string,
+  nightNumber: number,
+) => {
+  return `/api/users/${userId}/night-completions/${nightNumber}`;
+};
+
+export const updateNightCompletion = async (
+  userId: string,
+  nightNumber: number,
+  updateNightCompletionBody: UpdateNightCompletionBody,
+  options?: RequestInit,
+): Promise<NightCompletion> => {
+  return customFetch<NightCompletion>(
+    getUpdateNightCompletionUrl(userId, nightNumber),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateNightCompletionBody),
+    },
+  );
+};
+
+export const getUpdateNightCompletionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateNightCompletion>>,
+    TError,
+    {
+      userId: string;
+      nightNumber: number;
+      data: BodyType<UpdateNightCompletionBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateNightCompletion>>,
+  TError,
+  {
+    userId: string;
+    nightNumber: number;
+    data: BodyType<UpdateNightCompletionBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateNightCompletion"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateNightCompletion>>,
+    {
+      userId: string;
+      nightNumber: number;
+      data: BodyType<UpdateNightCompletionBody>;
+    }
+  > = (props) => {
+    const { userId, nightNumber, data } = props ?? {};
+
+    return updateNightCompletion(userId, nightNumber, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateNightCompletionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateNightCompletion>>
+>;
+export type UpdateNightCompletionMutationBody =
+  BodyType<UpdateNightCompletionBody>;
+export type UpdateNightCompletionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update checklist items for a night
+ */
+export const useUpdateNightCompletion = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateNightCompletion>>,
+    TError,
+    {
+      userId: string;
+      nightNumber: number;
+      data: BodyType<UpdateNightCompletionBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateNightCompletion>>,
+  TError,
+  {
+    userId: string;
+    nightNumber: number;
+    data: BodyType<UpdateNightCompletionBody>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateNightCompletionMutationOptions(options));
+};
+
+/**
+ * @summary Get progress summary for a user
+ */
+export const getGetProgressUrl = (userId: string) => {
+  return `/api/users/${userId}/progress`;
+};
+
+export const getProgress = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<ProgressSummary> => {
+  return customFetch<ProgressSummary>(getGetProgressUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProgressQueryKey = (userId: string) => {
+  return [`/api/users/${userId}/progress`] as const;
+};
+
+export const getGetProgressQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProgress>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProgress>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProgressQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProgress>>> = ({
+    signal,
+  }) => getProgress(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProgress>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProgressQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProgress>>
+>;
+export type GetProgressQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get progress summary for a user
+ */
+
+export function useGetProgress<
+  TData = Awaited<ReturnType<typeof getProgress>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProgress>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProgressQueryOptions(userId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

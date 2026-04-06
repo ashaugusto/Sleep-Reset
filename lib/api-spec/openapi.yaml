@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User management
+  - name: sleep-logs
+    description: Sleep log entries
+  - name: nights
+    description: Night program tracking
+  - name: progress
+    description: Progress and statistics
 paths:
   /healthz:
     get:
@@ -24,6 +32,216 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users:
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create or update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "200":
+          description: User created or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+
+  /users/{userId}/profile:
+    put:
+      operationId: updateSleepProfile
+      tags: [users]
+      summary: Update sleep profile (onboarding answers)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSleepProfileBody"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}/sleep-logs:
+    get:
+      operationId: listSleepLogs
+      tags: [sleep-logs]
+      summary: List all sleep logs for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sleep logs list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SleepLog"
+    post:
+      operationId: createSleepLog
+      tags: [sleep-logs]
+      summary: Create a new sleep log entry (night check-in)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSleepLogBody"
+      responses:
+        "201":
+          description: Sleep log created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SleepLog"
+
+  /users/{userId}/sleep-logs/{logId}/morning:
+    put:
+      operationId: updateSleepLogMorning
+      tags: [sleep-logs]
+      summary: Update sleep log with morning check-in data
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MorningCheckInBody"
+      responses:
+        "200":
+          description: Sleep log updated with morning data and calculations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SleepLog"
+
+  /users/{userId}/night-completions:
+    get:
+      operationId: listNightCompletions
+      tags: [nights]
+      summary: List all night completions for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Night completions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NightCompletion"
+
+  /users/{userId}/night-completions/{nightNumber}:
+    put:
+      operationId: updateNightCompletion
+      tags: [nights]
+      summary: Update checklist items for a night
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: nightNumber
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNightCompletionBody"
+      responses:
+        "200":
+          description: Night completion updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NightCompletion"
+
+  /users/{userId}/progress:
+    get:
+      operationId: getProgress
+      tags: [progress]
+      summary: Get progress summary for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Progress summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +252,343 @@ components:
       required:
         - status
 
+    CreateUserBody:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+      required:
+        - email
+
+    UpdateSleepProfileBody:
+      type: object
+      properties:
+        sleepDisruptorPrimary:
+          type: string
+          enum: [racing_thoughts, work_stress, partying_alcohol, anxiety, phone_screens, unknown]
+        sleepDisruptorFrequency:
+          type: string
+          enum: [every_night, most_nights, few_times_week, weekends_mostly]
+        usualBedtimeMinutes:
+          type: integer
+          description: Minutes from midnight (e.g. 22:30 = 22*60+30=1350)
+        neededWakeUpMinutes:
+          type: integer
+          description: Minutes from midnight
+        triedSolutions:
+          type: array
+          items:
+            type: string
+          description: e.g. [melatonin, herbal_supplements, sleep_apps, alcohol, nothing, other]
+        sleepProfileType:
+          type: string
+          description: Derived type like The Overthinker, The Party Recoverer, etc.
+        reminderNightMinutes:
+          type: integer
+          description: Evening reminder time in minutes from midnight
+        reminderMorningMinutes:
+          type: integer
+          description: Morning reminder time in minutes from midnight
+      required: []
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+          nullable: true
+        sleepDisruptorPrimary:
+          type: string
+          nullable: true
+        sleepDisruptorFrequency:
+          type: string
+          nullable: true
+        usualBedtimeMinutes:
+          type: integer
+          nullable: true
+        neededWakeUpMinutes:
+          type: integer
+          nullable: true
+        triedSolutions:
+          type: array
+          items:
+            type: string
+          nullable: true
+        sleepProfileType:
+          type: string
+          nullable: true
+        onboardingComplete:
+          type: boolean
+        reminderNightMinutes:
+          type: integer
+          nullable: true
+        reminderMorningMinutes:
+          type: integer
+          nullable: true
+        currentNight:
+          type: integer
+          description: Current night number (1-7)
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - onboardingComplete
+        - currentNight
+        - createdAt
+
+    CreateSleepLogBody:
+      type: object
+      properties:
+        logDate:
+          type: string
+          format: date
+          description: Date of the log (YYYY-MM-DD)
+        bedtimeMinutes:
+          type: integer
+          description: Bed time in minutes from midnight
+        sleepAttemptMinutes:
+          type: integer
+          description: When they tried to fall asleep (mins from midnight)
+        eveningMood:
+          type: integer
+          description: 1-5 scale (1=Wired/Anxious, 5=Very Relaxed)
+        eveningNotes:
+          type: string
+          nullable: true
+      required:
+        - logDate
+        - bedtimeMinutes
+        - sleepAttemptMinutes
+        - eveningMood
+
+    MorningCheckInBody:
+      type: object
+      properties:
+        finalWakeTimeMinutes:
+          type: integer
+          description: Last wake time in minutes from midnight
+        outOfBedMinutes:
+          type: integer
+          description: When they got out of bed in minutes from midnight
+        sleepLatencyMinutes:
+          type: integer
+          description: How long to fall asleep in minutes (7, 10, 22, 45, 75)
+        wakeCount:
+          type: integer
+          description: 0=No, 1=Once, 2=2-3 times, 3=More than 3 times
+        wakeDurationMinutes:
+          type: integer
+          description: Total awake time during night in minutes (5, 20, 45, 75)
+        sleepQuality:
+          type: integer
+          description: 1-5 (1=Very Poor, 5=Very Good)
+        restfulness:
+          type: integer
+          description: 1-5 (1=Not at all, 5=Very Well Rested)
+      required:
+        - finalWakeTimeMinutes
+        - outOfBedMinutes
+        - sleepLatencyMinutes
+        - wakeCount
+        - sleepQuality
+        - restfulness
+
+    SleepLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        logDate:
+          type: string
+          format: date
+        bedtimeMinutes:
+          type: integer
+          nullable: true
+        sleepAttemptMinutes:
+          type: integer
+          nullable: true
+        eveningMood:
+          type: integer
+          nullable: true
+        eveningNotes:
+          type: string
+          nullable: true
+        finalWakeTimeMinutes:
+          type: integer
+          nullable: true
+        outOfBedMinutes:
+          type: integer
+          nullable: true
+        sleepLatencyMinutes:
+          type: integer
+          nullable: true
+        wakeCount:
+          type: integer
+          nullable: true
+        wakeDurationMinutes:
+          type: integer
+          nullable: true
+        sleepQuality:
+          type: integer
+          nullable: true
+        restfulness:
+          type: integer
+          nullable: true
+        timeInBedMinutes:
+          type: integer
+          nullable: true
+          description: Calculated TIB
+        totalSleepMinutes:
+          type: integer
+          nullable: true
+          description: Calculated TST
+        sleepEfficiencyPct:
+          type: number
+          nullable: true
+          description: Calculated SE (0-100)
+        sleepScore:
+          type: integer
+          nullable: true
+          description: Overall score 0-100
+        morningComplete:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - logDate
+        - morningComplete
+        - createdAt
+
+    NightCompletion:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        nightNumber:
+          type: integer
+        checklistItems:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              checked:
+                type: boolean
+            required:
+              - key
+              - checked
+        completed:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - nightNumber
+        - checklistItems
+        - completed
+        - createdAt
+
+    UpdateNightCompletionBody:
+      type: object
+      properties:
+        checklistItems:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              checked:
+                type: boolean
+            required:
+              - key
+              - checked
+        completed:
+          type: boolean
+      required:
+        - checklistItems
+
+    DailySleepStat:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        sleepScore:
+          type: integer
+          nullable: true
+        totalSleepMinutes:
+          type: integer
+          nullable: true
+        sleepEfficiencyPct:
+          type: number
+          nullable: true
+      required:
+        - date
+
+    ProgressSummary:
+      type: object
+      properties:
+        currentSleepScore:
+          type: integer
+          nullable: true
+        firstSleepScore:
+          type: integer
+          nullable: true
+        logsCount:
+          type: integer
+        currentStreak:
+          type: integer
+        nightsCompleted:
+          type: integer
+        dailyStats:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailySleepStat"
+        avgSleepLatencyMinutes:
+          type: number
+          nullable: true
+        avgTotalSleepMinutes:
+          type: number
+          nullable: true
+        avgSleepEfficiencyPct:
+          type: number
+          nullable: true
+        avgWakeCount:
+          type: number
+          nullable: true
+        avgSleepQuality:
+          type: number
+          nullable: true
+        insights:
+          type: array
+          items:
+            type: string
+      required:
+        - logsCount
+        - currentStreak
+        - nightsCompleted
+        - dailyStats
+        - insights

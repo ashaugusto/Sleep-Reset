@@ -14,3 +14,307 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary Create or update user profile
+ */
+export const CreateUserBody = zod.object({
+  email: zod.string(),
+  name: zod.string().optional(),
+});
+
+export const CreateUserResponse = zod.object({
+  id: zod.string(),
+  email: zod.string(),
+  name: zod.string().nullish(),
+  sleepDisruptorPrimary: zod.string().nullish(),
+  sleepDisruptorFrequency: zod.string().nullish(),
+  usualBedtimeMinutes: zod.number().nullish(),
+  neededWakeUpMinutes: zod.number().nullish(),
+  triedSolutions: zod.array(zod.string()).nullish(),
+  sleepProfileType: zod.string().nullish(),
+  onboardingComplete: zod.boolean(),
+  reminderNightMinutes: zod.number().nullish(),
+  reminderMorningMinutes: zod.number().nullish(),
+  currentNight: zod.number().describe("Current night number (1-7)"),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Get user by ID
+ */
+export const GetUserParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const GetUserResponse = zod.object({
+  id: zod.string(),
+  email: zod.string(),
+  name: zod.string().nullish(),
+  sleepDisruptorPrimary: zod.string().nullish(),
+  sleepDisruptorFrequency: zod.string().nullish(),
+  usualBedtimeMinutes: zod.number().nullish(),
+  neededWakeUpMinutes: zod.number().nullish(),
+  triedSolutions: zod.array(zod.string()).nullish(),
+  sleepProfileType: zod.string().nullish(),
+  onboardingComplete: zod.boolean(),
+  reminderNightMinutes: zod.number().nullish(),
+  reminderMorningMinutes: zod.number().nullish(),
+  currentNight: zod.number().describe("Current night number (1-7)"),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update sleep profile (onboarding answers)
+ */
+export const UpdateSleepProfileParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const UpdateSleepProfileBody = zod.object({
+  sleepDisruptorPrimary: zod
+    .enum([
+      "racing_thoughts",
+      "work_stress",
+      "partying_alcohol",
+      "anxiety",
+      "phone_screens",
+      "unknown",
+    ])
+    .optional(),
+  sleepDisruptorFrequency: zod
+    .enum(["every_night", "most_nights", "few_times_week", "weekends_mostly"])
+    .optional(),
+  usualBedtimeMinutes: zod
+    .number()
+    .optional()
+    .describe("Minutes from midnight (e.g. 22:30 = 22\*60+30=1350)"),
+  neededWakeUpMinutes: zod
+    .number()
+    .optional()
+    .describe("Minutes from midnight"),
+  triedSolutions: zod
+    .array(zod.string())
+    .optional()
+    .describe(
+      "e.g. [melatonin, herbal_supplements, sleep_apps, alcohol, nothing, other]",
+    ),
+  sleepProfileType: zod
+    .string()
+    .optional()
+    .describe("Derived type like The Overthinker, The Party Recoverer, etc."),
+  reminderNightMinutes: zod
+    .number()
+    .optional()
+    .describe("Evening reminder time in minutes from midnight"),
+  reminderMorningMinutes: zod
+    .number()
+    .optional()
+    .describe("Morning reminder time in minutes from midnight"),
+});
+
+export const UpdateSleepProfileResponse = zod.object({
+  id: zod.string(),
+  email: zod.string(),
+  name: zod.string().nullish(),
+  sleepDisruptorPrimary: zod.string().nullish(),
+  sleepDisruptorFrequency: zod.string().nullish(),
+  usualBedtimeMinutes: zod.number().nullish(),
+  neededWakeUpMinutes: zod.number().nullish(),
+  triedSolutions: zod.array(zod.string()).nullish(),
+  sleepProfileType: zod.string().nullish(),
+  onboardingComplete: zod.boolean(),
+  reminderNightMinutes: zod.number().nullish(),
+  reminderMorningMinutes: zod.number().nullish(),
+  currentNight: zod.number().describe("Current night number (1-7)"),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List all sleep logs for a user
+ */
+export const ListSleepLogsParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const ListSleepLogsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.string(),
+  logDate: zod.coerce.date(),
+  bedtimeMinutes: zod.number().nullish(),
+  sleepAttemptMinutes: zod.number().nullish(),
+  eveningMood: zod.number().nullish(),
+  eveningNotes: zod.string().nullish(),
+  finalWakeTimeMinutes: zod.number().nullish(),
+  outOfBedMinutes: zod.number().nullish(),
+  sleepLatencyMinutes: zod.number().nullish(),
+  wakeCount: zod.number().nullish(),
+  wakeDurationMinutes: zod.number().nullish(),
+  sleepQuality: zod.number().nullish(),
+  restfulness: zod.number().nullish(),
+  timeInBedMinutes: zod.number().nullish().describe("Calculated TIB"),
+  totalSleepMinutes: zod.number().nullish().describe("Calculated TST"),
+  sleepEfficiencyPct: zod.number().nullish().describe("Calculated SE (0-100)"),
+  sleepScore: zod.number().nullish().describe("Overall score 0-100"),
+  morningComplete: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+export const ListSleepLogsResponse = zod.array(ListSleepLogsResponseItem);
+
+/**
+ * @summary Create a new sleep log entry (night check-in)
+ */
+export const CreateSleepLogParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const CreateSleepLogBody = zod.object({
+  logDate: zod.coerce.date().describe("Date of the log (YYYY-MM-DD)"),
+  bedtimeMinutes: zod.number().describe("Bed time in minutes from midnight"),
+  sleepAttemptMinutes: zod
+    .number()
+    .describe("When they tried to fall asleep (mins from midnight)"),
+  eveningMood: zod
+    .number()
+    .describe("1-5 scale (1=Wired\/Anxious, 5=Very Relaxed)"),
+  eveningNotes: zod.string().nullish(),
+});
+
+/**
+ * @summary Update sleep log with morning check-in data
+ */
+export const UpdateSleepLogMorningParams = zod.object({
+  userId: zod.coerce.string(),
+  logId: zod.coerce.number(),
+});
+
+export const UpdateSleepLogMorningBody = zod.object({
+  finalWakeTimeMinutes: zod
+    .number()
+    .describe("Last wake time in minutes from midnight"),
+  outOfBedMinutes: zod
+    .number()
+    .describe("When they got out of bed in minutes from midnight"),
+  sleepLatencyMinutes: zod
+    .number()
+    .describe("How long to fall asleep in minutes (7, 10, 22, 45, 75)"),
+  wakeCount: zod
+    .number()
+    .describe("0=No, 1=Once, 2=2-3 times, 3=More than 3 times"),
+  wakeDurationMinutes: zod
+    .number()
+    .optional()
+    .describe("Total awake time during night in minutes (5, 20, 45, 75)"),
+  sleepQuality: zod.number().describe("1-5 (1=Very Poor, 5=Very Good)"),
+  restfulness: zod.number().describe("1-5 (1=Not at all, 5=Very Well Rested)"),
+});
+
+export const UpdateSleepLogMorningResponse = zod.object({
+  id: zod.number(),
+  userId: zod.string(),
+  logDate: zod.coerce.date(),
+  bedtimeMinutes: zod.number().nullish(),
+  sleepAttemptMinutes: zod.number().nullish(),
+  eveningMood: zod.number().nullish(),
+  eveningNotes: zod.string().nullish(),
+  finalWakeTimeMinutes: zod.number().nullish(),
+  outOfBedMinutes: zod.number().nullish(),
+  sleepLatencyMinutes: zod.number().nullish(),
+  wakeCount: zod.number().nullish(),
+  wakeDurationMinutes: zod.number().nullish(),
+  sleepQuality: zod.number().nullish(),
+  restfulness: zod.number().nullish(),
+  timeInBedMinutes: zod.number().nullish().describe("Calculated TIB"),
+  totalSleepMinutes: zod.number().nullish().describe("Calculated TST"),
+  sleepEfficiencyPct: zod.number().nullish().describe("Calculated SE (0-100)"),
+  sleepScore: zod.number().nullish().describe("Overall score 0-100"),
+  morningComplete: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List all night completions for a user
+ */
+export const ListNightCompletionsParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const ListNightCompletionsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.string(),
+  nightNumber: zod.number(),
+  checklistItems: zod.array(
+    zod.object({
+      key: zod.string(),
+      checked: zod.boolean(),
+    }),
+  ),
+  completed: zod.boolean(),
+  completedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListNightCompletionsResponse = zod.array(
+  ListNightCompletionsResponseItem,
+);
+
+/**
+ * @summary Update checklist items for a night
+ */
+export const UpdateNightCompletionParams = zod.object({
+  userId: zod.coerce.string(),
+  nightNumber: zod.coerce.number(),
+});
+
+export const UpdateNightCompletionBody = zod.object({
+  checklistItems: zod.array(
+    zod.object({
+      key: zod.string(),
+      checked: zod.boolean(),
+    }),
+  ),
+  completed: zod.boolean().optional(),
+});
+
+export const UpdateNightCompletionResponse = zod.object({
+  id: zod.number(),
+  userId: zod.string(),
+  nightNumber: zod.number(),
+  checklistItems: zod.array(
+    zod.object({
+      key: zod.string(),
+      checked: zod.boolean(),
+    }),
+  ),
+  completed: zod.boolean(),
+  completedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Get progress summary for a user
+ */
+export const GetProgressParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const GetProgressResponse = zod.object({
+  currentSleepScore: zod.number().nullish(),
+  firstSleepScore: zod.number().nullish(),
+  logsCount: zod.number(),
+  currentStreak: zod.number(),
+  nightsCompleted: zod.number(),
+  dailyStats: zod.array(
+    zod.object({
+      date: zod.coerce.date(),
+      sleepScore: zod.number().nullish(),
+      totalSleepMinutes: zod.number().nullish(),
+      sleepEfficiencyPct: zod.number().nullish(),
+    }),
+  ),
+  avgSleepLatencyMinutes: zod.number().nullish(),
+  avgTotalSleepMinutes: zod.number().nullish(),
+  avgSleepEfficiencyPct: zod.number().nullish(),
+  avgWakeCount: zod.number().nullish(),
+  avgSleepQuality: zod.number().nullish(),
+  insights: zod.array(zod.string()),
+});
