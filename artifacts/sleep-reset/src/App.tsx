@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { useUserId } from "@/hooks/use-user-id";
 import { AppLayout } from "@/components/layout";
+import { useGetUser } from "@workspace/api-client-react";
 
 // Pages
 import Onboarding from "@/pages/onboarding";
@@ -15,6 +16,25 @@ import Progress from "@/pages/progress";
 import Profile from "@/pages/profile";
 
 const queryClient = new QueryClient();
+
+function RootRedirect() {
+  const userId = useUserId();
+  const { data: user, isLoading } = useGetUser(userId ?? "");
+
+  if (!userId || isLoading) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (user?.onboardingComplete) {
+    return <Redirect to="/dashboard" />;
+  }
+
+  return <Redirect to="/onboarding" />;
+}
 
 function Router() {
   const userId = useUserId();
@@ -29,10 +49,7 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/">
-        {/* We rely on the pages to do their own checking of onboardingComplete but for now redirect to onboarding which will redirect to dashboard if done */}
-        <Redirect to="/onboarding" />
-      </Route>
+      <Route path="/" component={RootRedirect} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard">
         <AppLayout><Dashboard /></AppLayout>

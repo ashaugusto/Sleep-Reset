@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, nightCompletionsTable, usersTable } from "@workspace/db";
+import { db, nightCompletionsTable, usersTable, checklistItemsTable } from "@workspace/db";
 import {
   ListNightCompletionsParams,
   UpdateNightCompletionParams,
@@ -71,6 +71,26 @@ router.put("/users/:userId/night-completions/:nightNumber", async (req, res) => 
       })
       .returning();
     completion = created;
+  }
+
+  if (body.checklistItems && Array.isArray(body.checklistItems)) {
+    const items = body.checklistItems as Array<{ key: string; checked: boolean }>;
+    for (const item of items) {
+      if (item.key) {
+        await db
+          .insert(checklistItemsTable)
+          .values({
+            userId,
+            nightNumber: nightNum,
+            key: item.key,
+            checked: item.checked ?? false,
+          })
+          .onConflictDoUpdate({
+            target: [checklistItemsTable.userId, checklistItemsTable.nightNumber, checklistItemsTable.key],
+            set: { checked: item.checked ?? false, updatedAt: new Date() },
+          });
+      }
+    }
   }
 
   if (isCompleted) {
