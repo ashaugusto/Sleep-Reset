@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db, nightCompletionsTable, usersTable, checklistItemsTable } from "@workspace/db";
 import {
   ListNightCompletionsParams,
@@ -26,6 +26,11 @@ router.put("/users/:userId/night-completions/:nightNumber", async (req, res) => 
   const body = UpdateNightCompletionBody.parse(req.body);
 
   const nightNum = Number(nightNumber);
+
+  if (nightNum < 1 || nightNum > 7) {
+    res.status(400).json({ message: "nightNumber must be between 1 and 7" });
+    return;
+  }
 
   const existing = await db
     .select()
@@ -98,12 +103,10 @@ router.put("/users/:userId/night-completions/:nightNumber", async (req, res) => 
     if (nextNight <= 7) {
       await db
         .update(usersTable)
-        .set({ currentNight: nextNight })
-        .where(
-          and(
-            eq(usersTable.id, userId),
-          )
-        );
+        .set({
+          currentNight: sql`GREATEST(current_night, ${nextNight})`,
+        })
+        .where(eq(usersTable.id, userId));
     }
   }
 

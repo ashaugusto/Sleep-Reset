@@ -193,8 +193,10 @@ export default function Night() {
   const userId = useUserId();
   const queryClient = useQueryClient();
 
-  const nightId = parseInt(params?.id || "1", 10);
-  const content = NIGHT_CONTENT[nightId as keyof typeof NIGHT_CONTENT] || NIGHT_CONTENT[1];
+  const rawNightId = parseInt(params?.id || "1", 10);
+  const nightId = isNaN(rawNightId) ? 0 : rawNightId;
+  const isValidNight = nightId >= 1 && nightId <= 7;
+  const content = isValidNight ? NIGHT_CONTENT[nightId as keyof typeof NIGHT_CONTENT] : NIGHT_CONTENT[1];
 
   const { data: user } = useGetUser(userId || "", {
     query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId || "") },
@@ -212,6 +214,12 @@ export default function Night() {
   const [textValues, setTextValues] = useState<Record<string, string>>({});
   const [showCelebration, setShowCelebration] = useState(false);
   const [savingReminder, setSavingReminder] = useState(false);
+
+  useEffect(() => {
+    if (!isValidNight) {
+      setLocation("/dashboard");
+    }
+  }, [isValidNight, setLocation]);
 
   useEffect(() => {
     if (currentCompletion) {
