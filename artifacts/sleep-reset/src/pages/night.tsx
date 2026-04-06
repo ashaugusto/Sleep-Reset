@@ -1,16 +1,22 @@
 import { useRoute, useLocation } from "wouter";
 import { useUserId } from "@/hooks/use-user-id";
-import { useListNightCompletions, useUpdateNightCompletion, getListNightCompletionsQueryKey, useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
+import {
+  useListNightCompletions,
+  useUpdateNightCompletion,
+  getListNightCompletionsQueryKey,
+  useGetUser,
+  getGetUserQueryKey,
+  useUpdateSleepProfile,
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { PlayCircle, CheckCircle2, Lock } from "lucide-react";
+import { PlayCircle, CheckCircle2, Lock, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { SLEEP_TYPES } from "@/lib/constants";
 
 const NIGHT_CONTENT = {
   1: {
@@ -27,7 +33,8 @@ const NIGHT_CONTENT = {
       partying_alcohol: "Even after a late Saturday, set the alarm. One rough Sunday is worth the payoff.",
       anxiety: "I know weekends feel sacred. But one consistent week will do more for your sleep than sleeping in ever did.",
       phone_screens: "I know weekends feel sacred. But one consistent week will do more for your sleep than sleeping in ever did.",
-      unknown: "I know weekends feel sacred. But one consistent week will do more for your sleep than sleeping in ever did."
+      unknown: "I know weekends feel sacred. But one consistent week will do more for your sleep than sleeping in ever did.",
+      default: "I know weekends feel sacred. But one consistent week will do more for your sleep than sleeping in ever did."
     }
   },
   2: {
@@ -118,12 +125,74 @@ const NIGHT_CONTENT = {
   }
 };
 
+function ReminderSetter({
+  nightMinutes,
+  morningMinutes,
+  onSave,
+  saving,
+}: {
+  nightMinutes?: number | null;
+  morningMinutes?: number | null;
+  onSave: (night: number, morning: number) => void;
+  saving: boolean;
+}) {
+  const toTimeStr = (mins: number | null | undefined) => {
+    if (mins == null) return "";
+    const h = Math.floor(((mins % 1440) + 1440) % 1440 / 60);
+    const m = ((mins % 1440) + 1440) % 1440 % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  };
+
+  const [night, setNight] = useState(toTimeStr(nightMinutes) || "22:00");
+  const [morning, setMorning] = useState(toTimeStr(morningMinutes) || "07:00");
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    const [nh, nm] = night.split(":").map(Number);
+    const [mh, mm] = morning.split(":").map(Number);
+    onSave(nh * 60 + nm, mh * 60 + mm);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="bg-card rounded-2xl p-5 border border-card-border space-y-4">
+      <div className="flex items-center gap-2">
+        <Bell className="w-4 h-4 text-primary" />
+        <h4 className="font-medium text-sm">Set Reminders</h4>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Night reminder</Label>
+          <Input type="time" value={night} onChange={e => setNight(e.target.value)} className="h-9 text-sm" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Morning reminder</Label>
+          <Input type="time" value={morning} onChange={e => setMorning(e.target.value)} className="h-9 text-sm" />
+        </div>
+      </div>
+      <Button
+        size="sm"
+        variant={saved ? "default" : "outline"}
+        className={cn("w-full text-sm", saved && "bg-primary text-primary-foreground")}
+        onClick={handleSave}
+        disabled={saving}
+      >
+        {saved ? "Saved ✓" : "Save Reminders"}
+      </Button>
+      <p className="text-xs text-muted-foreground text-center">
+        Enable browser notifications to receive reminders.
+      </p>
+    </div>
+  );
+}
+
 export default function Night() {
   const [, params] = useRoute("/night/:id");
   const [, setLocation] = useLocation();
   const userId = useUserId();
   const queryClient = useQueryClient();
-  
+
   const nightId = parseInt(params?.id || "1", 10);
   const content = NIGHT_CONTENT[nightId as keyof typeof NIGHT_CONTENT] || NIGHT_CONTENT[1];
 
@@ -136,11 +205,13 @@ export default function Night() {
   });
 
   const updateCompletion = useUpdateNightCompletion();
-  
+  const updateProfile = useUpdateSleepProfile();
+
   const currentCompletion = completions?.find(c => c.nightNumber === nightId);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [textValues, setTextValues] = useState<Record<string, string>>({});
   const [showCelebration, setShowCelebration] = useState(false);
+  const [savingReminder, setSavingReminder] = useState(false);
 
   useEffect(() => {
     if (currentCompletion) {
@@ -176,6 +247,23 @@ export default function Night() {
     }, 2000);
   };
 
+  const handleSaveReminders = async (nightMins: number, morningMins: number) => {
+    if (!userId) return;
+    setSavingReminder(true);
+    try {
+      await updateProfile.mutateAsync({
+        userId,
+        data: {
+          reminderNightMinutes: nightMins,
+          reminderMorningMinutes: morningMins,
+        },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
+    } finally {
+      setSavingReminder(false);
+    }
+  };
+
   const sleepProfile = user?.sleepProfileType || "unknown";
   const tip = (content.tips as Record<string, string>)[sleepProfile] || (content.tips as Record<string, string>)["default"] || "Keep going.";
 
@@ -183,7 +271,7 @@ export default function Night() {
     <div className="p-6 space-y-8 pb-32 relative">
       <AnimatePresence>
         {showCelebration && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -198,7 +286,6 @@ export default function Night() {
         )}
       </AnimatePresence>
 
-      {/* 1. Video placeholder */}
       <div className="aspect-video bg-card border border-card-border rounded-2xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
         <div className="flex flex-col items-center space-y-3 z-10">
@@ -207,15 +294,16 @@ export default function Night() {
         </div>
       </div>
 
-      {/* 2. Text Summary */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-serif">{content.title}</h2>
-        <p className="text-muted-foreground leading-relaxed">
-          {content.concept}
-        </p>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-serif">{content.title}</h2>
+          <span className="text-xs font-medium px-3 py-1 bg-secondary text-muted-foreground rounded-full">
+            Night {nightId}/7
+          </span>
+        </div>
+        <p className="text-muted-foreground leading-relaxed">{content.concept}</p>
       </div>
 
-      {/* 3. Tonight's Mission */}
       <div className={cn(
         "rounded-3xl p-6 space-y-6 transition-all duration-500",
         allChecked ? "bg-primary/10 border border-primary/30" : "bg-secondary/50 border border-transparent"
@@ -224,14 +312,14 @@ export default function Night() {
           Tonight's Mission
           {allChecked && <CheckCircle2 className="w-5 h-5 text-primary" />}
         </h3>
-        
+
         <div className="space-y-5">
           {content.checklist.map(item => (
             <div key={item.id} className="flex flex-col space-y-2">
               <div className="flex items-start space-x-3">
-                <Checkbox 
-                  id={item.id} 
-                  checked={!!checkedItems[item.id]} 
+                <Checkbox
+                  id={item.id}
+                  checked={!!checkedItems[item.id]}
                   onCheckedChange={(c) => handleCheck(item.id, !!c)}
                   className="mt-1"
                 />
@@ -239,21 +327,21 @@ export default function Night() {
               </div>
               {item.type === "time" && (
                 <div className="pl-7">
-                  <Input 
-                    type="time" 
-                    className="w-32 bg-background border-border text-sm h-9" 
-                    value={textValues[item.id] || ""} 
+                  <Input
+                    type="time"
+                    className="w-32 bg-background border-border text-sm h-9"
+                    value={textValues[item.id] || ""}
                     onChange={(e) => setTextValues({ ...textValues, [item.id]: e.target.value })}
                   />
                 </div>
               )}
               {item.type === "text" && (
                 <div className="pl-7">
-                  <Input 
-                    type="text" 
+                  <Input
+                    type="text"
                     placeholder="E.g. Read a book"
-                    className="w-full bg-background border-border text-sm h-9" 
-                    value={textValues[item.id] || ""} 
+                    className="w-full bg-background border-border text-sm h-9"
+                    value={textValues[item.id] || ""}
                     onChange={(e) => setTextValues({ ...textValues, [item.id]: e.target.value })}
                   />
                 </div>
@@ -263,7 +351,7 @@ export default function Night() {
         </div>
 
         {allChecked && (
-          <Button 
+          <Button
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-4"
             onClick={handleComplete}
           >
@@ -272,19 +360,24 @@ export default function Night() {
         )}
       </div>
 
-      {/* 4. Quick Tip */}
       <div className="bg-card rounded-2xl p-5 border border-card-border space-y-2">
         <span className="text-xs font-bold text-primary uppercase tracking-wider">Quick Tip</span>
         <p className="text-sm text-muted-foreground italic">"{tip}"</p>
       </div>
 
-      {/* 5. Tonight's Audio */}
+      <ReminderSetter
+        nightMinutes={user?.reminderNightMinutes}
+        morningMinutes={user?.reminderMorningMinutes}
+        onSave={handleSaveReminders}
+        saving={savingReminder}
+      />
+
       <div className="bg-secondary/30 rounded-2xl p-5 border border-secondary flex flex-col items-center text-center space-y-3 opacity-80">
         <span className="text-xs bg-background px-2 py-1 rounded flex items-center gap-1 text-muted-foreground">
-          <Lock className="w-3 h-3" /> Locked
+          <Lock className="w-3 h-3" /> Premium
         </span>
         <h4 className="font-medium">Deep Sleep Audio Protocol</h4>
-        <p className="text-xs text-muted-foreground">Upgrade to unlock guided audio sessions.</p>
+        <p className="text-xs text-muted-foreground">Unlock guided audio sessions and sleep soundscapes designed for each night's theme.</p>
         <Button variant="outline" size="sm" className="w-full mt-2" disabled>Unlock Audio</Button>
       </div>
     </div>
