@@ -1,0 +1,286 @@
+BRIEFING COMPLETO — 7-Night Sleep Reset (WebApp)
+1. VISÃO GERAL DO PRODUTO
+O 7-Night Sleep Reset é um webapp mobile-first que guia o usuário por um protocolo de 7 noites para instalar uma rotina de sono funcional. Não é curso. Não é e-book. É execução guiada com acompanhamento, progresso visível e diário de sono integrado.
+
+O público é jovem (20–35 anos), urbano, mora na Irlanda, tem vida social ativa, trabalha, e sofre com o ciclo de "deitar e o cérebro não desligar". A linguagem é direta, coloquial, zero médica. A persona (Gabrielle) é quem guia tudo: "eu quebrei esse ciclo, agora vou te mostrar como".
+
+O webapp roda no browser (mobile-first, responsivo para desktop), sem necessidade de app nativo na v1. Login por email ou número de WhatsApp. Toda a experiência é pensada para ser usada à noite antes de dormir e de manhã ao acordar.
+
+2. ARQUITETURA DE TELAS E FLUXO COMPLETO
+2.1 — ONBOARDING (Primeira vez)
+Quando o usuário chega no webapp (vindo do quiz ou do link de compra), ele passa por um onboarding curto que cria o perfil de sono dele e personaliza a experiência.
+
+Tela 1 — Welcome Screen Fundo escuro (tema noturno é o padrão da plataforma inteira). Mensagem curta da Gabrielle: "You made it. Let's fix your nights — starting tonight." Botão único: "Let's go".
+
+Tela 2 — Sleep Profile Setup (4–5 perguntas rápidas) Se o usuário veio do quiz externo, esses dados já podem estar pré-carregados. Se não, ele responde aqui:
+
+Pergunta 1: "What usually keeps you up at night?" — opções: Racing thoughts / Work stress / Partying & alcohol / Anxiety / Phone & screens / I don't know.
+
+Pergunta 2: "How often does this happen?" — Every night / Most nights / A few times a week / Weekends mostly.
+
+Pergunta 3: "What time do you usually go to bed?" — Slider de horário (21:00 a 03:00).
+
+Pergunta 4: "What time do you need to wake up?" — Slider de horário (05:00 a 12:00).
+
+Pergunta 5: "What have you tried so far?" — Melatonin / Herbal supplements / Sleep apps / Alcohol to relax / Nothing / Other.
+
+Tela 3 — Your Sleep Profile Com base nas respostas, a plataforma gera um perfil visual tipo card:
+
+"Your type: The Overthinker" (ou The Party Recoverer, The Stress Carrier, The Screen Addict, etc.)
+
+Abaixo, 2–3 linhas descrevendo o perfil: "Your brain doesn't know when to stop. You lie down and your mind starts replaying the day, planning tomorrow, worrying about nothing and everything. Sound familiar?"
+
+Botão: "Start Night 1 →"
+
+Esse perfil fica salvo e visível no dashboard. Ele influencia os exemplos e textos dentro das noites (personalização leve, não precisa ser complexa).
+
+2.2 — DASHBOARD (Tela Principal)
+A home do webapp. O usuário vê isso toda vez que abre o app.
+
+Área superior — Progresso da trilha Barra horizontal ou arco com 7 pontos (Night 1 a Night 7). Cada ponto completo fica verde/iluminado. O ponto atual pulsa suavemente. Pontos futuros ficam cinza/bloqueados.
+
+Abaixo da barra: texto dinâmico. Se é Noite 1: "Tonight's your first night. Let's set the foundation." Se é Noite 4: "You're halfway. Your sleep is already changing." Se completou tudo: "You did it. Now let's keep it going."
+
+Área central — Card da Noite Atual Card grande, visual, clicável: Título: "Night 3 — Food, Caffeine & Alcohol" Subtítulo: "What you eat and drink is sabotaging your sleep. Tonight, we fix that." Ícone de status: Not started / In progress / Completed. Botão: "Start Night 3" ou "Continue" ou "Review".
+
+Área inferior — Acesso rápido a 3 seções:
+
+Card 1: "Sleep Log" — ícone de lua/calendário — leva para o diário de sono. Card 2: "Audio Library" — ícone de fone — leva para os áudios (se comprou o upsell, senão mostra preview com lock). Card 3: "My Progress" — ícone de gráfico — leva para o painel de dados/estatísticas.
+
+Menu inferior fixo (bottom nav, 4 ícones): Home (dashboard) | Sleep Log | Tonight (noite atual) | Profile.
+
+2.3 — TELA DA NOITE (Night Screen)
+Cada noite é uma tela com scroll vertical, dividida em blocos claros. A estrutura é a mesma para todas as 7 noites, mas o conteúdo muda.
+
+Bloco 1 — Vídeo principal Player de vídeo embutido. Vídeo curto de 3 a 6 minutos da Gabrielle (ou gerado por IA com a persona) falando direto pra câmera, explicando o tema da noite. Tom conversacional, como se estivesse falando com um amigo. Sem slides, sem PowerPoint, sem enrolação.
+
+Abaixo do vídeo: texto resumo do que foi falado (para quem prefere ler ou está sem áudio), em formato de parágrafos curtos.
+
+Bloco 2 — Tonight's Mission (Tarefa da Noite) Card destacado com fundo diferenciado (cor accent). Lista a tarefa específica para aquela noite.
+
+Exemplo (Noite 3): "Tonight's Mission: Cut all caffeine after 2pm. Have your last meal at least 2 hours before bed. If you drink alcohol tonight, stop at least 3 hours before bed. Check each item below when done."
+
+Abaixo: checklist interativa com 3–5 itens que o usuário marca como feito. Cada item tem um toggle ou checkbox: ☐ No caffeine after 2pm ☐ Last meal 2+ hours before bed ☐ No alcohol 3 hours before bed ☐ Drank at least 500ml of water today
+
+Quando todos estão marcados, aparece animação leve (confetti sutil ou check verde grande) e botão "Night 3 Complete ✓".
+
+Bloco 3 — Quick Tip (Opcional) Card menor com uma dica contextual rápida ligada ao perfil do usuário.
+
+Exemplo para perfil "Party Recoverer": "If you went out last night, eat something with magnesium today (banana, dark chocolate, spinach). It helps your body recover faster."
+
+Exemplo para perfil "Overthinker": "Write down 3 things that are on your mind right now. Just getting them out of your head makes it easier to let go at night."
+
+Bloco 4 — Tonight's Audio (Preview ou Acesso) Se o usuário comprou o pacote de áudios (upsell), aparece o player do áudio da noite: "Night 3 — Body Scan for Digestion & Relaxation" (8 min).
+
+Se não comprou, aparece preview de 30 segundos + CTA: "Unlock all 7 night audios + 5 bonus tracks → €X".
+
+Bloco 5 — Set Your Reminder Opção de definir um lembrete por push notification ou WhatsApp para começar a rotina noturna. O usuário escolhe o horário. A plataforma envia uma mensagem tipo: "Hey, it's 10pm. Time to start your Night 3 routine. Open the app →".
+
+2.4 — SLEEP LOG (Diário / Planilha de Sono)
+Esta é a feature que você pediu especificamente — e é uma das mais importantes do produto inteiro. É baseada no Consensus Sleep Diary, que é o padrão usado em pesquisa e clínica de sono, mas simplificada para o público leigo e adaptada para mobile.
+
+Como funciona:
+
+O Sleep Log tem dois momentos de preenchimento:
+
+MOMENTO 1 — Night Check-in (antes de dormir) Aparece como pop-up suave ou card no dashboard quando o usuário abre o app à noite (ou no horário do lembrete). São 3–4 campos rápidos:
+
+Campo 1: "What time are you getting into bed?" — Seletor de hora (tipo relógio mobile). Campo 2: "What time are you trying to fall asleep?" — Seletor de hora. (Pode ser diferente de quando deitou, porque muita gente deita e fica no celular.) Campo 3: "How are you feeling right now?" — Escala de 5 ícones (faces): Wired/Anxious → Restless → Neutral → Calm → Very Relaxed. Campo 4 (opcional): "Anything worth noting?" — Campo de texto livre, 1 linha. Para coisas tipo "had 3 coffees today", "went out drinking", "stressful day at work".
+
+Botão: "Good night. See you in the morning."
+
+MOMENTO 2 — Morning Check-in (ao acordar) Aparece como primeira coisa quando o usuário abre o app de manhã (ou via push notification). Campos:
+
+Campo 1: "What time did you wake up for the last time?" — Seletor de hora. Campo 2: "What time did you actually get out of bed?" — Seletor de hora. Campo 3: "How long do you think it took you to fall asleep?" — Opções rápidas: < 5 min / 5–15 min / 15–30 min / 30–60 min / > 1 hour. Campo 4: "Did you wake up during the night?" — No / Once / 2–3 times / More than 3 times. Campo 5: "If yes, roughly how long were you awake total?" — Opções: < 10 min / 10–30 min / 30–60 min / > 1 hour. Campo 6: "How would you rate your sleep quality?" — Escala de 1 a 5 estrelas (ou faces): Very poor → Poor → Fair → Good → Very good. Campo 7: "How rested do you feel right now?" — Escala de 1 a 5: Not at all → Slightly → Somewhat → Well-rested → Very well-rested.
+
+Botão: "Log my sleep ☀️"
+
+O que a plataforma calcula automaticamente com esses dados:
+
+Usando os campos preenchidos, o sistema calcula e armazena:
+
+Time in Bed (TIB): diferença entre "time getting into bed" (night) e "time getting out of bed" (morning). Exemplo: deitou 23:00, levantou 7:30 → TIB = 8h30.
+
+Sleep Onset Latency (SOL): o tempo que a pessoa levou para dormir. Veio do campo "how long to fall asleep". Exemplo: 25 min.
+
+Wake After Sleep Onset (WASO): tempo total acordado durante a noite. Veio dos campos "did you wake up" + "how long awake total". Exemplo: 20 min.
+
+Total Sleep Time (TST): TIB menos SOL menos WASO menos tempo entre acordar e levantar. Exemplo: 8h30 - 25min - 20min - 15min = ~7h30.
+
+Sleep Efficiency (SE): a métrica mais importante. Fórmula: (TST / TIB) × 100. Exemplo: (7.5 / 8.5) × 100 = 88%. Eficiência saudável é acima de 85%.
+
+Sleep Quality Score: média ponderada de: sleep quality rating (campo 6), restfulness rating (campo 7) e sleep efficiency calculada. Escala de 0 a 100. Este é o "Sleep Score" que o usuário vê como número principal.
+
+O usuário não precisa saber dessas fórmulas. Ele vê o resultado visual.
+
+2.5 — MY PROGRESS (Painel de Estatísticas)
+Tela acessível pelo dashboard ou pelo menu inferior. Mostra a evolução do sono ao longo dos 7 dias (e depois, se o usuário continuar logando).
+
+Seção 1 — Sleep Score (destaque principal) Número grande no topo: "Your Sleep Score: 74/100". Cor muda conforme faixa: vermelho (< 50), amarelo (50–69), verde claro (70–84), verde forte (85+). Abaixo: "Night 1: 58 → Tonight: 74. You're improving."
+
+Seção 2 — Gráfico de 7 dias Gráfico de barras ou linha mostrando a evolução diária de: Sleep Score (linha principal) Total Sleep Time (barras) Sleep Efficiency % (linha secundária pontilhada)
+
+Cada dia é clicável: ao tocar, abre um popup com os detalhes daquele dia (todos os campos que preencheu + cálculos).
+
+Seção 3 — Streak & Consistency "Nights logged: 5/7" "Current streak: 5 nights in a row" Ícone de fogo ou lua crescente conforme a streak.
+
+Seção 4 — Averages (após 7 dias) Card com médias: "Avg. time to fall asleep: 22 min" "Avg. total sleep: 7h 12min" "Avg. sleep efficiency: 84%" "Avg. wake-ups per night: 1.4" "Avg. sleep quality: 3.8/5"
+
+Seção 5 — Insights gerados Mensagens automáticas baseadas nos dados: "You sleep 45 minutes more on nights when you log before midnight." "Your worst night was Saturday — you rated it 2/5. Weekend pattern?" "Your sleep efficiency went from 68% to 86% in 5 nights."
+
+Esses insights são gerados por lógica simples (não precisa de IA pesada): comparar dados entre dias, identificar padrões de dia da semana, horário, etc.
+
+2.6 — SLEEP LOG HISTORY (Planilha Completa)
+Dentro da seção Sleep Log, o usuário tem acesso a uma visão de calendário/tabela com todo o histórico.
+
+Visão Calendário: cada dia do mês é um quadrado colorido (verde = sono bom, amarelo = médio, vermelho = ruim, cinza = não logou). Ao tocar no dia, abre o detalhe.
+
+Visão Lista/Tabela: formato scroll vertical com cards por dia: "Monday, April 7 — Bed: 23:15 → Up: 7:00 | Slept: 6h 48min | Score: 72 | Quality: Fair"
+
+Export: botão para exportar dados como PDF ou CSV. Isso é útil para quem quer levar os dados para um médico ou terapeuta, e também é um diferencial de produto — plataformas maiores como Sleep Reset oferecem isso.
+
+2.7 — PROFILE / SETTINGS
+Sleep Profile: mostra o tipo de perfil gerado no onboarding (The Overthinker, etc.) com opção de refazer o quiz a qualquer momento.
+
+Reminder Settings: definir horários dos lembretes (night check-in e morning check-in).
+
+Notification Preferences: push, email, WhatsApp (se integrado).
+
+Account: email, senha, dados pessoais.
+
+Subscription: o que o usuário comprou, status do acesso, opção de upgrade.
+
+3. CONTEÚDO DAS 7 NOITES (Detalhado)
+Cada noite segue a mesma estrutura (vídeo + missão + checklist + tip + áudio), mas com conteúdo diferente.
+
+Night 1 — The Anchor (Horário fixo)
+Conceito: a coisa mais importante para regular o sono é acordar sempre no mesmo horário. Não é "dormir cedo" — é ter uma âncora de horário.
+
+Vídeo: Gabrielle explica por que o horário de acordar importa mais que o de dormir. Fala sobre ritmo circadiano de forma simples ("seu corpo tem um relógio interno; se você muda o alarme todo dia, ele nunca sabe quando é hora de dormir").
+
+Missão: escolher um horário fixo de acordar (inclusive fim de semana) e colocar alarme. Não mudar por pelo menos 7 dias.
+
+Checklist: ☐ Escolhi meu horário de acordar: [campo editável] / ☐ Coloquei alarme no celular / ☐ Comprometo a manter por 7 dias, inclusive sábado e domingo.
+
+Tip (Overthinker): "I know weekends feel sacred. But one consistent week will do more for your sleep than sleeping in ever did."
+
+Tip (Party Recoverer): "Even after a late Saturday, set the alarm. You'll feel rough for one day, but your Sunday night sleep will be completely different."
+
+Night 2 — The Shutdown (Telas e luz)
+Conceito: a tela do celular à noite engana o cérebro e atrasa a produção de melatonina. O "digital curfew" é a segunda peça mais importante.
+
+Vídeo: Gabrielle mostra o efeito da luz azul no sono, fala sobre como scrollar o TikTok às 2am é o pior hábito que existe, e propõe o "60-minute shutdown": 60 minutos antes de dormir, celular vai para modo avião ou fica em outro cômodo.
+
+Missão: definir horário de shutdown digital (60 min antes de deitar). Substituir tela por alguma atividade: ler, stretching, tomar chá, arrumar coisas, conversar.
+
+Checklist: ☐ Defini meu horário de shutdown: [campo] / ☐ Celular fora do quarto ou em modo avião / ☐ Fiz algo no lugar: [campo texto livre] / ☐ Quarto com luz baixa ou desligada.
+
+Night 3 — The Fuel (Comida, cafeína e álcool)
+Conceito: cafeína tem meia-vida de 5–6 horas; álcool fragmenta o sono; comer pesado à noite atrapalha a digestão e o descanso.
+
+Vídeo: Gabrielle explica os 3 sabotadores alimentares do sono. Fala dos horários de corte: cafeína até 14h, última refeição 2–3h antes, álcool 3h antes. Dá exemplos de janta "amiga do sono" (leve, com triptofano, magnésio).
+
+Missão: seguir os horários de corte naquela noite.
+
+Checklist: ☐ No caffeine after 2pm / ☐ Last meal at least 2h before bed / ☐ If drinking, stopped 3h before bed / ☐ Drank water throughout the day.
+
+Night 4 — The Cave (Ambiente do quarto)
+Conceito: o quarto precisa ser escuro, fresco e silencioso. Temperatura ideal entre 16–19°C. Luz, ruído e desconforto são sabotadores invisíveis.
+
+Vídeo: Gabrielle faz um "room audit" e mostra o que mudar: cortinas blackout, tirar TV, baixar aquecimento, cobertores certos, ruído branco se necessário.
+
+Missão: fazer a "auditoria do quarto" e ajustar o que puder.
+
+Checklist: ☐ Room is dark (blackout or eye mask) / ☐ Temperature is cool (16–19°C) / ☐ Phone is away from bed / ☐ No TV or bright lights in bedroom / ☐ Comfortable pillow and bedding.
+
+Night 5 — The Download (Mente acelerada)
+Conceito: a mente que não para à noite precisa de um ritual de "download" antes de dormir. Técnicas: brain dump (escrever tudo que está na cabeça), lista de preocupações com "next action", respiração 4-7-8, body scan.
+
+Vídeo: Gabrielle fala sobre como o cérebro não sabe a diferença entre "resolver um problema" e "pensar sobre um problema", e mostra como o "brain dump" em papel resolve 80% dos pensamentos intrusivos. Demonstra a respiração 4-7-8 ao vivo.
+
+Missão: fazer o brain dump + respiração antes de deitar.
+
+Checklist: ☐ Wrote down everything on my mind (paper or phone notes, then phone away) / ☐ For each worry, wrote one "next action" I can take tomorrow / ☐ Did 4-7-8 breathing (4 cycles minimum) / ☐ Lay down without trying to "force" sleep.
+
+Night 6 — The Protocol (Juntar tudo)
+Conceito: agora o usuário tem todas as peças — horário, shutdown, alimentação, ambiente, mente. A Noite 6 é sobre montar o protocolo completo como uma sequência: "seu ritual dos próximos 60–90 minutos antes de dormir".
+
+Vídeo: Gabrielle monta o protocolo passo a passo com horários exemplo. Mostra que não é sobre fazer tudo perfeito, é sobre ter uma sequência que o corpo começa a associar com "hora de dormir".
+
+Missão: seguir o protocolo completo pela primeira vez.
+
+Checklist: ☐ Started shutdown at [horário] / ☐ Had last meal/caffeine on time / ☐ Did room check / ☐ Did brain dump / ☐ Did breathing exercise / ☐ In bed at target time / ☐ No phone in bed.
+
+Night 7 — The Lock-In (Revisar e fixar)
+Conceito: revisar o progresso, olhar os dados do Sleep Log, identificar o que funcionou e o que não, e escolher os 3 hábitos que vai manter como rotina fixa.
+
+Vídeo: Gabrielle faz uma "review" mostrando o que muda em 7 dias, celebra o progresso, e fala sobre o que vem depois (manutenção, áudios, coaching).
+
+Missão: revisar dados, escolher 3 hábitos fixos, planejar as próximas 2 semanas.
+
+Checklist: ☐ Reviewed my sleep log and stats / ☐ Identified my top 3 habits to keep / ☐ Set reminders for those habits / ☐ Decided if I want to continue with audios or coaching (CTA para upsell).
+
+4. SISTEMA DE NOTIFICAÇÕES E LEMBRETES
+A plataforma envia lembretes automatizados nos seguintes momentos:
+
+Lembrete noturno (horário definido pelo usuário, padrão: 60 min antes do horário de dormir): "Time to start your night routine. Open Night [X] →"
+
+Lembrete matinal (horário definido pelo usuário, padrão: 15 min depois do alarme): "Good morning. How did you sleep? Log it now →"
+
+Nudge de consistência (se não logou ontem): "You missed last night's log. It takes 30 seconds. Keep your streak going →"
+
+Nudge de progresso (a cada 3 noites completas): "You've completed 3 nights. Your sleep efficiency went up 12%. Keep going →"
+
+Nudge pós-Night 7 (1 dia depois de completar): "You finished the 7-Night Reset. Want to keep tracking and go deeper? Check out [upsell] →"
+
+Canais: push notification (webapp PWA) + WhatsApp (via integração com seu chatbot/API). WhatsApp é o canal principal dado que seu funil já opera lá.
+
+5. DESIGN E UX GUIDELINES
+Tema: dark mode por padrão (o usuário usa à noite; tela clara é contraproducente). Tons de azul escuro, roxo profundo, com accent em verde suave ou dourado para botões e progresso.
+
+Tipografia: sans-serif moderna, legível em tamanho grande. Hierarquia clara: títulos grandes, corpo em tamanho confortável para ler deitado no escuro.
+
+Animações: sutis. Confetti leve ao completar uma noite. Transição suave entre seções. Nada que distraia ou demore para carregar.
+
+Mobile-first: toda a UI pensada para tela de celular. Botões grandes, fáceis de tocar com uma mão. Scroll vertical simples. Nada de menus complexos ou submenus escondidos.
+
+Acessibilidade: contraste alto entre texto e fundo. Fontes ajustáveis. Áudios com descrição textual.
+
+PWA (Progressive Web App): o webapp pode ser instalado como app no celular (ícone na home screen), enviar push notifications, e funcionar parcialmente offline (conteúdo das noites cacheado).
+
+6. STACK TÉCNICA SUGERIDA (MVP)
+Frontend: Next.js ou React com Tailwind CSS (rápido de desenvolver, mobile-first nativo).
+
+Backend: Supabase (auth, database, storage) ou Firebase. Ambos permitem lançar rápido sem montar infra pesada.
+
+Vídeo hosting: Mux ou Bunny.net (player leve, adaptativo).
+
+Áudio hosting: mesmo player ou Cloudflare R2 + player customizado.
+
+Notificações: OneSignal (push) + integração WhatsApp via API (seu chatbot atual).
+
+Pagamentos: Stripe (funciona na Irlanda, suporta one-time e subscription).
+
+Analytics: Mixpanel ou PostHog (para rastrear: completion rate por noite, log rate, churn, conversão de upsell).
+
+7. MÉTRICAS DE SUCESSO DO PRODUTO
+As métricas que importam medir desde o dia 1:
+
+Completion Rate por Noite: % de usuários que completam Night 1, Night 2, etc. O drop-off entre noites mostra onde o conteúdo ou a experiência falha.
+
+Log Rate: % de usuários que preenchem o Sleep Log (noturno e matinal). Se o log rate cai, o engajamento cai, e a chance de upsell despenca.
+
+Sleep Score médio: evolução do score ao longo dos 7 dias. Se o score sobe de forma consistente, o produto funciona e vira prova social.
+
+Streak médio: quantas noites consecutivas o usuário completa. Streak alta = retenção alta = chance de upsell alta.
+
+Upsell conversion rate: % de usuários que compram áudios, coaching ou físico após completar (ou durante) o programa.
+
+NPS / Satisfaction: pergunta simples no final do Night 7: "Would you recommend this to a friend?" (1–10).
+
+8. O QUE NÃO PRECISA TER NA V1
+Não precisa ter: app nativo iOS/Android (PWA resolve), personalização por IA generativa (personalização por perfil estático basta), integração com wearables (dados do diário são suficientes), chat ao vivo, gamificação complexa (badges, levels, etc.), modo offline completo, multi-idioma (inglês primeiro, só Irlanda).
+
+Tudo isso pode entrar na v2, v3, conforme você validar que o produto vende e retém.
+
+Esse é o briefing completo do produto principal. Cobre arquitetura de telas, fluxo do usuário, conteúdo de cada noite, diário de sono com todos os campos e cálculos, painel de progresso, design, stack técnica 
