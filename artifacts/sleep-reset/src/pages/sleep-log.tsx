@@ -195,8 +195,13 @@ export default function SleepLog() {
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayLog = logsArray.find(l => l.logDate === todayStr);
 
-  const needsMorningCheckin = todayLog && !todayLog.morningComplete;
-  const showEveningForm = !todayLog;
+  const pendingMorningLog = logsArray
+    .slice()
+    .sort((a, b) => b.logDate.localeCompare(a.logDate))
+    .find(l => !l.morningComplete);
+
+  const needsMorningCheckin = !!pendingMorningLog;
+  const showEveningForm = !todayLog && !needsMorningCheckin;
 
   const handleEveningSubmit = async () => {
     if (!userId) return;
@@ -219,12 +224,12 @@ export default function SleepLog() {
   };
 
   const handleMorningSubmit = async () => {
-    if (!userId || !todayLog) return;
+    if (!userId || !pendingMorningLog) return;
     setSubmitting(true);
     try {
       await updateMorning.mutateAsync({
         userId,
-        logId: todayLog.id,
+        logId: pendingMorningLog.id,
         data: {
           finalWakeTimeMinutes: timeToMinutes(wakeTime),
           outOfBedMinutes: timeToMinutes(outOfBedTime),
@@ -314,13 +319,17 @@ export default function SleepLog() {
         </Card>
       )}
 
-      {needsMorningCheckin && (
+      {needsMorningCheckin && pendingMorningLog && (
         <Card className="p-6 space-y-6 bg-card border-primary/50 shadow-lg shadow-primary/5">
           <div className="flex items-center gap-3">
             <Sun className="w-6 h-6 text-primary" />
             <div>
               <h2 className="text-xl font-medium">Morning Check-in</h2>
-              <p className="text-sm text-muted-foreground">Good morning. How did you sleep?</p>
+              <p className="text-sm text-muted-foreground">
+                {pendingMorningLog.logDate === todayStr
+                  ? "Good morning. How did you sleep?"
+                  : `For ${format(new Date(pendingMorningLog.logDate + "T00:00:00"), "EEE, MMM d")} — how did you sleep?`}
+              </p>
             </div>
           </div>
           <div className="space-y-5">
@@ -381,33 +390,42 @@ export default function SleepLog() {
         </Card>
       )}
 
-      {todayLog && todayLog.morningComplete && (
-        <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 text-center space-y-2">
-          <CheckCircle2 className="w-8 h-8 text-primary mx-auto" />
-          <h3 className="font-medium text-foreground">All caught up</h3>
-          <p className="text-sm text-muted-foreground">You've logged your sleep for today.</p>
-          {todayLog.sleepScore !== null && todayLog.sleepScore !== undefined && (
-            <div className="pt-2 flex justify-center gap-6 text-sm">
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground">Score</p>
-                <p className="font-bold text-primary">{Math.round(todayLog.sleepScore)}</p>
+      {!needsMorningCheckin && !showEveningForm && (() => {
+        const recentLog = logsArray
+          .slice()
+          .sort((a, b) => b.logDate.localeCompare(a.logDate))
+          .find(l => l.morningComplete);
+        if (!recentLog) return null;
+        return (
+          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 text-center space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-primary mx-auto" />
+            <h3 className="font-medium text-foreground">All caught up</h3>
+            <p className="text-sm text-muted-foreground">
+              Last logged: {format(new Date(recentLog.logDate + "T00:00:00"), "EEE, MMM d")}
+            </p>
+            {recentLog.sleepScore !== null && recentLog.sleepScore !== undefined && (
+              <div className="pt-2 flex justify-center gap-6 text-sm">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Score</p>
+                  <p className="font-bold text-primary">{Math.round(recentLog.sleepScore)}</p>
+                </div>
+                {recentLog.totalSleepMinutes && (
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground">TST</p>
+                    <p className="font-bold">{formatDuration(recentLog.totalSleepMinutes)}</p>
+                  </div>
+                )}
+                {recentLog.sleepEfficiencyPct && (
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground">Efficiency</p>
+                    <p className="font-bold">{Math.round(recentLog.sleepEfficiencyPct)}%</p>
+                  </div>
+                )}
               </div>
-              {todayLog.totalSleepMinutes && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">TST</p>
-                  <p className="font-bold">{formatDuration(todayLog.totalSleepMinutes)}</p>
-                </div>
-              )}
-              {todayLog.sleepEfficiencyPct && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Efficiency</p>
-                  <p className="font-bold">{Math.round(todayLog.sleepEfficiencyPct)}%</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        );
+      })()}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
