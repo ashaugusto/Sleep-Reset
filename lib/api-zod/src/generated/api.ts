@@ -19,6 +19,10 @@ export const HealthCheckResponse = zod.object({
  * @summary Create or update user profile
  */
 export const CreateUserBody = zod.object({
+  id: zod
+    .string()
+    .optional()
+    .describe("Client-generated UUID to use as the user's identity"),
   email: zod.string(),
   name: zod.string().optional(),
 });

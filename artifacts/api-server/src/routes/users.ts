@@ -14,10 +14,14 @@ const router: IRouter = Router();
 router.post("/users", async (req, res) => {
   const body = CreateUserBody.parse(req.body);
 
+  const whereClause = body.id
+    ? eq(usersTable.id, body.id)
+    : eq(usersTable.email, body.email);
+
   const existing = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.email, body.email))
+    .where(whereClause)
     .limit(1);
 
   if (existing.length > 0) {
@@ -28,7 +32,7 @@ router.post("/users", async (req, res) => {
   const [user] = await db
     .insert(usersTable)
     .values({
-      id: randomUUID(),
+      id: body.id ?? randomUUID(),
       email: body.email,
       name: body.name ?? null,
     })

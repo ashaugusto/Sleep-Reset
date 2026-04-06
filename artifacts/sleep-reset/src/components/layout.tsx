@@ -1,6 +1,8 @@
 import { Link, useRoute } from "wouter";
 import { Home, Moon, PlayCircle, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserId } from "@/hooks/use-user-id";
+import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
 
 export function BottomNav() {
   const [isHome] = useRoute("/dashboard");
@@ -8,13 +10,19 @@ export function BottomNav() {
   const [isTonight] = useRoute("/night/:id");
   const [isProfile] = useRoute("/profile");
 
+  const userId = useUserId();
+  const { data: user } = useGetUser(userId || "", {
+    query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId || "") }
+  });
+
+  const currentNight = user?.currentNight ?? 1;
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t border-border pb-safe">
       <div className="max-w-md mx-auto flex items-center justify-around h-16 px-4">
         <NavItem href="/dashboard" icon={<Home className="w-5 h-5" />} label="Home" isActive={isHome} />
         <NavItem href="/sleep-log" icon={<Moon className="w-5 h-5" />} label="Sleep Log" isActive={isSleepLog} />
-        {/* We can link Tonight to the dashboard or let the dashboard link to it, for now link to /night/1 as fallback or handle dynamic routing */}
-        <NavItem href="/dashboard" icon={<PlayCircle className="w-5 h-5" />} label="Tonight" isActive={isTonight} />
+        <NavItem href={`/night/${currentNight}`} icon={<PlayCircle className="w-5 h-5" />} label="Tonight" isActive={isTonight} />
         <NavItem href="/profile" icon={<UserIcon className="w-5 h-5" />} label="Profile" isActive={isProfile} />
       </div>
     </div>

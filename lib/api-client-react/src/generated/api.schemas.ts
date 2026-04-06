@@ -10,6 +10,8 @@ export interface HealthStatus {
 }
 
 export interface CreateUserBody {
+  /** Client-generated UUID to use as the user's identity */
+  id?: string;
   email: string;
   name?: string;
 }

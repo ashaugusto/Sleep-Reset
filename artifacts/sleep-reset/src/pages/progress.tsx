@@ -1,7 +1,16 @@
 import { useUserId } from "@/hooks/use-user-id";
 import { useGetProgress, getGetProgressQueryKey } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Line, ComposedChart } from "recharts";
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -37,40 +46,72 @@ export default function Progress() {
   };
 
   const chartData = progress.dailyStats.map(stat => ({
-    day: format(new Date(stat.date), "EEE"),
-    score: stat.sleepScore || 0,
-    duration: stat.totalSleepMinutes ? stat.totalSleepMinutes / 60 : 0,
+    day: format(new Date(stat.date + "T00:00:00"), "EEE"),
+    score: stat.sleepScore ? Math.round(stat.sleepScore) : null,
+    tst: stat.totalSleepMinutes ? Math.round(stat.totalSleepMinutes / 60 * 10) / 10 : null,
+    efficiency: stat.sleepEfficiencyPct ? Math.round(stat.sleepEfficiencyPct) : null,
   })).slice(-7);
 
   return (
     <div className="p-6 space-y-8 pb-32">
       <div className="text-center space-y-2 mt-4">
         <h1 className={cn("text-6xl font-serif transition-colors", scoreColor(progress.currentSleepScore))}>
-          {progress.currentSleepScore || "--"}
+          {progress.currentSleepScore ? Math.round(progress.currentSleepScore) : "--"}
         </h1>
         <p className="font-medium text-foreground tracking-wide uppercase text-xs">Current Sleep Score</p>
         {progress.firstSleepScore && progress.currentSleepScore && (
           <p className="text-sm text-muted-foreground mt-2">
-            Night 1: {progress.firstSleepScore} → Tonight: {progress.currentSleepScore}. 
+            Night 1: {Math.round(progress.firstSleepScore)} → Now: {Math.round(progress.currentSleepScore)}.
             {progress.currentSleepScore > progress.firstSleepScore ? " You're improving." : " Keep going."}
           </p>
         )}
       </div>
 
-      <div className="h-64 w-full mt-8 bg-card border border-card-border p-4 rounded-3xl">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData}>
-            <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis yAxisId="left" hide />
-            <YAxis yAxisId="right" orientation="right" hide />
-            <Tooltip 
-              cursor={{fill: 'hsl(var(--secondary))', opacity: 0.5}}
-              contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }} 
-            />
-            <Bar yAxisId="left" dataKey="duration" fill="hsl(var(--primary))" radius={[4,4,0,0]} opacity={0.8} />
-            <Line yAxisId="right" type="monotone" dataKey="score" stroke="hsl(var(--foreground))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--background))" }} />
-          </ComposedChart>
-        </ResponsiveContainer>
+      <div className="bg-card border border-card-border p-4 rounded-3xl">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4 px-1">Last 7 Nights</p>
+        <div className="h-56 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -8 }}>
+              <XAxis
+                dataKey="day"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis yAxisId="tst" hide domain={[0, 12]} />
+              <YAxis yAxisId="pct" orientation="right" hide domain={[0, 100]} />
+              <Tooltip
+                cursor={{ fill: "hsl(var(--secondary))", opacity: 0.5 }}
+                contentStyle={{
+                  backgroundColor: "hsl(var(--popover))",
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "12px",
+                  color: "hsl(var(--foreground))",
+                  fontSize: "12px",
+                }}
+                formatter={(value: number, name: string) => {
+                  if (name === "tst") return [`${value}h`, "TST"];
+                  if (name === "efficiency") return [`${value}%`, "Efficiency"];
+                  if (name === "score") return [value, "Score"];
+                  return [value, name];
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: "11px", color: "hsl(var(--muted-foreground))" }}
+                formatter={(value) => {
+                  if (value === "tst") return "TST (hrs)";
+                  if (value === "efficiency") return "Efficiency %";
+                  if (value === "score") return "Sleep Score";
+                  return value;
+                }}
+              />
+              <Bar yAxisId="tst" dataKey="tst" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.7} />
+              <Line yAxisId="pct" type="monotone" dataKey="efficiency" stroke="hsl(var(--foreground))" strokeWidth={1.5} strokeDasharray="4 2" dot={{ r: 3, fill: "hsl(var(--background))", stroke: "hsl(var(--foreground))", strokeWidth: 1.5 }} connectNulls />
+              <Line yAxisId="pct" type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2 }} connectNulls />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -84,25 +125,27 @@ export default function Progress() {
         </Card>
       </div>
 
-      {progress.logsCount >= 3 && (
+      {progress.logsCount >= 2 && (
         <div className="space-y-4">
           <h3 className="font-medium px-2">Your Averages</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card border border-card-border p-4 rounded-2xl">
               <p className="text-xs text-muted-foreground mb-1">Time to Fall Asleep</p>
-              <p className="font-medium">{progress.avgSleepLatencyMinutes ? `${Math.round(progress.avgSleepLatencyMinutes)}m` : "--"}</p>
+              <p className="font-medium">{progress.avgSleepLatencyMinutes ? `${Math.round(progress.avgSleepLatencyMinutes)} min` : "--"}</p>
             </div>
             <div className="bg-card border border-card-border p-4 rounded-2xl">
               <p className="text-xs text-muted-foreground mb-1">Total Sleep</p>
-              <p className="font-medium">{progress.avgTotalSleepMinutes ? `${Math.floor(progress.avgTotalSleepMinutes/60)}h ${Math.round(progress.avgTotalSleepMinutes%60)}m` : "--"}</p>
+              <p className="font-medium">{progress.avgTotalSleepMinutes ? `${Math.floor(progress.avgTotalSleepMinutes / 60)}h ${Math.round(progress.avgTotalSleepMinutes % 60)}m` : "--"}</p>
             </div>
             <div className="bg-card border border-card-border p-4 rounded-2xl">
               <p className="text-xs text-muted-foreground mb-1">Efficiency</p>
-              <p className="font-medium">{progress.avgSleepEfficiencyPct ? `${Math.round(progress.avgSleepEfficiencyPct)}%` : "--"}</p>
+              <p className={cn("font-medium", progress.avgSleepEfficiencyPct && progress.avgSleepEfficiencyPct >= 85 ? "text-green-500" : progress.avgSleepEfficiencyPct && progress.avgSleepEfficiencyPct >= 70 ? "text-primary" : "")}>
+                {progress.avgSleepEfficiencyPct ? `${Math.round(progress.avgSleepEfficiencyPct)}%` : "--"}
+              </p>
             </div>
             <div className="bg-card border border-card-border p-4 rounded-2xl">
               <p className="text-xs text-muted-foreground mb-1">Wake Ups</p>
-              <p className="font-medium">{progress.avgWakeCount ? Math.round(progress.avgWakeCount * 10)/10 : "--"}</p>
+              <p className="font-medium">{progress.avgWakeCount !== null && progress.avgWakeCount !== undefined ? `${Math.round(progress.avgWakeCount * 10) / 10}×` : "--"}</p>
             </div>
           </div>
         </div>
@@ -114,9 +157,7 @@ export default function Progress() {
           <div className="space-y-3">
             {progress.insights.map((insight, idx) => (
               <Card key={idx} className="p-5 bg-primary/10 border-primary/20">
-                <p className="text-sm text-primary-foreground leading-relaxed">
-                  {insight}
-                </p>
+                <p className="text-sm text-foreground leading-relaxed">{insight}</p>
               </Card>
             ))}
           </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useUserId } from "@/hooks/use-user-id";
 import { useListSleepLogs, useCreateSleepLog, useUpdateSleepLogMorning, getListSleepLogsQueryKey } from "@workspace/api-client-react";
+import type { SleepLog } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,12 +12,67 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Moon, Sun, CheckCircle2 } from "lucide-react";
+import { Moon, Sun, CheckCircle2, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function timeToMinutes(timeStr: string) {
   const [h, m] = timeStr.split(":").map(Number);
   return h * 60 + m;
+}
+
+function formatDuration(minutes: number | null | undefined) {
+  if (!minutes) return "--";
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+function exportCsv(logs: SleepLog[]) {
+  const headers = ["Date", "Bedtime", "Wake Time", "TST (min)", "Sleep Efficiency %", "Sleep Score", "Quality", "Restfulness"];
+  const rows = logs.map((l: SleepLog) => [
+    l.logDate,
+    l.bedtimeMinutes !== null ? `${Math.floor((l.bedtimeMinutes ?? 0) / 60)}:${String((l.bedtimeMinutes ?? 0) % 60).padStart(2, "0")}` : "",
+    l.finalWakeTimeMinutes !== null ? `${Math.floor((l.finalWakeTimeMinutes ?? 0) / 60)}:${String((l.finalWakeTimeMinutes ?? 0) % 60).padStart(2, "0")}` : "",
+    l.totalSleepMinutes ?? "",
+    l.sleepEfficiencyPct !== null ? `${l.sleepEfficiencyPct}` : "",
+    l.sleepScore ?? "",
+    l.sleepQuality ?? "",
+    l.restfulness ?? "",
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sleep-log.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function RatingRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <RadioGroup value={value} onValueChange={onChange} className="flex justify-between mt-2">
+        {[1, 2, 3, 4, 5].map(v => (
+          <div key={v} className="flex flex-col items-center">
+            <RadioGroupItem value={v.toString()} id={`${label}-${v}`} className="sr-only" />
+            <Label
+              htmlFor={`${label}-${v}`}
+              className={cn(
+                "w-10 h-10 rounded-full border border-border flex items-center justify-center cursor-pointer transition-colors text-sm",
+                value === v.toString() ? "bg-primary text-primary-foreground border-primary" : "hover:bg-secondary"
+              )}
+            >
+              {v}
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+        <span>Poor</span>
+        <span>Excellent</span>
+      </div>
+    </div>
+  );
 }
 
 export default function SleepLog() {
@@ -30,13 +86,11 @@ export default function SleepLog() {
   const createLog = useCreateSleepLog();
   const updateMorning = useUpdateSleepLogMorning();
 
-  // Evening Check-in state
   const [bedtime, setBedtime] = useState("22:00");
   const [sleepAttempt, setSleepAttempt] = useState("22:30");
   const [mood, setMood] = useState("3");
   const [notes, setNotes] = useState("");
 
-  // Morning Check-in state
   const [wakeTime, setWakeTime] = useState("07:00");
   const [outOfBedTime, setOutOfBedTime] = useState("07:15");
   const [latency, setLatency] = useState("15");
@@ -44,6 +98,7 @@ export default function SleepLog() {
   const [wakeDuration, setWakeDuration] = useState("10");
   const [quality, setQuality] = useState("3");
   const [restfulness, setRestfulness] = useState("3");
+  const [submitting, setSubmitting] = useState(false);
 
   if (isLoading || !logs) return <div className="p-6">Loading...</div>;
 
@@ -55,40 +110,61 @@ export default function SleepLog() {
 
   const handleEveningSubmit = async () => {
     if (!userId) return;
-    await createLog.mutateAsync({
-      userId,
-      data: {
-        logDate: todayStr,
-        bedtimeMinutes: timeToMinutes(bedtime),
-        sleepAttemptMinutes: timeToMinutes(sleepAttempt),
-        eveningMood: parseInt(mood),
-        eveningNotes: notes,
-      }
-    });
-    queryClient.invalidateQueries({ queryKey: getListSleepLogsQueryKey(userId) });
+    setSubmitting(true);
+    try {
+      await createLog.mutateAsync({
+        userId,
+        data: {
+          logDate: todayStr,
+          bedtimeMinutes: timeToMinutes(bedtime),
+          sleepAttemptMinutes: timeToMinutes(sleepAttempt),
+          eveningMood: parseInt(mood),
+          eveningNotes: notes,
+        }
+      });
+      queryClient.invalidateQueries({ queryKey: getListSleepLogsQueryKey(userId) });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleMorningSubmit = async () => {
     if (!userId || !todayLog) return;
-    await updateMorning.mutateAsync({
-      userId,
-      logId: todayLog.id,
-      data: {
-        finalWakeTimeMinutes: timeToMinutes(wakeTime),
-        outOfBedMinutes: timeToMinutes(outOfBedTime),
-        sleepLatencyMinutes: parseInt(latency),
-        wakeCount: parseInt(wakeCount),
-        wakeDurationMinutes: parseInt(wakeDuration),
-        sleepQuality: parseInt(quality),
-        restfulness: parseInt(restfulness)
-      }
-    });
-    queryClient.invalidateQueries({ queryKey: getListSleepLogsQueryKey(userId) });
+    setSubmitting(true);
+    try {
+      await updateMorning.mutateAsync({
+        userId,
+        logId: todayLog.id,
+        data: {
+          finalWakeTimeMinutes: timeToMinutes(wakeTime),
+          outOfBedMinutes: timeToMinutes(outOfBedTime),
+          sleepLatencyMinutes: parseInt(latency),
+          wakeCount: parseInt(wakeCount),
+          wakeDurationMinutes: parseInt(wakeDuration),
+          sleepQuality: parseInt(quality),
+          restfulness: parseInt(restfulness),
+        }
+      });
+      queryClient.invalidateQueries({ queryKey: getListSleepLogsQueryKey(userId) });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="p-6 space-y-8">
-      <h1 className="text-3xl font-serif">Sleep Log</h1>
+    <div className="p-6 space-y-8 pb-32">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-serif">Sleep Log</h1>
+        {logs.length > 0 && (
+          <button
+            onClick={() => exportCsv(logs as SleepLog[])}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            CSV
+          </button>
+        )}
+      </div>
 
       {showEveningForm && (
         <Card className="p-6 space-y-6 bg-card border-card-border">
@@ -99,7 +175,6 @@ export default function SleepLog() {
               <p className="text-sm text-muted-foreground">Log this right before bed.</p>
             </div>
           </div>
-
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -111,15 +186,14 @@ export default function SleepLog() {
                 <Input type="time" value={sleepAttempt} onChange={e => setSleepAttempt(e.target.value)} />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>How are you feeling right now?</Label>
               <RadioGroup value={mood} onValueChange={setMood} className="flex justify-between mt-2">
-                {[1,2,3,4,5].map(v => (
+                {[1, 2, 3, 4, 5].map(v => (
                   <div key={v} className="flex flex-col items-center">
                     <RadioGroupItem value={v.toString()} id={`mood-${v}`} className="sr-only" />
-                    <Label 
-                      htmlFor={`mood-${v}`} 
+                    <Label
+                      htmlFor={`mood-${v}`}
                       className={cn(
                         "w-10 h-10 rounded-full border border-border flex items-center justify-center cursor-pointer transition-colors",
                         mood === v.toString() ? "bg-primary text-primary-foreground border-primary" : "hover:bg-secondary"
@@ -135,17 +209,15 @@ export default function SleepLog() {
                 <span>Relaxed</span>
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>Notes (optional)</Label>
-              <Textarea 
-                placeholder="What's on your mind?" 
+              <Textarea
+                placeholder="What's on your mind?"
                 value={notes} onChange={e => setNotes(e.target.value)}
-                className="resize-none h-20" 
+                className="resize-none h-20"
               />
             </div>
-
-            <Button className="w-full" onClick={handleEveningSubmit}>
+            <Button className="w-full" onClick={handleEveningSubmit} disabled={submitting}>
               Good night
             </Button>
           </div>
@@ -161,7 +233,6 @@ export default function SleepLog() {
               <p className="text-sm text-muted-foreground">Good morning. How did you sleep?</p>
             </div>
           </div>
-
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -173,7 +244,6 @@ export default function SleepLog() {
                 <Input type="time" value={outOfBedTime} onChange={e => setOutOfBedTime(e.target.value)} />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>Time to fall asleep</Label>
               <Select value={latency} onValueChange={setLatency}>
@@ -187,7 +257,6 @@ export default function SleepLog() {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label>Times woken up</Label>
               <Select value={wakeCount} onValueChange={setWakeCount}>
@@ -195,33 +264,27 @@ export default function SleepLog() {
                 <SelectContent>
                   <SelectItem value="0">None</SelectItem>
                   <SelectItem value="1">Once</SelectItem>
-                  <SelectItem value="2">2-3 times</SelectItem>
+                  <SelectItem value="2">2–3 times</SelectItem>
                   <SelectItem value="4">More than 3</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label>Sleep Quality</Label>
-              <RadioGroup value={quality} onValueChange={setQuality} className="flex justify-between mt-2">
-                {[1,2,3,4,5].map(v => (
-                  <div key={v} className="flex flex-col items-center">
-                    <RadioGroupItem value={v.toString()} id={`q-${v}`} className="sr-only" />
-                    <Label 
-                      htmlFor={`q-${v}`} 
-                      className={cn(
-                        "w-10 h-10 rounded-full border border-border flex items-center justify-center cursor-pointer transition-colors",
-                        quality === v.toString() ? "bg-primary text-primary-foreground border-primary" : "hover:bg-secondary"
-                      )}
-                    >
-                      {v}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-
-            <Button className="w-full bg-primary text-primary-foreground" onClick={handleMorningSubmit}>
+            {parseInt(wakeCount) > 0 && (
+              <div className="space-y-2">
+                <Label>How long were you awake total? (minutes)</Label>
+                <Slider
+                  min={0}
+                  max={120}
+                  step={5}
+                  value={[parseInt(wakeDuration)]}
+                  onValueChange={([v]) => setWakeDuration(v.toString())}
+                />
+                <p className="text-sm text-muted-foreground text-center">{wakeDuration} min</p>
+              </div>
+            )}
+            <RatingRow label="Sleep Quality" value={quality} onChange={setQuality} />
+            <RatingRow label="How rested do you feel?" value={restfulness} onChange={setRestfulness} />
+            <Button className="w-full bg-primary text-primary-foreground" onClick={handleMorningSubmit} disabled={submitting}>
               Log my sleep
             </Button>
           </div>
@@ -235,7 +298,7 @@ export default function SleepLog() {
           <p className="text-sm text-muted-foreground">You've logged your sleep for today.</p>
         </div>
       )}
-      
+
       <div className="space-y-4">
         <h3 className="font-medium px-2">History</h3>
         <div className="bg-card rounded-2xl p-4 border border-card-border space-y-3">
@@ -246,19 +309,25 @@ export default function SleepLog() {
               {logs.slice().reverse().map(log => (
                 <div key={log.id} className="flex justify-between items-center p-3 rounded-xl bg-secondary/30">
                   <div>
-                    <p className="font-medium text-sm">{format(new Date(log.logDate), "MMM d, yyyy")}</p>
+                    <p className="font-medium text-sm">{format(new Date(log.logDate + "T00:00:00"), "EEE, MMM d")}</p>
                     <p className="text-xs text-muted-foreground">
-                      {log.morningComplete ? `${log.totalSleepMinutes ? Math.floor(log.totalSleepMinutes / 60) + 'h ' + (log.totalSleepMinutes % 60) + 'm' : ''}` : 'Incomplete'}
+                      {log.morningComplete
+                        ? `${formatDuration(log.totalSleepMinutes)} · ${log.sleepEfficiencyPct ? Math.round(log.sleepEfficiencyPct) + "% efficiency" : ""}`
+                        : "Incomplete"}
                     </p>
                   </div>
-                  {log.sleepScore && (
+                  {log.sleepScore !== null && log.sleepScore !== undefined ? (
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm",
                       log.sleepScore >= 85 ? "bg-green-500/20 text-green-500" :
-                      log.sleepScore >= 70 ? "bg-primary/20 text-primary" :
-                      "bg-destructive/20 text-destructive"
+                        log.sleepScore >= 70 ? "bg-primary/20 text-primary" :
+                          "bg-destructive/20 text-destructive"
                     )}>
-                      {log.sleepScore}
+                      {Math.round(log.sleepScore)}
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center border border-border text-muted-foreground text-xs">
+                      {log.morningComplete ? "--" : "·"}
                     </div>
                   )}
                 </div>

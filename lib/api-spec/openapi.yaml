@@ -255,6 +255,9 @@ components:
     CreateUserBody:
       type: object
       properties:
+        id:
+          type: string
+          description: Client-generated UUID to use as the user's identity
         email:
           type: string
         name:
