@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { PlayCircle, CheckCircle2, Lock, Bell } from "lucide-react";
-import { useState, useEffect } from "react";
+import { PlayCircle, PauseCircle, CheckCircle2, Headphones, Bell } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -267,6 +267,42 @@ export default function Night() {
   const sleepProfile = user?.sleepProfileType || "unknown";
   const tip = (content.tips as Record<string, string>)[sleepProfile] || (content.tips as Record<string, string>)["default"] || "Keep going.";
 
+  const AUDIO_DURATION = 120;
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioListened, setAudioListened] = useState(false);
+  const audioTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const toggleAudio = () => {
+    if (audioPlaying) {
+      clearInterval(audioTimer.current!);
+      setAudioPlaying(false);
+    } else {
+      setAudioPlaying(true);
+      audioTimer.current = setInterval(() => {
+        setAudioProgress(prev => {
+          if (prev >= AUDIO_DURATION) {
+            clearInterval(audioTimer.current!);
+            setAudioPlaying(false);
+            setAudioListened(true);
+            return AUDIO_DURATION;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    return () => { if (audioTimer.current) clearInterval(audioTimer.current); };
+  }, []);
+
+  const formatAudioTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className="p-6 space-y-8 pb-32 relative">
       <AnimatePresence>
@@ -286,12 +322,45 @@ export default function Night() {
         )}
       </AnimatePresence>
 
-      <div className="aspect-video bg-card border border-card-border rounded-2xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
-        <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-        <div className="flex flex-col items-center space-y-3 z-10">
-          <PlayCircle className="w-12 h-12 text-primary" />
-          <span className="text-sm font-medium">Gabrielle's message for Night {nightId}</span>
+      <div
+        className={cn(
+          "bg-card border rounded-2xl p-6 flex flex-col items-center space-y-4 cursor-pointer transition-all",
+          audioPlaying ? "border-primary/50 shadow-lg shadow-primary/10" : "border-card-border",
+          audioListened && "border-primary/30"
+        )}
+        onClick={toggleAudio}
+      >
+        <div className="flex items-center gap-3 self-start">
+          {audioListened
+            ? <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+            : <Headphones className="w-5 h-5 text-primary flex-shrink-0" />
+          }
+          <span className="text-sm font-medium">Gabrielle's message — Night {nightId}</span>
         </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
+          className="w-14 h-14 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center hover:bg-primary/20 transition-colors"
+        >
+          {audioPlaying
+            ? <PauseCircle className="w-8 h-8 text-primary" />
+            : <PlayCircle className="w-8 h-8 text-primary" />
+          }
+        </button>
+        <div className="w-full space-y-1">
+          <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-primary h-full rounded-full transition-all duration-1000"
+              style={{ width: `${(audioProgress / AUDIO_DURATION) * 100}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{formatAudioTime(audioProgress)}</span>
+            <span>{formatAudioTime(AUDIO_DURATION)}</span>
+          </div>
+        </div>
+        {audioListened && (
+          <p className="text-xs text-primary font-medium self-start">Listened ✓</p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -372,13 +441,44 @@ export default function Night() {
         saving={savingReminder}
       />
 
-      <div className="bg-secondary/30 rounded-2xl p-5 border border-secondary flex flex-col items-center text-center space-y-3 opacity-80">
-        <span className="text-xs bg-background px-2 py-1 rounded flex items-center gap-1 text-muted-foreground">
-          <Lock className="w-3 h-3" /> Premium
-        </span>
-        <h4 className="font-medium">Deep Sleep Audio Protocol</h4>
-        <p className="text-xs text-muted-foreground">Unlock guided audio sessions and sleep soundscapes designed for each night's theme.</p>
-        <Button variant="outline" size="sm" className="w-full mt-2" disabled>Unlock Audio</Button>
+      <div className={cn(
+        "rounded-2xl p-5 border flex flex-col items-center text-center space-y-3 transition-all duration-500",
+        allChecked
+          ? "bg-primary/5 border-primary/30"
+          : "bg-secondary/30 border-secondary opacity-75"
+      )}>
+        {allChecked ? (
+          <>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex items-center gap-1 font-medium">
+              <Headphones className="w-3 h-3" /> Unlocked
+            </span>
+            <h4 className="font-medium">Deep Sleep Audio Protocol</h4>
+            <p className="text-xs text-muted-foreground">
+              You completed tonight's mission. Here's a sleep soundscape tailored to Night {nightId}: {content.title}.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 border-primary/40 text-primary hover:bg-primary/10"
+              onClick={toggleAudio}
+            >
+              {audioPlaying ? "Pause Soundscape" : "Play Soundscape"}
+            </Button>
+          </>
+        ) : (
+          <>
+            <span className="text-xs bg-background px-2 py-1 rounded flex items-center gap-1 text-muted-foreground">
+              <Bell className="w-3 h-3" /> Locked
+            </span>
+            <h4 className="font-medium">Deep Sleep Audio Protocol</h4>
+            <p className="text-xs text-muted-foreground">
+              Complete tonight's checklist to unlock the guided soundscape for Night {nightId}.
+            </p>
+            <Button variant="outline" size="sm" className="w-full mt-2" disabled>
+              Complete checklist to unlock
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

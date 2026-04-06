@@ -1,0 +1,18 @@
+{
+  "name": "7-Night Sleep Reset",
+  "short_name": "Sleep Reset",
+  "description": "A 7-night guided program to reset your sleep",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
