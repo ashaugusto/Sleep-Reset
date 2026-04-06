@@ -82,10 +82,10 @@ router.put("/users/:userId/profile", async (req, res) => {
     updates.reminderMorningMinutes = body.reminderMorningMinutes;
 
   if (
-    body.sleepDisruptorPrimary &&
-    body.sleepDisruptorFrequency &&
-    body.usualBedtimeMinutes &&
-    body.neededWakeUpMinutes
+    body.sleepDisruptorPrimary !== undefined &&
+    body.sleepDisruptorFrequency !== undefined &&
+    body.usualBedtimeMinutes !== undefined &&
+    body.neededWakeUpMinutes !== undefined
   ) {
     updates.onboardingComplete = true;
   }
