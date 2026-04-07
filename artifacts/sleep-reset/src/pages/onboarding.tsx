@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useUserId } from "@/hooks/use-user-id";
-import { useCreateUser, useUpdateSleepProfile } from "@workspace/api-client-react";
+import { useClerkUser } from "@/hooks/use-clerk-user";
+import { useUpdateSleepProfile } from "@workspace/api-client-react";
 import { SLEEP_TYPES, SleepTypeId } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -42,7 +42,7 @@ function formatTime(minutes: number) {
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
-  const userId = useUserId();
+  const { userId } = useClerkUser();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,6 @@ export default function Onboarding() {
   const [q4, setQ4] = useState<number>(420);
   const [q5, setQ5] = useState<string[]>([]);
 
-  const createUser = useCreateUser();
   const updateProfile = useUpdateSleepProfile();
 
   const deriveSleepProfileType = (disruptor: string): SleepTypeId => {
@@ -74,17 +73,8 @@ export default function Onboarding() {
     setError(null);
 
     try {
-      const createdUser = await createUser.mutateAsync({
-        data: {
-          id: userId,
-          email: `user-${userId}@sleep-reset.local`,
-        },
-      });
-
-      localStorage.setItem("userId", createdUser.id);
-
       await updateProfile.mutateAsync({
-        userId: createdUser.id,
+        userId,
         data: {
           sleepDisruptorPrimary: q1 as "racing_thoughts" | "work_stress" | "partying_alcohol" | "anxiety" | "phone_screens" | "unknown",
           sleepDisruptorFrequency: q2 as "every_night" | "most_nights" | "few_times_week" | "weekends_mostly",

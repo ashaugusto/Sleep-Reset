@@ -8,7 +8,7 @@
 
 export interface User {
   id: string;
-  email: string;
+  email?: string | null;
   name?: string | null;
   sleepDisruptorPrimary?: string | null;
   sleepDisruptorFrequency?: string | null;
@@ -21,5 +21,7 @@ export interface User {
   reminderMorningMinutes?: number | null;
   /** Current night number (1-7) */
   currentNight: number;
+  stripeCustomerId?: string | null;
+  purchasedAt?: Date | null;
   createdAt: Date;
 }

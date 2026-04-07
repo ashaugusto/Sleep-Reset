@@ -6,9 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateUserBody {
-  /** Clerk user ID */
-  id: string;
-  email?: string | null;
-  name?: string | null;
+export interface CreateCheckoutSessionBody {
+  /** Stripe Price ID for the product */
+  priceId: string;
 }

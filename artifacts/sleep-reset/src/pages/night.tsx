@@ -1,5 +1,5 @@
 import { useRoute, useLocation } from "wouter";
-import { useUserId } from "@/hooks/use-user-id";
+import { useClerkUser } from "@/hooks/use-clerk-user";
 import {
   useListNightCompletions,
   useUpdateNightCompletion,
@@ -190,7 +190,7 @@ function ReminderSetter({
 export default function Night() {
   const [, params] = useRoute("/night/:id");
   const [, setLocation] = useLocation();
-  const userId = useUserId();
+  const { userId } = useClerkUser();
   const queryClient = useQueryClient();
 
   const rawNightId = parseInt(params?.id || "1", 10);

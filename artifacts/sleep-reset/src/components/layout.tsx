@@ -1,7 +1,7 @@
 import { Link, useRoute } from "wouter";
 import { Home, Moon, PlayCircle, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUserId } from "@/hooks/use-user-id";
+import { useClerkUser } from "@/hooks/use-clerk-user";
 import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
 
 export function BottomNav() {
@@ -10,7 +10,7 @@ export function BottomNav() {
   const [isTonight] = useRoute("/night/:id");
   const [isProfile] = useRoute("/profile");
 
-  const userId = useUserId();
+  const { userId } = useClerkUser();
   const { data: user } = useGetUser(userId || "", {
     query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId || "") }
   });

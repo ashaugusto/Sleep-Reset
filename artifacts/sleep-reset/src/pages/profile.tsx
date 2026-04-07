@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useUserId } from "@/hooks/use-user-id";
+import { useClerk } from "@clerk/react";
+import { useClerkUser } from "@/hooks/use-clerk-user";
 import { useGetUser, getGetUserQueryKey, useUpdateSleepProfile } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ function parseMinutes(timeStr: string): number {
 }
 
 export default function Profile() {
-  const userId = useUserId();
+  const { userId } = useClerkUser();
+  const { signOut } = useClerk();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
@@ -35,13 +37,11 @@ export default function Profile() {
 
   const [eveningRem, setEveningRem] = useState("21:00");
   const [morningRem, setMorningRem] = useState("07:00");
-  const [name, setName] = useState("");
 
   useEffect(() => {
     if (user) {
       setEveningRem(formatMinutes(user.reminderNightMinutes || 1260));
       setMorningRem(formatMinutes(user.reminderMorningMinutes || 420));
-      setName(user.name || "");
     }
   }, [user]);
 
@@ -59,18 +59,30 @@ export default function Profile() {
           reminderMorningMinutes: parseMinutes(morningRem),
         }
       });
-      // also if there was a user update endpoint for name, we'd call it here
       queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
       toast.success("Settings saved");
-    } catch (e) {
+    } catch {
       toast.error("Failed to save settings");
     }
   };
 
-  const handleReset = () => {
-    if (confirm("Are you sure you want to reset your onboarding progress?")) {
-      localStorage.removeItem("userId");
-      setLocation("/onboarding");
+  const handleSignOut = async () => {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    await signOut({ redirectUrl: `${base}/` });
+  };
+
+  const handleReset = async () => {
+    if (confirm("Are you sure you want to reset your onboarding progress? You will stay signed in but your program will restart.")) {
+      if (!userId) return;
+      try {
+        await updateProfile.mutateAsync({
+          userId,
+          data: { sleepProfileType: undefined },
+        });
+        setLocation("/onboarding");
+      } catch {
+        toast.error("Failed to reset onboarding");
+      }
     }
   };
 
@@ -108,12 +120,25 @@ export default function Profile() {
       <div className="space-y-4">
         <h3 className="font-medium px-2">Account</h3>
         <Card className="divide-y divide-border bg-card border-card-border">
-          <div className="p-5 space-y-2">
-            <Label>Email</Label>
-            <Input disabled value={user.email} className="bg-muted text-muted-foreground" />
-          </div>
-          <div className="p-5">
-            <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10" onClick={handleReset}>
+          {user.email && (
+            <div className="p-5 space-y-2">
+              <Label>Email</Label>
+              <Input disabled value={user.email} className="bg-muted text-muted-foreground" />
+            </div>
+          )}
+          <div className="p-5 space-y-3">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleSignOut}
+            >
+              Sign Out
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={handleReset}
+            >
               Reset Onboarding & Start Over
             </Button>
           </div>

@@ -14,26 +14,30 @@ const router: IRouter = Router();
 router.post("/users", async (req, res) => {
   const body = CreateUserBody.parse(req.body);
 
-  const whereClause = body.id
-    ? eq(usersTable.id, body.id)
-    : eq(usersTable.email, body.email);
-
   const existing = await db
     .select()
     .from(usersTable)
-    .where(whereClause)
+    .where(eq(usersTable.id, body.id))
     .limit(1);
 
   if (existing.length > 0) {
-    res.json(existing[0]);
+    const updated = await db
+      .update(usersTable)
+      .set({
+        ...(body.email ? { email: body.email } : {}),
+        ...(body.name ? { name: body.name } : {}),
+      })
+      .where(eq(usersTable.id, body.id))
+      .returning();
+    res.json(updated[0]);
     return;
   }
 
   const [user] = await db
     .insert(usersTable)
     .values({
-      id: body.id ?? randomUUID(),
-      email: body.email,
+      id: body.id,
+      email: body.email ?? null,
       name: body.name ?? null,
     })
     .returning();

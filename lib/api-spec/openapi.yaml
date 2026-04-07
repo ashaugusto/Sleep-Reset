@@ -242,6 +242,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProgressSummary"
 
+  /checkout:
+    post:
+      operationId: createCheckoutSession
+      tags: [payments]
+      summary: Create a Stripe checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCheckoutSessionBody"
+      responses:
+        "200":
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSessionResponse"
+
+  /purchase-status:
+    get:
+      operationId: getPurchaseStatus
+      tags: [payments]
+      summary: Get purchase status for authenticated user
+      responses:
+        "200":
+          description: Purchase status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseStatusResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -257,13 +289,15 @@ components:
       properties:
         id:
           type: string
-          description: Client-generated UUID to use as the user's identity
+          description: Clerk user ID
         email:
           type: string
+          nullable: true
         name:
           type: string
+          nullable: true
       required:
-        - email
+        - id
 
     UpdateSleepProfileBody:
       type: object
@@ -303,6 +337,7 @@ components:
           type: string
         email:
           type: string
+          nullable: true
         name:
           type: string
           nullable: true
@@ -337,12 +372,18 @@ components:
         currentNight:
           type: integer
           description: Current night number (1-7)
+        stripeCustomerId:
+          type: string
+          nullable: true
+        purchasedAt:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
       required:
         - id
-        - email
         - onboardingComplete
         - currentNight
         - createdAt
@@ -595,3 +636,33 @@ components:
         - nightsCompleted
         - dailyStats
         - insights
+
+    CreateCheckoutSessionBody:
+      type: object
+      properties:
+        priceId:
+          type: string
+          description: Stripe Price ID for the product
+      required:
+        - priceId
+
+    CheckoutSessionResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Stripe checkout URL to redirect the user to
+      required:
+        - url
+
+    PurchaseStatusResponse:
+      type: object
+      properties:
+        purchased:
+          type: boolean
+        purchasedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - purchased

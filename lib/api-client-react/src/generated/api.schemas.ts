@@ -10,10 +10,10 @@ export interface HealthStatus {
 }
 
 export interface CreateUserBody {
-  /** Client-generated UUID to use as the user's identity */
-  id?: string;
-  email: string;
-  name?: string;
+  /** Clerk user ID */
+  id: string;
+  email?: string | null;
+  name?: string | null;
 }
 
 export type UpdateSleepProfileBodySleepDisruptorPrimary =
@@ -57,7 +57,7 @@ export interface UpdateSleepProfileBody {
 
 export interface User {
   id: string;
-  email: string;
+  email?: string | null;
   name?: string | null;
   sleepDisruptorPrimary?: string | null;
   sleepDisruptorFrequency?: string | null;
@@ -70,6 +70,8 @@ export interface User {
   reminderMorningMinutes?: number | null;
   /** Current night number (1-7) */
   currentNight: number;
+  stripeCustomerId?: string | null;
+  purchasedAt?: string | null;
   createdAt: string;
 }
 
@@ -174,4 +176,19 @@ export interface ProgressSummary {
   avgWakeCount?: number | null;
   avgSleepQuality?: number | null;
   insights: string[];
+}
+
+export interface CreateCheckoutSessionBody {
+  /** Stripe Price ID for the product */
+  priceId: string;
+}
+
+export interface CheckoutSessionResponse {
+  /** Stripe checkout URL to redirect the user to */
+  url: string;
+}
+
+export interface PurchaseStatusResponse {
+  purchased: boolean;
+  purchasedAt?: string | null;
 }

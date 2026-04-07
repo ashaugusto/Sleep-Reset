@@ -19,17 +19,14 @@ export const HealthCheckResponse = zod.object({
  * @summary Create or update user profile
  */
 export const CreateUserBody = zod.object({
-  id: zod
-    .string()
-    .optional()
-    .describe("Client-generated UUID to use as the user's identity"),
-  email: zod.string(),
-  name: zod.string().optional(),
+  id: zod.string().describe("Clerk user ID"),
+  email: zod.string().nullish(),
+  name: zod.string().nullish(),
 });
 
 export const CreateUserResponse = zod.object({
   id: zod.string(),
-  email: zod.string(),
+  email: zod.string().nullish(),
   name: zod.string().nullish(),
   sleepDisruptorPrimary: zod.string().nullish(),
   sleepDisruptorFrequency: zod.string().nullish(),
@@ -41,6 +38,8 @@ export const CreateUserResponse = zod.object({
   reminderNightMinutes: zod.number().nullish(),
   reminderMorningMinutes: zod.number().nullish(),
   currentNight: zod.number().describe("Current night number (1-7)"),
+  stripeCustomerId: zod.string().nullish(),
+  purchasedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 
@@ -53,7 +52,7 @@ export const GetUserParams = zod.object({
 
 export const GetUserResponse = zod.object({
   id: zod.string(),
-  email: zod.string(),
+  email: zod.string().nullish(),
   name: zod.string().nullish(),
   sleepDisruptorPrimary: zod.string().nullish(),
   sleepDisruptorFrequency: zod.string().nullish(),
@@ -65,6 +64,8 @@ export const GetUserResponse = zod.object({
   reminderNightMinutes: zod.number().nullish(),
   reminderMorningMinutes: zod.number().nullish(),
   currentNight: zod.number().describe("Current night number (1-7)"),
+  stripeCustomerId: zod.string().nullish(),
+  purchasedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 
@@ -119,7 +120,7 @@ export const UpdateSleepProfileBody = zod.object({
 
 export const UpdateSleepProfileResponse = zod.object({
   id: zod.string(),
-  email: zod.string(),
+  email: zod.string().nullish(),
   name: zod.string().nullish(),
   sleepDisruptorPrimary: zod.string().nullish(),
   sleepDisruptorFrequency: zod.string().nullish(),
@@ -131,6 +132,8 @@ export const UpdateSleepProfileResponse = zod.object({
   reminderNightMinutes: zod.number().nullish(),
   reminderMorningMinutes: zod.number().nullish(),
   currentNight: zod.number().describe("Current night number (1-7)"),
+  stripeCustomerId: zod.string().nullish(),
+  purchasedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 
@@ -321,4 +324,23 @@ export const GetProgressResponse = zod.object({
   avgWakeCount: zod.number().nullish(),
   avgSleepQuality: zod.number().nullish(),
   insights: zod.array(zod.string()),
+});
+
+/**
+ * @summary Create a Stripe checkout session
+ */
+export const CreateCheckoutSessionBody = zod.object({
+  priceId: zod.string().describe("Stripe Price ID for the product"),
+});
+
+export const CreateCheckoutSessionResponse = zod.object({
+  url: zod.string().describe("Stripe checkout URL to redirect the user to"),
+});
+
+/**
+ * @summary Get purchase status for authenticated user
+ */
+export const GetPurchaseStatusResponse = zod.object({
+  purchased: zod.boolean(),
+  purchasedAt: zod.coerce.date().nullish(),
 });

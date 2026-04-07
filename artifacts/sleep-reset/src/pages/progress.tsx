@@ -1,4 +1,4 @@
-import { useUserId } from "@/hooks/use-user-id";
+import { useClerkUser } from "@/hooks/use-clerk-user";
 import { useGetProgress, getGetProgressQueryKey } from "@workspace/api-client-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export default function Progress() {
-  const userId = useUserId();
+  const { userId } = useClerkUser();
 
   const { data: progress, isLoading } = useGetProgress(userId || "", {
     query: { enabled: !!userId, queryKey: getGetProgressQueryKey(userId || "") }

@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
+  email: text("email").unique(),
   name: text("name"),
   sleepDisruptorPrimary: text("sleep_disruptor_primary"),
   sleepDisruptorFrequency: text("sleep_disruptor_frequency"),
@@ -16,6 +16,8 @@ export const usersTable = pgTable("users", {
   reminderNightMinutes: integer("reminder_night_minutes"),
   reminderMorningMinutes: integer("reminder_morning_minutes"),
   currentNight: integer("current_night").notNull().default(1),
+  stripeCustomerId: text("stripe_customer_id"),
+  purchasedAt: timestamp("purchased_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
