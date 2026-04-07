@@ -70,12 +70,12 @@ function Router() {
       <Route path="/" component={LandingOrRedirect} />
       <Route path="/sign-in">
         <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-          <SignIn routing="path" path={`${base}/sign-in`} signUpUrl={`${base}/sign-up`} />
+          <SignIn routing="hash" signUpUrl={`${base}/sign-up`} fallbackRedirectUrl={`${base}/`} />
         </div>
       </Route>
       <Route path="/sign-up">
         <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-          <SignUp routing="path" path={`${base}/sign-up`} signInUrl={`${base}/sign-in`} />
+          <SignUp routing="hash" signInUrl={`${base}/sign-in`} fallbackRedirectUrl={`${base}/purchase`} />
         </div>
       </Route>
       <Route path="/purchase" component={Purchase} />
