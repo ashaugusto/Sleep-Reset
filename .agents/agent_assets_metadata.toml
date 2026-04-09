@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "YB809oZo4iUNpvKdENIjD"
+uri = "file://artifacts/sleep-reset/public/images/sleep-peaceful.png"
+type = "image"
+title = "peaceful sleep bedroom"
+
+[[generated]]
+id = "b_I4AL_p-shoFy6ryoBvi"
+uri = "file://artifacts/sleep-reset/public/images/sleep-awake-3am.png"
+type = "image"
+title = "person awake 3am insomnia"
+
+[[generated]]
+id = "MFABcUhAYCtouRFg5ceDQ"
+uri = "file://artifacts/sleep-reset/public/images/sleep-wakeup-refreshed.png"
+type = "image"
+title = "refreshed morning wakeup"
+
+[[generated]]
+id = "muEIFYqwVFUJrN08e46ss"
+uri = "file://artifacts/sleep-reset/public/images/sleep-brain-science.png"
+type = "image"
+title = "sleep brain science illustration"
+
+[[generated]]
+id = "8v8RFkcYVY5ST1aRIeeA5"
+uri = "file://artifacts/sleep-reset/public/images/sleep-journal.png"
+type = "image"
+title = "sleep journal flatlay"
