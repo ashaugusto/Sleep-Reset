@@ -27,8 +27,8 @@ export default function Purchase() {
       },
       onError: () => {
         toast({
-          title: "Erro",
-          description: "Falha ao iniciar pagamento. Tente novamente.",
+          title: "Error",
+          description: "Failed to start checkout. Please try again.",
           variant: "destructive",
         });
       },
@@ -53,7 +53,7 @@ export default function Purchase() {
 
   const handleCheckout = () => {
     if (!PRICE_ID) {
-      toast({ title: "Em breve", description: "Checkout disponível em breve." });
+      toast({ title: "Coming soon", description: "Checkout will be available shortly." });
       return;
     }
     createCheckout({ data: { priceId: PRICE_ID } });
@@ -72,7 +72,7 @@ export default function Purchase() {
         {cancelled && (
           <div className="flex items-center gap-2 bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-xl mb-6 w-full">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            Pagamento cancelado. Tente novamente quando quiser.
+            Payment cancelled. You can try again whenever you're ready.
           </div>
         )}
 
@@ -80,24 +80,24 @@ export default function Purchase() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             <Lock className="w-7 h-7 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold mb-3">Acesso completo</h1>
+          <h1 className="text-3xl font-bold mb-3">Get full access</h1>
           <p className="text-muted-foreground">
-            Pagamento único. Sem assinatura. Acesso ao programa completo de 7 noites.
+            One-time payment. No subscription. Access the complete 7-night Sleep Reset program.
           </p>
         </div>
 
         <Card className="w-full p-6 mb-6 border-primary/30 bg-card">
           <div className="flex items-baseline justify-between mb-4">
             <span className="text-2xl font-bold">$47</span>
-            <span className="text-muted-foreground text-sm">pagamento único</span>
+            <span className="text-muted-foreground text-sm">one-time</span>
           </div>
           <ul className="space-y-2 mb-6">
             {[
-              "Programa completo de 7 noites CBT-I",
-              "Áudio guiado para cada sessão",
-              "Diário de sono + rastreamento",
-              "Gráficos e exportação CSV",
-              "Acesso vitalício",
+              "Full 7-night CBT-I program",
+              "Guided audio for each session",
+              "Sleep diary + progress tracking",
+              "Charts & CSV export",
+              "Lifetime access",
             ].map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
@@ -111,12 +111,12 @@ export default function Purchase() {
             className="w-full py-6 text-base font-semibold"
             size="lg"
           >
-            {isPending ? "Redirecionando…" : "Pagar $47 e começar hoje"}
+            {isPending ? "Redirecting…" : "Pay $47 & start tonight"}
           </Button>
         </Card>
 
         <p className="text-xs text-muted-foreground text-center">
-          Pagamento seguro via Stripe. Suas informações nunca são armazenadas em nossos servidores.
+          Secured by Stripe. Your payment info is never stored on our servers.
         </p>
       </main>
     </div>

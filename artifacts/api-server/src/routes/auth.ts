@@ -14,12 +14,12 @@ router.post("/auth/signup", async (req, res) => {
   };
 
   if (!email || !password) {
-    res.status(400).json({ message: "Email e senha são obrigatórios" });
+    res.status(400).json({ message: "Email and password are required" });
     return;
   }
 
   if (password.length < 6) {
-    res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+    res.status(400).json({ message: "Password must be at least 6 characters" });
     return;
   }
 
@@ -30,7 +30,7 @@ router.post("/auth/signup", async (req, res) => {
     .limit(1);
 
   if (existing.length > 0) {
-    res.status(409).json({ message: "Esse email já está cadastrado" });
+    res.status(409).json({ message: "An account with this email already exists" });
     return;
   }
 
@@ -61,7 +61,7 @@ router.post("/auth/signin", async (req, res) => {
   const { email, password } = req.body as { email: string; password: string };
 
   if (!email || !password) {
-    res.status(400).json({ message: "Email e senha são obrigatórios" });
+    res.status(400).json({ message: "Email and password are required" });
     return;
   }
 

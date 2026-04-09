@@ -132,9 +132,9 @@ export default function Onboarding() {
             </div>
             <RadioGroup value={q1} onValueChange={setQ1} className="space-y-3 flex-1">
               {DISRUPTOR_OPTIONS.map(opt => (
-                <div key={opt.id} className={`flex items-center space-x-3 border p-4 rounded-xl cursor-pointer transition-colors ${q1 === opt.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
+                <div key={opt.id} onClick={() => setQ1(opt.id)} className={`flex items-center space-x-3 border p-4 rounded-xl cursor-pointer transition-colors ${q1 === opt.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
                   <RadioGroupItem value={opt.id} id={`q1-${opt.id}`} />
-                  <Label htmlFor={`q1-${opt.id}`} className="flex-1 cursor-pointer">{opt.label}</Label>
+                  <Label htmlFor={`q1-${opt.id}`} className="flex-1 cursor-pointer select-none">{opt.label}</Label>
                 </div>
               ))}
             </RadioGroup>
@@ -154,9 +154,9 @@ export default function Onboarding() {
             </div>
             <RadioGroup value={q2} onValueChange={setQ2} className="space-y-3 flex-1">
               {FREQUENCY_OPTIONS.map(opt => (
-                <div key={opt.id} className={`flex items-center space-x-3 border p-4 rounded-xl cursor-pointer transition-colors ${q2 === opt.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
+                <div key={opt.id} onClick={() => setQ2(opt.id)} className={`flex items-center space-x-3 border p-4 rounded-xl cursor-pointer transition-colors ${q2 === opt.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
                   <RadioGroupItem value={opt.id} id={`q2-${opt.id}`} />
-                  <Label htmlFor={`q2-${opt.id}`} className="flex-1 cursor-pointer">{opt.label}</Label>
+                  <Label htmlFor={`q2-${opt.id}`} className="flex-1 cursor-pointer select-none">{opt.label}</Label>
                 </div>
               ))}
             </RadioGroup>

@@ -22,11 +22,11 @@ export default function SignUp() {
     setError("");
 
     if (password !== confirm) {
-      setError("As senhas não coincidem");
+      setError("Passwords do not match");
       return;
     }
     if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
+      setError("Password must be at least 6 characters");
       return;
     }
 
@@ -40,13 +40,13 @@ export default function SignUp() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Erro ao criar conta");
+        setError(data.message || "Failed to create account");
         return;
       }
       queryClient.setQueryData(["auth", "me"], data);
       setLocation("/purchase");
     } catch {
-      setError("Erro de conexão. Tente novamente.");
+      setError("Connection error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,18 +59,18 @@ export default function SignUp() {
           <div className="flex justify-center">
             <Moon className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-serif">Criar conta</h1>
-          <p className="text-sm text-muted-foreground">Comece o seu protocolo de sono</p>
+          <h1 className="text-2xl font-serif">Create account</h1>
+          <p className="text-sm text-muted-foreground">Start your sleep reset protocol</p>
         </div>
 
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome (opcional)</Label>
+              <Label htmlFor="name">Name (optional)</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Seu nome"
+                placeholder="Your name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 autoComplete="name"
@@ -81,7 +81,7 @@ export default function SignUp() {
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -89,11 +89,11 @@ export default function SignUp() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="At least 6 characters"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -101,11 +101,11 @@ export default function SignUp() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm">Confirmar senha</Label>
+              <Label htmlFor="confirm">Confirm password</Label>
               <Input
                 id="confirm"
                 type="password"
-                placeholder="Repita a senha"
+                placeholder="Repeat your password"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
                 required
@@ -116,18 +116,18 @@ export default function SignUp() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Criando conta..." : "Criar conta"}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Já tem conta?{" "}
+          Already have an account?{" "}
           <button
             onClick={() => setLocation("/sign-in")}
             className="text-primary underline underline-offset-4"
           >
-            Entrar
+            Sign in
           </button>
         </p>
       </div>

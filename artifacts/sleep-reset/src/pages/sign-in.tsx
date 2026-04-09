@@ -28,7 +28,7 @@ export default function SignIn() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Erro ao entrar");
+        setError(data.message || "Incorrect email or password");
         return;
       }
       queryClient.setQueryData(["auth", "me"], data);
@@ -40,7 +40,7 @@ export default function SignIn() {
         setLocation("/dashboard");
       }
     } catch {
-      setError("Erro de conexão. Tente novamente.");
+      setError("Connection error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,8 +53,8 @@ export default function SignIn() {
           <div className="flex justify-center">
             <Moon className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-serif">Entrar</h1>
-          <p className="text-sm text-muted-foreground">Bem-vindo de volta ao Sleep Reset</p>
+          <h1 className="text-2xl font-serif">Sign in</h1>
+          <p className="text-sm text-muted-foreground">Welcome back to Sleep Reset</p>
         </div>
 
         <Card className="p-6">
@@ -64,7 +64,7 @@ export default function SignIn() {
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder="your@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -72,11 +72,11 @@ export default function SignIn() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Sua senha"
+                placeholder="Your password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -87,18 +87,18 @@ export default function SignIn() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Não tem conta?{" "}
+          Don't have an account?{" "}
           <button
             onClick={() => setLocation("/sign-up")}
             className="text-primary underline underline-offset-4"
           >
-            Criar conta
+            Create account
           </button>
         </p>
       </div>
