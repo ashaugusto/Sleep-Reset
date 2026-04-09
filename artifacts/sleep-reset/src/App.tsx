@@ -9,7 +9,6 @@ import { AppLayout } from "@/components/layout";
 // Pages
 import Landing from "@/pages/landing";
 import SignIn from "@/pages/sign-in";
-import SignUp from "@/pages/sign-up";
 import Onboarding from "@/pages/onboarding";
 import Dashboard from "@/pages/dashboard";
 import Night from "@/pages/night";
@@ -35,7 +34,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <Spinner />;
   if (!isSignedIn) return <Redirect to="/sign-in" />;
-  if (!user?.purchasedAt) return <Redirect to="/purchase" />;
+  if (!user?.purchasedAt) return <Redirect to="/" />;
   return <>{children}</>;
 }
 
@@ -43,7 +42,7 @@ function RootRedirect() {
   const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <Spinner />;
   if (!isSignedIn) return <Landing />;
-  if (!user?.purchasedAt) return <Redirect to="/purchase" />;
+  if (!user?.purchasedAt) return <Landing />;
   if (!user?.onboardingComplete) return <Redirect to="/onboarding" />;
   return <Redirect to="/dashboard" />;
 }
@@ -53,7 +52,7 @@ function Router() {
     <Switch>
       <Route path="/" component={RootRedirect} />
       <Route path="/sign-in" component={SignIn} />
-      <Route path="/sign-up" component={SignUp} />
+      <Route path="/sign-up"><Redirect to="/" /></Route>
       <Route path="/purchase" component={Purchase} />
       <Route path="/onboarding">
         <AuthGuard><Onboarding /></AuthGuard>

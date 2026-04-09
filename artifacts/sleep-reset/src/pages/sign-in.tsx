@@ -33,7 +33,7 @@ export default function SignIn() {
       }
       queryClient.setQueryData(["auth", "me"], data);
       if (!data.purchasedAt) {
-        setLocation("/purchase");
+        setLocation("/");
       } else if (!data.onboardingComplete) {
         setLocation("/onboarding");
       } else {
@@ -93,12 +93,12 @@ export default function SignIn() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          No account yet?{" "}
           <button
-            onClick={() => setLocation("/sign-up")}
+            onClick={() => setLocation("/")}
             className="text-primary underline underline-offset-4"
           >
-            Create account
+            Purchase the program to get access →
           </button>
         </p>
       </div>
