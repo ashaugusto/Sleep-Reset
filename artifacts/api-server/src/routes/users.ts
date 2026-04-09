@@ -1,13 +1,12 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, usersTable, sleepProfilesTable } from "@workspace/db";
+import { db, usersTable } from "@workspace/db";
 import {
   CreateUserBody,
   GetUserParams,
   UpdateSleepProfileParams,
   UpdateSleepProfileBody,
 } from "@workspace/api-zod";
-import { randomUUID } from "crypto";
 
 const router: IRouter = Router();
 
@@ -103,40 +102,6 @@ router.put("/users/:userId/profile", async (req, res) => {
   if (!user) {
     res.status(404).json({ message: "User not found" });
     return;
-  }
-
-  const profileUpdates: Partial<typeof sleepProfilesTable.$inferInsert> = {};
-  if (body.sleepDisruptorPrimary !== undefined)
-    profileUpdates.sleepDisruptorPrimary = body.sleepDisruptorPrimary;
-  if (body.sleepDisruptorFrequency !== undefined)
-    profileUpdates.sleepDisruptorFrequency = body.sleepDisruptorFrequency;
-  if (body.usualBedtimeMinutes !== undefined)
-    profileUpdates.usualBedtimeMinutes = body.usualBedtimeMinutes;
-  if (body.neededWakeUpMinutes !== undefined)
-    profileUpdates.neededWakeUpMinutes = body.neededWakeUpMinutes;
-  if (body.triedSolutions !== undefined)
-    profileUpdates.triedSolutions = body.triedSolutions;
-  if (body.sleepProfileType !== undefined)
-    profileUpdates.sleepProfileType = body.sleepProfileType;
-  if (body.reminderNightMinutes !== undefined)
-    profileUpdates.reminderNightMinutes = body.reminderNightMinutes;
-  if (body.reminderMorningMinutes !== undefined)
-    profileUpdates.reminderMorningMinutes = body.reminderMorningMinutes;
-  if (updates.onboardingComplete !== undefined)
-    profileUpdates.onboardingComplete = updates.onboardingComplete;
-
-  if (Object.keys(profileUpdates).length > 0) {
-    await db
-      .insert(sleepProfilesTable)
-      .values({
-        id: randomUUID(),
-        userId,
-        ...profileUpdates,
-      })
-      .onConflictDoUpdate({
-        target: sleepProfilesTable.userId,
-        set: { ...profileUpdates, updatedAt: new Date() },
-      });
   }
 
   res.json(user);
