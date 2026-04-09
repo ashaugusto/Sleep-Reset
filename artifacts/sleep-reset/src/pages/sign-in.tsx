@@ -54,7 +54,7 @@ export default function SignIn() {
             <Moon className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-2xl font-serif">Sign in</h1>
-          <p className="text-sm text-muted-foreground">Welcome back to Sleep Reset</p>
+          <p className="text-sm text-muted-foreground">Welcome back to Sleep Rewire</p>
         </div>
 
         <Card className="p-6">

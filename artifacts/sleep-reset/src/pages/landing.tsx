@@ -73,24 +73,27 @@ function CountdownTimer() {
         ))}
       </div>
       <p className="text-xs text-muted-foreground mt-3">
-        After this, price returns to <strong className="text-foreground">${PRICE_ORIGINAL}</strong>
+        After this, price returns to <strong className="text-foreground">{CURRENCY}{PRICE_ORIGINAL}</strong>
       </p>
     </div>
   );
 }
 
-// ─── Pricing constants (single source of truth) ───
+// ─── Brand & Pricing — single source of truth ─────
+const BRAND = "Sleep Rewire";
+const PRODUCT = "The Sleep Rewire Protocol";
+const CURRENCY = "€";
 const PRICE_TODAY = 47;
 const PRICE_ORIGINAL = 197;
 const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 150
 
 // ─── Bonus list ───────────────────────────────────
 const BONUSES = [
-  { name: "Sleep Science Masterclass", desc: "The neuroscience behind why you can't sleep — and the exact reason CBT-I works when nothing else does", value: "$47" },
-  { name: "Evening Wind-Down Ritual Guide", desc: "15 evidence-based habits that prime your nervous system for deep sleep", value: "$27" },
-  { name: "Morning Recovery Protocol", desc: "Optimize the first 30 minutes of your day to anchor your sleep-wake cycle", value: "$27" },
-  { name: "Sleep Efficiency Tracker Template", desc: "The same spreadsheet framework used in clinical CBT-I trials — yours forever", value: "$27" },
-  { name: "Lifetime Access + All Future Updates", desc: "New nights, features, and research added as the protocol evolves — no extra charge", value: "$27" },
+  { name: "Anxiety & Sleep Masterclass", desc: "Why anxiety hijacks your sleep — and the exact neuroscience behind why the Rewire Protocol shuts it off", value: "€47" },
+  { name: "Evening Wind-Down Ritual Guide", desc: "15 evidence-based habits that calm your nervous system and prime your brain for deep, unbroken sleep", value: "€27" },
+  { name: "Morning Recovery Protocol", desc: "Optimise the first 30 minutes of your day to anchor your sleep-wake cycle and reduce night-time anxiety", value: "€27" },
+  { name: "Sleep Efficiency Tracker Template", desc: "The same spreadsheet framework used in clinical CBT-I trials — track your progress every night", value: "€27" },
+  { name: "Lifetime Access + All Future Updates", desc: "New nights, features, and research added as the protocol evolves — no extra charge, ever", value: "€27" },
 ];
 
 // ─── Inline Order Form ────────────────────────────
@@ -138,17 +141,17 @@ function OrderForm({ id }: { id?: string }) {
       <div className="px-5 pt-6 pb-5 border-b border-border/50 text-center">
         {/* Crossed-out original */}
         <p className="text-base text-muted-foreground line-through mb-1">
-          Regular price: ${PRICE_ORIGINAL}
+          Regular price: {CURRENCY}{PRICE_ORIGINAL}
         </p>
         {/* Hero price */}
         <p className="text-6xl font-extrabold text-foreground leading-none mb-2">
-          $<span className="text-primary">{PRICE_TODAY}</span>
+          {CURRENCY}<span className="text-primary">{PRICE_TODAY}</span>
         </p>
         <p className="text-sm font-bold text-foreground mb-3">One-time payment · Instant access · No subscription</p>
         {/* Savings badge */}
         <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
           <span className="text-xs font-extrabold text-primary uppercase tracking-wider">
-            You save ${PRICE_SAVINGS} today — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off
+            You save {CURRENCY}{PRICE_SAVINGS} today — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off
           </span>
         </div>
       </div>
@@ -161,8 +164,8 @@ function OrderForm({ id }: { id?: string }) {
         <div className="flex items-start gap-2.5">
           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <div className="flex-1">
-            <span className="text-sm text-foreground font-semibold">Full 7-Night CBT-I Protocol</span>
-            <span className="text-xs text-muted-foreground ml-2">(${PRICE_ORIGINAL} value)</span>
+            <span className="text-sm text-foreground font-semibold">Full 7-Night Rewire Protocol</span>
+            <span className="text-xs text-muted-foreground ml-2">({CURRENCY}{PRICE_ORIGINAL} value)</span>
           </div>
         </div>
         {BONUSES.map((b) => (
@@ -177,8 +180,8 @@ function OrderForm({ id }: { id?: string }) {
         <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
           <span className="text-xs font-bold text-muted-foreground">Total value</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground line-through">$352+</span>
-            <span className="text-sm font-extrabold text-primary">Your price: $47</span>
+            <span className="text-sm text-muted-foreground line-through">{CURRENCY}352+</span>
+            <span className="text-sm font-extrabold text-primary">Your price: {CURRENCY}47</span>
           </div>
         </div>
       </div>
@@ -248,8 +251,8 @@ function WarningBanner() {
       <p className="text-sm font-extrabold leading-snug">
         <AlertTriangle className="inline w-4 h-4 mr-1.5 -mt-0.5" />
         {expired
-          ? "⚠️ WARNING: This offer has expired. Price is now $197."
-          : `⚠️ WARNING: This page and the $${PRICE_TODAY} price may be REMOVED at Midnight on ${dateStr}.`}
+          ? `⚠️ WARNING: This offer has expired. Price is now ${CURRENCY}${PRICE_ORIGINAL}.`
+          : `⚠️ WARNING: This page and the ${CURRENCY}${PRICE_TODAY} price may be REMOVED at Midnight on ${dateStr}.`}
       </p>
     </div>
   );
@@ -269,7 +272,7 @@ function CtaButton({ children }: { children: React.ReactNode }) {
       >
         {children}
       </button>
-      <p className="text-xs text-muted-foreground mt-2">One-time $47 · Lifetime access · 7-Night Guarantee</p>
+      <p className="text-xs text-muted-foreground mt-2">One-time {CURRENCY}47 · Lifetime access · 7-Night Guarantee</p>
     </div>
   );
 }
@@ -291,7 +294,7 @@ export default function Landing() {
       <header className="flex items-center justify-between px-5 py-4 max-w-lg mx-auto">
         <div className="flex items-center gap-2">
           <Moon className="w-5 h-5 text-primary" />
-          <span className="font-bold text-base tracking-tight">Sleep Reset</span>
+          <span className="font-bold text-base tracking-tight">{BRAND}</span>
         </div>
         <button
           onClick={() => setLocation("/sign-in")}
@@ -307,23 +310,23 @@ export default function Landing() {
       <Section className="pt-4 pb-8 text-center">
         <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
           <Star className="w-3 h-3 fill-current" />
-          Used by 2,400+ people · Science-backed CBT-I protocol
+          2,400+ people sleeping through the night · Anxiety-focused CBT-I protocol
         </div>
 
         <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">
-          Read this if you've tried everything and still can't sleep
+          Read this if anxiety is the reason you can't sleep
         </p>
 
         <h1 className="text-[2rem] font-extrabold leading-[1.15] mb-5">
-          The Only Proven System That{" "}
-          <span className="text-primary">Permanently Resets</span>{" "}
-          How Your Brain Sleeps — In 7 Nights.
+          Rewire Your Anxious Brain to{" "}
+          <span className="text-primary">Sleep Deeply</span>{" "}
+          — In 7 Nights.
         </h1>
 
         <p className="text-muted-foreground text-base leading-relaxed mb-7">
-          No pills. No noise machines. No luck. Just the{" "}
+          No pills. No meditation apps. No "just relax" advice. Just the{" "}
           <strong className="text-foreground">clinically-proven CBT-I protocol</strong>{" "}
-          — the only insomnia treatment recommended by the American College of Physicians over sleeping pills — now available as a self-guided 7-night program.
+          — specifically engineered to shut off the anxious loop that keeps your brain wired at night — now available as a self-guided 7-night program.
         </p>
 
         {/* ── VSL ── */}
@@ -335,7 +338,7 @@ export default function Landing() {
                 className="w-full h-full"
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
-                title="7-Night Sleep Reset — Watch this first"
+                title="The Sleep Rewire Protocol — Watch this first"
               />
             </div>
           ) : (
@@ -358,7 +361,7 @@ export default function Landing() {
           )}
         </div>
 
-        <CtaButton>Yes — Start My 7-Night Reset →</CtaButton>
+        <CtaButton>Yes — Rewire My Sleep Tonight →</CtaButton>
       </Section>
 
       <Divider />
@@ -383,9 +386,9 @@ export default function Landing() {
         </h2>
 
         {[
-          { emoji: "😤", title: "Scenario #1 — You lie awake for hours", desc: "You get into bed on time. You close your eyes. But your brain won't stop. Racing thoughts, replaying conversations, rehearsing tomorrow. You check the clock. 1am. 2am. 3am. You finally sleep — then your alarm goes off.", bad: true },
-          { emoji: "😰", title: "Scenario #2 — You crash, but wake at 3am", desc: "You fall asleep quickly — but wake up wide-eyed in the middle of the night. You lie there staring at the ceiling for 2 hours. By the time you finally drift off, it's almost time to get up again. Every. Single. Day.", bad: true },
-          { emoji: "😴", title: "Scenario #3 — You fall asleep and stay asleep", desc: "You're in bed, relaxed. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what the 7-Night Sleep Reset trains your brain to do automatically.", bad: false },
+          { emoji: "😤", title: "Scenario #1 — Your anxious brain won't switch off", desc: "You're exhausted. You lie down. But your mind turns on like a machine — worst-case scenarios, old conversations, tomorrow's problems. Your chest tightens. Your heart won't slow down. The harder you try to force sleep, the wider awake you become. The clock says 3am.", bad: true },
+          { emoji: "😰", title: "Scenario #2 — You crash, but wake at 3am", desc: "You fall asleep quickly — but bolt awake at 3am with a jolt of anxiety. Your mind immediately starts racing. You lie there staring at the ceiling, adrenaline running. By the time you finally drift off, it's almost time to get up. Every. Single. Night.", bad: true },
+          { emoji: "😴", title: "Scenario #3 — You fall asleep and stay asleep", desc: "You're in bed, calm. The anxious loop doesn't start. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what the Sleep Rewire Protocol trains your brain to do automatically.", bad: false },
         ].map((s) => (
           <div key={s.title} className={`border rounded-2xl p-5 mb-4 ${s.bad ? "border-border/50 bg-card/40" : "border-primary/40 bg-primary/5 shadow-[0_0_30px_rgba(139,92,246,0.12)]"}`}>
             <div className="flex items-center gap-2 mb-2">
@@ -415,12 +418,12 @@ export default function Landing() {
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">This Program Is for You If…</h2>
         <div className="space-y-3 mb-6">
           {[
-            "You lie awake for more than 20 minutes before falling asleep",
-            "You wake up in the middle of the night and can't get back to sleep",
-            "You feel exhausted during the day even after a \"full night\" in bed",
-            "You've tried melatonin, apps, or white noise — and still can't sleep",
-            "Stress, anxiety, or a racing mind keeps your brain wired at night",
-            "You want a permanent fix, not another temporary patch",
+            "Your mind races the moment you try to sleep — even when you're exhausted",
+            "Anxiety or stress is the main reason you can't fall or stay asleep",
+            "You wake up at 3am with a jolt of worry and can't get back to sleep",
+            "You feel exhausted during the day even after hours in bed",
+            "You've tried melatonin, apps, or deep breathing — and still can't sleep",
+            "You want to stop depending on sleep aids and fix the root cause permanently",
           ].map((item) => (
             <div key={item} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -452,7 +455,7 @@ export default function Landing() {
         {[
           { title: "Melatonin", why: "Helps you feel drowsy — but doesn't fix the root cause. You're still dependent on it tomorrow night." },
           { title: "Sleep hygiene tips", why: "\"No screens before bed\" has minimal impact on clinical insomnia. It's not enough on its own." },
-          { title: "Meditation apps", why: "Great for stress. Poor for insomnia. They don't reprogram the anxiety loop your brain built around sleep." },
+          { title: "Meditation & breathing apps", why: "Great for general stress. Poor for anxiety-driven insomnia. They don't break the conditioned fear response your brain has built around sleep." },
           { title: "Alcohol", why: "Disrupts REM sleep. You fall asleep faster but sleep far worse — making the problem worse over time." },
         ].map((f) => (
           <div key={f.title} className="flex gap-3 mb-4 p-4 bg-card/50 border border-border/40 rounded-xl">
@@ -479,7 +482,7 @@ export default function Landing() {
 
       {/* ── Mid-page CTA ── */}
       <Section className="py-6">
-        <CtaButton>Get Instant Access — $47</CtaButton>
+        <CtaButton>Start My Sleep Rewire — {CURRENCY}47</CtaButton>
       </Section>
 
       <Divider />
@@ -538,8 +541,8 @@ export default function Landing() {
         </div>
 
         {[
-          { name: "Alex M., 28", stars: 5, text: "I was skeptical about CBT-I. Tried melatonin for 3 years. Night 3 of this protocol I slept 7 hours straight for the first time in a year. By Night 7 I didn't even think about sleep — I just fell asleep." },
-          { name: "Jordan T., 31", stars: 5, text: "The brain dump technique on Night 5 alone was worth $47. I used to lie awake for 2 hours replaying my day. Now I'm asleep in under 20 minutes. Every night." },
+          { name: "Alex M., 28", stars: 5, text: "My anxiety would kick in the moment I got into bed. I'd tried everything. Night 3 of this protocol I slept 7 hours straight for the first time in a year. By Night 7 I didn't even think about sleep — I just fell asleep." },
+          { name: "Jordan T., 31", stars: 5, text: "The brain dump technique on Night 5 alone was worth every cent. I used to lie awake for 2 hours replaying my day, heart pounding with anxiety. Now I'm asleep in under 20 minutes. Every night." },
           { name: "Sam K., 24", stars: 5, text: "Waking up at 3am every night for 6 months. Finished Night 7 two weeks ago. Haven't had a single 3am wake since. Genuinely shocked." },
           { name: "Riley P., 33", stars: 5, text: "Actual science, not wellness fluff. Watching my sleep efficiency go from 62% to 89% in 7 nights using the built-in tracker was insane." },
         ].map((t) => (
@@ -568,7 +571,7 @@ export default function Landing() {
           {" "}— Free
         </h2>
         <p className="text-center text-sm text-muted-foreground mb-7">
-          Total bonus value: <strong className="text-foreground">$155+</strong> — included at no extra cost.
+          Total bonus value: <strong className="text-foreground">{CURRENCY}155+</strong> — included at no extra cost.
         </p>
 
         <div className="space-y-3 mb-6">
@@ -590,10 +593,10 @@ export default function Landing() {
 
         <div className="bg-primary/8 border border-primary/30 rounded-2xl p-4 text-center">
           <p className="text-sm font-bold text-foreground">
-            Total value: <span className="line-through text-muted-foreground">$352+</span>
+            Total value: <span className="line-through text-muted-foreground">{CURRENCY}352+</span>
           </p>
-          <p className="text-2xl font-extrabold text-primary mt-1">Your price today: ${PRICE_TODAY}</p>
-          <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">$305</strong> — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off the program alone</p>
+          <p className="text-2xl font-extrabold text-primary mt-1">Your price today: {CURRENCY}{PRICE_TODAY}</p>
+          <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">{CURRENCY}{PRICE_SAVINGS}</strong> — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off the program alone</p>
         </div>
       </Section>
 
@@ -666,8 +669,8 @@ export default function Landing() {
               <p className="text-xs text-muted-foreground">Advanced protocol · 3-month access</p>
             </div>
             <div className="text-right">
-              <p className="text-xl font-extrabold text-foreground">$37</p>
-              <p className="text-xs text-muted-foreground line-through">$97</p>
+              <p className="text-xl font-extrabold text-foreground">{CURRENCY}37</p>
+              <p className="text-xs text-muted-foreground line-through">{CURRENCY}97</p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground italic mb-4">
@@ -677,7 +680,7 @@ export default function Landing() {
             onClick={scrollToOrder}
             className="w-full border border-primary/40 text-primary font-semibold py-3 rounded-xl text-sm hover:bg-primary/5 transition-colors"
           >
-            Start with the 7-Night Reset First →
+            Start with the 7-Night Rewire First →
           </button>
         </div>
       </Section>
@@ -693,7 +696,8 @@ export default function Landing() {
 
         {[
           { q: "Do I need to create an account before buying?", a: "No. Just enter your email and name, pay securely through Stripe, and you'll immediately be prompted to create your password. Your account is created automatically after payment — no sign-up friction." },
-          { q: "Is this the same as CBT-I therapy with a therapist?", a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs $47 instead of $300/session, and you can start tonight." },
+          { q: "Does this work specifically for anxiety-related insomnia?", a: "Yes — this is exactly what CBT-I was designed for. Anxiety-driven insomnia (lying awake with a racing mind, waking at 3am with a jolt of worry) responds extremely well to the techniques in this protocol. The Cognitive Restructuring and Brain Dump sessions directly target the anxiety loop." },
+          { q: "Is this the same as CBT-I therapy with a therapist?", a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs €47 instead of €300/session, and you can start tonight." },
           { q: "What if I've had insomnia for years?", a: "CBT-I is specifically designed for chronic insomnia. The longer you've had it, the more entrenched the behavioral patterns — which means CBT-I often produces more dramatic results." },
           { q: "Do I need a specific wake-up time to make this work?", a: "You'll set a consistent wake time during the protocol — it's central to building sleep pressure. The protocol adapts to your schedule, whether you wake at 6am or 10am." },
           { q: "Is there ongoing access after I finish Night 7?", a: "Yes — lifetime access. The sleep diary and tracking tools are yours forever. Many users log their sleep indefinitely to maintain their results." },
@@ -723,7 +727,7 @@ export default function Landing() {
       <footer className="border-t border-border/40 py-8 text-center px-5">
         <div className="flex items-center justify-center gap-2 mb-4">
           <Moon className="w-4 h-4 text-primary" />
-          <span className="font-bold text-sm">Sleep Reset</span>
+          <span className="font-bold text-sm">{BRAND}</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4 text-xs text-muted-foreground">
           <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">Sign in</button>
@@ -732,9 +736,9 @@ export default function Landing() {
           <span className="text-border">·</span>
           <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms of Service</button>
           <span className="text-border">·</span>
-          <a href="mailto:support@sleepreset.com" className="hover:text-foreground transition-colors">Contact</a>
+          <a href="mailto:support@sleepwire.com" className="hover:text-foreground transition-colors">Contact</a>
         </div>
-        <p className="text-xs text-muted-foreground">© 2026 Sleep Reset. All rights reserved.</p>
+        <p className="text-xs text-muted-foreground">© 2026 Sleep Rewire. All rights reserved.</p>
         <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
           This program is for educational purposes only and is not a substitute for professional medical advice. Results vary. If you have a diagnosed sleep disorder, consult your physician before beginning.
         </p>

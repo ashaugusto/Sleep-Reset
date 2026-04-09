@@ -64,7 +64,7 @@ export default function Purchase() {
       <header className="flex items-center px-6 py-4 max-w-lg mx-auto w-full">
         <button onClick={() => setLocation("/")} className="flex items-center gap-2">
           <Moon className="w-5 h-5 text-primary" />
-          <span className="font-semibold">Sleep Reset</span>
+          <span className="font-semibold">Sleep Rewire</span>
         </button>
       </header>
 
@@ -82,13 +82,13 @@ export default function Purchase() {
           </div>
           <h1 className="text-3xl font-bold mb-3">Get full access</h1>
           <p className="text-muted-foreground">
-            One-time payment. No subscription. Access the complete 7-night Sleep Reset program.
+            One-time payment. No subscription. Access The Sleep Rewire Protocol — 7 nights.
           </p>
         </div>
 
         <Card className="w-full p-6 mb-6 border-primary/30 bg-card">
           <div className="flex items-baseline justify-between mb-4">
-            <span className="text-2xl font-bold">$47</span>
+            <span className="text-2xl font-bold">€47</span>
             <span className="text-muted-foreground text-sm">one-time</span>
           </div>
           <ul className="space-y-2 mb-6">
@@ -111,7 +111,7 @@ export default function Purchase() {
             className="w-full py-6 text-base font-semibold"
             size="lg"
           >
-            {isPending ? "Redirecting…" : "Pay $47 & start tonight"}
+            {isPending ? "Redirecting…" : "Pay €47 & start tonight"}
           </Button>
         </Card>
 

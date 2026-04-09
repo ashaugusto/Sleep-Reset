@@ -16,7 +16,7 @@ export default function Terms() {
         </button>
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
           <Moon className="w-4 h-4 text-primary" />
-          <span className="font-bold text-sm">Sleep Reset</span>
+          <span className="font-bold text-sm">Sleep Rewire</span>
         </div>
       </header>
 
@@ -27,13 +27,13 @@ export default function Terms() {
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed">
-          These Terms of Service ("Terms") govern your access to and use of the Sleep Reset platform, website, and digital program (collectively, the "Service") operated by Sleep Reset ("we", "us", or "our"). By creating an account or purchasing the program, you agree to be bound by these Terms.
+          These Terms of Service ("Terms") govern your access to and use of the Sleep Rewire platform, website, and digital program (collectively, the "Service") operated by Sleep Rewire ("we", "us", or "our"). By creating an account or purchasing the program, you agree to be bound by these Terms.
         </p>
 
         {[
           {
             title: "1. The Service",
-            content: `Sleep Reset provides a self-guided, 7-night digital program based on Cognitive Behavioral Therapy for Insomnia (CBT-I). The program includes:
+            content: `Sleep Rewire provides a self-guided, 7-night digital program based on Cognitive Behavioral Therapy for Insomnia (CBT-I). The program includes:
 
 - Nightly guided content and protocols
 - Evening and morning sleep diary tools
@@ -46,7 +46,7 @@ The program is a digital educational product. It is not a medical treatment, the
             title: "2. Medical Disclaimer",
             content: `**This program is not a substitute for professional medical advice, diagnosis, or treatment.**
 
-CBT-I is a well-researched, evidence-based behavioral approach to improving sleep. However, Sleep Reset does not diagnose, treat, or cure any medical condition. If you have or suspect a sleep disorder (such as sleep apnea, narcolepsy, or restless leg syndrome), a mental health condition, or any other medical concern, consult a qualified healthcare professional before beginning this program.
+CBT-I is a well-researched, evidence-based behavioral approach to improving sleep. However, Sleep Rewire does not diagnose, treat, or cure any medical condition. If you have or suspect a sleep disorder (such as sleep apnea, narcolepsy, or restless leg syndrome), a mental health condition, or any other medical concern, consult a qualified healthcare professional before beginning this program.
 
 Individual results vary. We make no guarantee that the program will resolve your specific sleep issues.`,
           },
@@ -59,7 +59,7 @@ Individual results vary. We make no guarantee that the program will resolve your
             content: `To access the full program, you must:
 
 1. Create an account with a valid email address and password
-2. Complete a one-time purchase of $47 USD via Stripe
+2. Complete a one-time purchase of €47 via Stripe
 
 Your account is personal and non-transferable. You are responsible for maintaining the security of your credentials. Do not share your account with others.
 
@@ -67,7 +67,7 @@ The purchase grants you **lifetime access** to the program for your personal, no
           },
           {
             title: "5. Refund Policy",
-            content: `We offer a full 7-night money-back guarantee. If you complete all 7 nights of the protocol and do not notice a measurable improvement in your sleep quality, you may request a full refund within 30 days of purchase by emailing us at support@sleepreset.com.
+            content: `We offer a full 7-night money-back guarantee. If you complete all 7 nights of the protocol and do not notice a measurable improvement in your sleep quality, you may request a full refund within 30 days of purchase by emailing us at support@sleepwire.com.
 
 We reserve the right to refuse refund requests that show no evidence of program completion, or where the refund policy is being abused.
 
@@ -75,7 +75,7 @@ Refunds are processed within 5–10 business days through the original payment m
           },
           {
             title: "6. Intellectual Property",
-            content: `All content within the Sleep Reset platform — including but not limited to program materials, copy, audio, design, and software — is the exclusive intellectual property of Sleep Reset.
+            content: `All content within the Sleep Rewire platform — including but not limited to program materials, copy, audio, design, and software — is the exclusive intellectual property of Sleep Rewire.
 
 Your purchase grants you a personal, non-exclusive, non-transferable licence to access and use the content for your own sleep improvement. You may not:
 
@@ -85,15 +85,15 @@ Your purchase grants you a personal, non-exclusive, non-transferable licence to 
           },
           {
             title: "7. Limitation of Liability",
-            content: `To the maximum extent permitted by applicable law, Sleep Reset shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
+            content: `To the maximum extent permitted by applicable law, Sleep Rewire shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
 
-Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program ($47 USD).`,
+Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program (€47).`,
           },
           {
             title: "8. Termination",
             content: `We reserve the right to suspend or terminate your account at our sole discretion if you violate these Terms, engage in abusive behaviour, or attempt to circumvent payment. In such cases, no refund will be issued.
 
-You may delete your account at any time by contacting us at support@sleepreset.com.`,
+You may delete your account at any time by contacting us at support@sleepwire.com.`,
           },
           {
             title: "9. Changes to Terms",
@@ -101,13 +101,13 @@ You may delete your account at any time by contacting us at support@sleepreset.c
           },
           {
             title: "10. Governing Law",
-            content: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Sleep Reset operates, without regard to conflict of law provisions. Any disputes arising from these Terms shall be resolved through good-faith negotiation, and if necessary, binding arbitration.`,
+            content: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Sleep Rewire operates, without regard to conflict of law provisions. Any disputes arising from these Terms shall be resolved through good-faith negotiation, and if necessary, binding arbitration.`,
           },
           {
             title: "11. Contact",
             content: `For any questions about these Terms, contact us at:
 
-**Email:** support@sleepreset.com`,
+**Email:** support@sleepwire.com`,
           },
         ].map((section) => (
           <div key={section.title} className="space-y-3">
@@ -129,7 +129,7 @@ You may delete your account at any time by contacting us at support@sleepreset.c
             onClick={() => setLocation("/")}
             className="text-sm text-primary hover:underline"
           >
-            ← Back to Sleep Reset
+            ← Back to Sleep Rewire
           </button>
         </div>
       </main>

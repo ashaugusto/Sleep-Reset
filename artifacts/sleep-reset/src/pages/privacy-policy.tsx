@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
         </button>
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
           <Moon className="w-4 h-4 text-primary" />
-          <span className="font-bold text-sm">Sleep Reset</span>
+          <span className="font-bold text-sm">Sleep Rewire</span>
         </div>
       </header>
 
@@ -27,7 +27,7 @@ export default function PrivacyPolicy() {
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Sleep Reset ("we", "our", or "us") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights regarding it. By using the Sleep Reset platform, you agree to the practices described in this policy.
+          Sleep Rewire ("we", "our", or "us") is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights regarding it. By using the Sleep Rewire platform, you agree to the practices described in this policy.
         </p>
 
         {[
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
             title: "2. How We Use Your Information",
             content: `We use your information to:
 
-- Provide and operate the 7-Night Sleep Reset program
+- Provide and operate The Sleep Rewire Protocol
 - Personalise your sleep protocol based on your onboarding answers
 - Track your nightly progress and generate sleep efficiency scores
 - Send transactional emails (account confirmation, purchase receipt) — no marketing emails without your opt-in
@@ -93,7 +93,7 @@ To exercise any of these rights, email us at the address in Section 7.`,
             title: "7. Contact",
             content: `For any privacy-related questions or requests, contact us at:
 
-**Email:** privacy@sleepreset.com
+**Email:** privacy@sleepwire.com
 
 We aim to respond to all requests within 5 business days.`,
           },
@@ -121,7 +121,7 @@ We aim to respond to all requests within 5 business days.`,
             onClick={() => setLocation("/")}
             className="text-sm text-primary hover:underline"
           >
-            ← Back to Sleep Reset
+            ← Back to Sleep Rewire
           </button>
         </div>
       </main>

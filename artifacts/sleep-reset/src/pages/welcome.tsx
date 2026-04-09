@@ -80,7 +80,7 @@ export default function Welcome() {
       {/* Header */}
       <header className="flex items-center justify-center gap-2 py-5 border-b border-border/40">
         <Moon className="w-4 h-4 text-primary" />
-        <span className="font-bold text-sm">Sleep Reset</span>
+        <span className="font-bold text-sm">Sleep Rewire</span>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-10 max-w-md mx-auto w-full">
@@ -137,7 +137,7 @@ export default function Welcome() {
               <div>
                 <h1 className="text-2xl font-extrabold mb-1">Payment Confirmed!</h1>
                 <p className="text-sm text-muted-foreground">
-                  One last step — create your password to access the 7-Night Sleep Reset.
+                  One last step — create your password to access The Sleep Rewire Protocol.
                 </p>
               </div>
             </div>
