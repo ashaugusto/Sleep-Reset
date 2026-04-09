@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import {
   Moon, CheckCircle2, Star, Shield, Play,
-  ChevronDown, AlertTriangle, Clock, Zap, Brain, X
+  ChevronDown, AlertTriangle, Clock, Zap, X
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -237,6 +237,38 @@ export default function Landing() {
           <p className="text-sm text-foreground leading-relaxed">
             <strong>What separates Scenario #3?</strong> It's not genetics. Not luck. Not the right mattress. It's whether your brain has learned the correct{" "}
             <span className="text-primary font-semibold">sleep-wake association</span> — and that's 100% trainable. The science is called <strong>CBT-I</strong>, and it works in 7 nights.
+          </p>
+        </div>
+      </Section>
+
+      <Divider />
+
+      {/* ════════════════════════════════════
+          WHO THIS IS FOR
+      ════════════════════════════════════ */}
+      <Section className="py-8">
+        <SectionLabel>Is this for you?</SectionLabel>
+        <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
+          This Program Is for You If…
+        </h2>
+        <div className="space-y-3 mb-6">
+          {[
+            "You lie awake for more than 20 minutes before falling asleep",
+            "You wake up in the middle of the night and can't get back to sleep",
+            "You feel exhausted during the day even after a \"full night\" in bed",
+            "You've tried melatonin, apps, or white noise — and still can't sleep",
+            "Stress, anxiety, or a racing mind is keeping your brain wired at night",
+            "You want a permanent fix, not another temporary patch",
+          ].map((item) => (
+            <div key={item} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
+              <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <span className="text-sm text-foreground">{item}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-primary/8 border border-primary/30 rounded-2xl p-5">
+          <p className="text-sm text-foreground leading-relaxed">
+            <strong>This is NOT for you if</strong> you have an undiagnosed sleep disorder like sleep apnea or narcolepsy — those require clinical diagnosis first. If you're unsure, speak with your doctor.
           </p>
         </div>
       </Section>
@@ -556,21 +588,33 @@ export default function Landing() {
       </Section>
 
       {/* ── Footer ── */}
-      <div className="border-t border-border/40 py-6 text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
+      <footer className="border-t border-border/40 py-8 text-center px-5">
+        <div className="flex items-center justify-center gap-2 mb-4">
           <Moon className="w-4 h-4 text-primary" />
           <span className="font-bold text-sm">Sleep Reset</span>
         </div>
-        <p className="text-xs text-muted-foreground">
-          © 2026 Sleep Reset ·{" "}
-          <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground underline">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4 text-xs text-muted-foreground">
+          <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">
             Sign in
           </button>
+          <span className="text-border">·</span>
+          <button onClick={() => setLocation("/privacy-policy")} className="hover:text-foreground transition-colors">
+            Privacy Policy
+          </button>
+          <span className="text-border">·</span>
+          <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">
+            Terms of Service
+          </button>
+          <span className="text-border">·</span>
+          <a href="mailto:support@sleepreset.com" className="hover:text-foreground transition-colors">
+            Contact
+          </a>
+        </div>
+        <p className="text-xs text-muted-foreground">© 2026 Sleep Reset. All rights reserved.</p>
+        <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
+          This program is for educational purposes only and is not a substitute for professional medical advice. Results vary. If you have a diagnosed sleep disorder, consult your physician before beginning.
         </p>
-        <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto px-4">
-          Results vary. This is not medical advice. Consult your physician if you have a diagnosed sleep disorder.
-        </p>
-      </div>
+      </footer>
 
     </div>
   );

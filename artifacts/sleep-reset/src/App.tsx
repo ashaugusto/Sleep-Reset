@@ -17,6 +17,8 @@ import SleepLog from "@/pages/sleep-log";
 import Progress from "@/pages/progress";
 import Profile from "@/pages/profile";
 import Purchase from "@/pages/purchase";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import Terms from "@/pages/terms";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,8 @@ function Router() {
       <Route path="/profile">
         <AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>
       </Route>
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms" component={Terms} />
       <Route>
         <AppLayout showNav={false}><NotFound /></AppLayout>
       </Route>
