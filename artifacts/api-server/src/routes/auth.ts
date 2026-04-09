@@ -72,13 +72,13 @@ router.post("/auth/signin", async (req, res) => {
     .limit(1);
 
   if (!user || !user.passwordHash) {
-    res.status(401).json({ message: "Email ou senha incorretos" });
+    res.status(401).json({ message: "Incorrect email or password" });
     return;
   }
 
   const match = await bcrypt.compare(password, user.passwordHash);
   if (!match) {
-    res.status(401).json({ message: "Email ou senha incorretos" });
+    res.status(401).json({ message: "Incorrect email or password" });
     return;
   }
 

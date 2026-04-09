@@ -1,26 +1,20 @@
 import { useLocation } from "wouter";
 import {
   Moon, CheckCircle2, Star, Shield, Play,
-  ChevronDown, AlertTriangle, Clock, Zap, X
+  ChevronDown, AlertTriangle, Clock, Zap, X, Gift, Lock
 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { customFetch } from "@/lib/fetch";
+import { useToast } from "@/hooks/use-toast";
 
 // ─────────────────────────────────────────────────
 // 🎬 VSL VIDEO — paste your YouTube or Vimeo embed
-//    URL below, then delete the placeholder block.
-//
 //    YouTube:  https://www.youtube.com/embed/VIDEO_ID
 //    Vimeo:    https://player.vimeo.com/video/VIDEO_ID
-//
-//    Leave as empty string "" to show placeholder.
+//    Leave as "" to show placeholder.
 // ─────────────────────────────────────────────────
 const VSL_URL = "";
 
-// ─────────────────────────────────────────────────
-// Images — generated for this niche. Swap any path
-// with your own image if needed.
-// ─────────────────────────────────────────────────
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const IMG = {
   awake:     `${base}/images/sleep-awake-3am.png`,
@@ -30,14 +24,216 @@ const IMG = {
   journal:   `${base}/images/sleep-journal.png`,
 };
 
-// ─────────────────────────────────────────────────
-// Reusable components
-// ─────────────────────────────────────────────────
-function CtaButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+// ─── Utility: countdown to midnight ───────────────
+function useMidnightCountdown() {
+  function getSecondsLeft() {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0);
+    return Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+  }
+  const [seconds, setSeconds] = useState(getSecondsLeft);
+  useEffect(() => {
+    const id = setInterval(() => setSeconds(getSecondsLeft()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
+  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+  const s = String(seconds % 60).padStart(2, "0");
+  return { h, m, s, expired: seconds === 0 };
+}
+
+// ─── Reusable layout ──────────────────────────────
+function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <section className={`max-w-lg mx-auto px-5 ${className}`}>{children}</section>;
+}
+function Divider() {
+  return <div className="border-t border-border/30 my-1" />;
+}
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs font-bold text-primary uppercase tracking-widest text-center mb-2">{children}</p>;
+}
+
+// ─── Countdown block ──────────────────────────────
+function CountdownTimer() {
+  const { h, m, s, expired } = useMidnightCountdown();
+  return (
+    <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-4 text-center">
+      <p className="text-xs font-bold text-destructive uppercase tracking-wider mb-3">
+        {expired ? "Price has increased" : "⚡ Introductory price expires at midnight"}
+      </p>
+      <div className="flex items-center justify-center gap-3">
+        {[{ label: "HRS", val: h }, { label: "MIN", val: m }, { label: "SEC", val: s }].map(({ label, val }) => (
+          <div key={label} className="text-center">
+            <div className="bg-background border border-border rounded-xl w-16 py-2">
+              <span className="text-2xl font-extrabold tabular-nums text-foreground">{val}</span>
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground mt-3">
+        After this, price returns to <strong className="text-foreground">$97</strong>
+      </p>
+    </div>
+  );
+}
+
+// ─── Bonus list ───────────────────────────────────
+const BONUSES = [
+  { name: "Sleep Science Masterclass", desc: "The neuroscience behind why you can't sleep — explained so you finally understand the fix", value: "$47" },
+  { name: "Evening Wind-Down Ritual Guide", desc: "15 evidence-based habits that prime your nervous system for deep sleep", value: "$27" },
+  { name: "Morning Recovery Protocol", desc: "Optimize the first 30 minutes of your day to anchor your sleep-wake cycle", value: "$27" },
+  { name: "Sleep Efficiency Tracker Template", desc: "The same spreadsheet framework used in clinical CBT-I trials — yours forever", value: "$27" },
+  { name: "Lifetime Access + All Future Updates", desc: "New nights, features, and research added as the protocol evolves", value: "Priceless" },
+];
+const BONUS_TOTAL = 128; // numeric sum of dollar values
+
+// ─── Inline Order Form ────────────────────────────
+function OrderForm({ id }: { id?: string }) {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) { toast({ title: "Please enter your email", variant: "destructive" }); return; }
+    setLoading(true);
+    try {
+      const r = await customFetch("/api/checkout/public", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), name: name.trim() || null }),
+      });
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({ message: "Something went wrong." }));
+        toast({ title: body.message ?? "Could not start checkout", variant: "destructive" });
+        return;
+      }
+      const { url } = await r.json();
+      window.location.href = url;
+    } catch {
+      toast({ title: "Network error. Please try again.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div id={id} className="bg-card border-2 border-primary/40 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.15)]">
+      {/* Header */}
+      <div className="bg-primary px-5 py-4 text-center">
+        <p className="text-sm font-extrabold text-primary-foreground uppercase tracking-wider">
+          Enter your details to get instant access
+        </p>
+      </div>
+
+      {/* Price comparison */}
+      <div className="px-5 pt-5 pb-4 border-b border-border/50">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">7-Night Sleep Reset — Limited Offer</p>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-extrabold text-foreground">$47</span>
+              <span className="text-lg text-muted-foreground line-through">$199</span>
+            </div>
+            <p className="text-xs text-primary font-bold mt-0.5">You save $152 today</p>
+          </div>
+          <div className="text-right">
+            <div className="bg-primary/10 border border-primary/30 rounded-xl px-3 py-2">
+              <p className="text-xs text-primary font-bold">Total value</p>
+              <p className="text-lg font-extrabold text-foreground">${47 + BONUS_TOTAL}+</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bonus list inside the form */}
+      <div className="px-5 py-4 border-b border-border/50 space-y-2.5">
+        <p className="text-xs font-bold text-foreground uppercase tracking-wider">When you order right now, you get:</p>
+        <div className="flex items-start gap-2.5">
+          <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <span className="text-sm text-foreground font-semibold">Full 7-Night CBT-I Protocol</span>
+            <span className="text-xs text-primary font-bold ml-2">($97 value)</span>
+          </div>
+        </div>
+        {BONUSES.map((b) => (
+          <div key={b.name} className="flex items-start gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="text-sm text-foreground font-semibold">+ {b.name}</span>
+              <span className="text-xs text-primary font-bold ml-2">({b.value} value)</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Form inputs */}
+      <form onSubmit={handleSubmit} className="px-5 pt-5 pb-6 space-y-3">
+        <div>
+          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+            Your Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="First name (optional)"
+            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+            Email Address <span className="text-destructive">*</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your best email"
+            required
+            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-primary text-primary-foreground font-extrabold text-base py-4 rounded-xl shadow-[0_0_30px_rgba(139,92,246,0.4)] hover:shadow-[0_0_50px_rgba(139,92,246,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 mt-1"
+        >
+          {loading ? "Redirecting to secure checkout…" : "Yes — Give Me Instant Access →"}
+        </button>
+
+        <div className="flex items-center justify-center gap-4 pt-1">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Lock className="w-3 h-3" />
+            Secured by Stripe
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Shield className="w-3 h-3" />
+            7-Night Guarantee
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground/70 text-center">
+          One-time payment · No subscription · Immediate access
+        </p>
+      </form>
+    </div>
+  );
+}
+
+// ─── Scroll-to-order helper ────────────────────────
+function scrollToOrder() {
+  document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function CtaButton({ children }: { children: React.ReactNode }) {
   return (
     <div className="text-center">
       <button
-        onClick={onClick}
+        onClick={scrollToOrder}
         className="inline-block w-full max-w-sm bg-primary text-primary-foreground font-bold text-lg py-5 px-8 rounded-2xl shadow-[0_0_40px_rgba(139,92,246,0.4)] hover:shadow-[0_0_60px_rgba(139,92,246,0.6)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 cursor-pointer"
       >
         {children}
@@ -47,40 +243,20 @@ function CtaButton({ children, onClick }: { children: React.ReactNode; onClick: 
   );
 }
 
-function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`max-w-lg mx-auto px-5 ${className}`}>{children}</section>;
-}
-
-function Divider() {
-  return <div className="border-t border-border/30 my-1" />;
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-xs font-bold text-primary uppercase tracking-widest text-center mb-2">{children}</p>
-  );
-}
-
 // ─────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────
 export default function Landing() {
   const [, setLocation] = useLocation();
-  const { isSignedIn, isLoading } = useAuth();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const handleCTA = () => {
-    if (isSignedIn) setLocation("/purchase");
-    else setLocation("/sign-up");
-  };
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
 
-      {/* ── Warning banner ── */}
+      {/* ── Urgency banner ── */}
       <div className="bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-400 text-center text-xs font-semibold py-2.5 px-4">
         <AlertTriangle className="inline w-3.5 h-3.5 mr-1.5 -mt-0.5" />
-        LIMITED ACCESS — Introductory price of <strong>$47</strong> may end at any time
+        LIMITED ACCESS — Introductory price of <strong>$47</strong> ends at midnight. After that, $97.
       </div>
 
       {/* ── Nav ── */}
@@ -122,10 +298,9 @@ export default function Landing() {
           — the only insomnia treatment recommended by the American College of Physicians over sleeping pills — now available as a self-guided 7-night program.
         </p>
 
-        {/* ── VSL Block ── */}
+        {/* ── VSL ── */}
         <div className="relative rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
           {VSL_URL ? (
-            /* ✅ Real video — shows when VSL_URL is filled in */
             <div className="aspect-video">
               <iframe
                 src={VSL_URL}
@@ -136,7 +311,6 @@ export default function Landing() {
               />
             </div>
           ) : (
-            /* 🎬 Placeholder — remove when VSL_URL is set */
             <div className="aspect-video flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-card to-background/60 px-8">
               <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary/50 flex items-center justify-center">
                 <Play className="w-7 h-7 text-primary fill-primary ml-1" />
@@ -156,24 +330,15 @@ export default function Landing() {
           )}
         </div>
 
-        <CtaButton onClick={handleCTA}>
-          Yes — Start My 7-Night Reset →
-        </CtaButton>
+        <CtaButton>Yes — Start My 7-Night Reset →</CtaButton>
       </Section>
 
       <Divider />
 
-      {/* ════════════════════════════════════
-          PROBLEM IMAGE (3am scene)
-      ════════════════════════════════════ */}
+      {/* ── 3am image ── */}
       <Section className="py-8">
         <div className="rounded-2xl overflow-hidden border border-border/40">
-          <img
-            src={IMG.awake}
-            alt="Person lying awake at 3am"
-            className="w-full object-cover"
-            style={{ aspectRatio: "16/9" }}
-          />
+          <img src={IMG.awake} alt="Lying awake at 3am" className="w-full object-cover" style={{ aspectRatio: "16/9" }} />
         </div>
         <p className="text-center text-sm text-muted-foreground mt-3 italic">
           Sound familiar? You're not alone — and it's not your fault.
@@ -190,46 +355,17 @@ export default function Landing() {
         </h2>
 
         {[
-          {
-            num: "1",
-            emoji: "😤",
-            title: "Scenario #1 — You lie awake for hours",
-            desc: "You get into bed on time. You close your eyes. But your brain won't stop. Racing thoughts, replaying conversations, rehearsing tomorrow. You check the clock. 1am. 2am. 3am. You finally sleep — then your alarm goes off.",
-            bad: true,
-          },
-          {
-            num: "2",
-            emoji: "😰",
-            title: "Scenario #2 — You crash, but wake at 3am",
-            desc: "You fall asleep quickly — but wake up wide-eyed in the middle of the night. You lie there staring at the ceiling for 2 hours. By the time you finally drift off, it's almost time to get up again. Every. Single. Day.",
-            bad: true,
-          },
-          {
-            num: "3",
-            emoji: "😴",
-            title: "Scenario #3 — You fall asleep easily and stay asleep",
-            desc: "You're in bed, relaxed. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what the 7-Night Sleep Reset trains your brain to do automatically.",
-            bad: false,
-          },
+          { emoji: "😤", title: "Scenario #1 — You lie awake for hours", desc: "You get into bed on time. You close your eyes. But your brain won't stop. Racing thoughts, replaying conversations, rehearsing tomorrow. You check the clock. 1am. 2am. 3am. You finally sleep — then your alarm goes off.", bad: true },
+          { emoji: "😰", title: "Scenario #2 — You crash, but wake at 3am", desc: "You fall asleep quickly — but wake up wide-eyed in the middle of the night. You lie there staring at the ceiling for 2 hours. By the time you finally drift off, it's almost time to get up again. Every. Single. Day.", bad: true },
+          { emoji: "😴", title: "Scenario #3 — You fall asleep and stay asleep", desc: "You're in bed, relaxed. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what the 7-Night Sleep Reset trains your brain to do automatically.", bad: false },
         ].map((s) => (
-          <div
-            key={s.num}
-            className={`border rounded-2xl p-5 mb-4 ${
-              s.bad
-                ? "border-border/50 bg-card/40"
-                : "border-primary/40 bg-primary/5 shadow-[0_0_30px_rgba(139,92,246,0.12)]"
-            }`}
-          >
+          <div key={s.title} className={`border rounded-2xl p-5 mb-4 ${s.bad ? "border-border/50 bg-card/40" : "border-primary/40 bg-primary/5 shadow-[0_0_30px_rgba(139,92,246,0.12)]"}`}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">{s.emoji}</span>
-              <p className={`text-xs font-bold uppercase tracking-widest ${s.bad ? "text-muted-foreground" : "text-primary"}`}>
-                {s.title}
-              </p>
+              <p className={`text-xs font-bold uppercase tracking-widest ${s.bad ? "text-muted-foreground" : "text-primary"}`}>{s.title}</p>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-            {!s.bad && (
-              <p className="text-xs font-semibold text-primary mt-3">← This is achievable. It just takes the right system.</p>
-            )}
+            {!s.bad && <p className="text-xs font-semibold text-primary mt-3">← This is achievable. It just takes the right system.</p>}
           </div>
         ))}
 
@@ -248,16 +384,14 @@ export default function Landing() {
       ════════════════════════════════════ */}
       <Section className="py-8">
         <SectionLabel>Is this for you?</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          This Program Is for You If…
-        </h2>
+        <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">This Program Is for You If…</h2>
         <div className="space-y-3 mb-6">
           {[
             "You lie awake for more than 20 minutes before falling asleep",
             "You wake up in the middle of the night and can't get back to sleep",
             "You feel exhausted during the day even after a \"full night\" in bed",
             "You've tried melatonin, apps, or white noise — and still can't sleep",
-            "Stress, anxiety, or a racing mind is keeping your brain wired at night",
+            "Stress, anxiety, or a racing mind keeps your brain wired at night",
             "You want a permanent fix, not another temporary patch",
           ].map((item) => (
             <div key={item} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
@@ -268,7 +402,7 @@ export default function Landing() {
         </div>
         <div className="bg-primary/8 border border-primary/30 rounded-2xl p-5">
           <p className="text-sm text-foreground leading-relaxed">
-            <strong>This is NOT for you if</strong> you have an undiagnosed sleep disorder like sleep apnea or narcolepsy — those require clinical diagnosis first. If you're unsure, speak with your doctor.
+            <strong>This is NOT for you if</strong> you have an undiagnosed sleep disorder like sleep apnea or narcolepsy — those require clinical diagnosis first.
           </p>
         </div>
       </Section>
@@ -280,20 +414,11 @@ export default function Landing() {
       ════════════════════════════════════ */}
       <Section className="py-8">
         <SectionLabel>The hard truth</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
-          Why Everything You've Tried Has Failed
-        </h2>
-        <p className="text-center text-sm text-muted-foreground mb-7">
-          It's not because you didn't try hard enough. It's because none of it addresses the root cause.
-        </p>
+        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">Why Everything You've Tried Has Failed</h2>
+        <p className="text-center text-sm text-muted-foreground mb-7">It's not because you didn't try hard enough. It's because none of it addresses the root cause.</p>
 
         <div className="rounded-2xl overflow-hidden border border-border/40 mb-7">
-          <img
-            src={IMG.science}
-            alt="Sleep science and the brain"
-            className="w-full object-cover"
-            style={{ aspectRatio: "1/1", maxHeight: "260px" }}
-          />
+          <img src={IMG.science} alt="Sleep science" className="w-full object-cover" style={{ aspectRatio: "1/1", maxHeight: "260px" }} />
         </div>
 
         {[
@@ -314,18 +439,19 @@ export default function Landing() {
         <div className="bg-primary/8 border border-primary/30 rounded-2xl p-5 mt-2">
           <p className="text-sm leading-relaxed text-foreground">
             <strong>The only treatment proven to work long-term</strong> is{" "}
-            <span className="text-primary font-semibold">Cognitive Behavioral Therapy for Insomnia (CBT-I)</span>. Recommended by the American College of Physicians as the{" "}
-            <em>first-line treatment over sleeping pills</em>. It permanently reprograms the anxiety and behavioral patterns keeping you awake.
+            <span className="text-primary font-semibold">Cognitive Behavioral Therapy for Insomnia (CBT-I)</span>.
+            Recommended by the American College of Physicians as the{" "}
+            <em>first-line treatment over sleeping pills</em>.
           </p>
           <p className="text-xs text-primary font-semibold mt-3">
-            We've turned the CBT-I protocol into a 7-night self-guided program — so you can do it at home, starting tonight.
+            We've turned the CBT-I protocol into a 7-night self-guided program — starting tonight.
           </p>
         </div>
       </Section>
 
-      {/* ── CTA mid-page ── */}
+      {/* ── Mid-page CTA ── */}
       <Section className="py-6">
-        <CtaButton onClick={handleCTA}>Get Instant Access — $47</CtaButton>
+        <CtaButton>Get Instant Access — $47</CtaButton>
       </Section>
 
       <Divider />
@@ -336,20 +462,12 @@ export default function Landing() {
       <Section className="py-8">
         <SectionLabel>The system</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
-          Here's Exactly What Happens
-          <br />Each of the <span className="text-primary">7 Nights</span>
+          Here's Exactly What Happens Each of the <span className="text-primary">7 Nights</span>
         </h2>
-        <p className="text-center text-sm text-muted-foreground mb-8">
-          Each night builds on the last. By Night 7, your brain knows exactly how to sleep.
-        </p>
+        <p className="text-center text-sm text-muted-foreground mb-8">Each night builds on the last. By Night 7, your brain knows exactly how to sleep.</p>
 
         <div className="rounded-2xl overflow-hidden border border-border/40 mb-8">
-          <img
-            src={IMG.journal}
-            alt="Sleep journal and routine"
-            className="w-full object-cover"
-            style={{ aspectRatio: "1/1", maxHeight: "260px" }}
-          />
+          <img src={IMG.journal} alt="Sleep journal" className="w-full object-cover" style={{ aspectRatio: "1/1", maxHeight: "260px" }} />
         </div>
 
         {[
@@ -385,41 +503,17 @@ export default function Landing() {
       <Section className="py-8">
         <SectionLabel>Real results</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-2">What People Are Saying</h2>
-        <p className="text-center text-sm text-muted-foreground mb-7">
-          From people who were exactly where you are now.
-        </p>
+        <p className="text-center text-sm text-muted-foreground mb-7">From people who were exactly where you are now.</p>
 
-        {/* Refreshed image */}
         <div className="rounded-2xl overflow-hidden border border-border/40 mb-7">
-          <img
-            src={IMG.refreshed}
-            alt="Waking up refreshed after sleep reset"
-            className="w-full object-cover"
-            style={{ aspectRatio: "4/3" }}
-          />
+          <img src={IMG.refreshed} alt="Waking up refreshed" className="w-full object-cover" style={{ aspectRatio: "4/3" }} />
         </div>
 
         {[
-          {
-            name: "Alex M., 28",
-            stars: 5,
-            text: "I was skeptical about CBT-I. Tried melatonin for 3 years. Night 3 of this protocol I slept 7 hours straight for the first time in a year. By Night 7 I didn't even think about sleep — I just fell asleep.",
-          },
-          {
-            name: "Jordan T., 31",
-            stars: 5,
-            text: "The brain dump technique on Night 5 alone was worth $47. I used to lie awake for 2 hours replaying my day. Now I'm asleep in under 20 minutes. Every night.",
-          },
-          {
-            name: "Sam K., 24",
-            stars: 5,
-            text: "Waking up at 3am every night for 6 months. Finished Night 7 two weeks ago. Haven't had a single 3am wake since. Genuinely shocked.",
-          },
-          {
-            name: "Riley P., 33",
-            stars: 5,
-            text: "Actual science, not wellness fluff. Watching my sleep efficiency go from 62% to 89% in 7 nights using the built-in tracker was insane.",
-          },
+          { name: "Alex M., 28", stars: 5, text: "I was skeptical about CBT-I. Tried melatonin for 3 years. Night 3 of this protocol I slept 7 hours straight for the first time in a year. By Night 7 I didn't even think about sleep — I just fell asleep." },
+          { name: "Jordan T., 31", stars: 5, text: "The brain dump technique on Night 5 alone was worth $47. I used to lie awake for 2 hours replaying my day. Now I'm asleep in under 20 minutes. Every night." },
+          { name: "Sam K., 24", stars: 5, text: "Waking up at 3am every night for 6 months. Finished Night 7 two weeks ago. Haven't had a single 3am wake since. Genuinely shocked." },
+          { name: "Riley P., 33", stars: 5, text: "Actual science, not wellness fluff. Watching my sleep efficiency go from 62% to 89% in 7 nights using the built-in tracker was insane." },
         ].map((t) => (
           <div key={t.name} className="bg-card border border-border/60 rounded-2xl p-5 mb-4">
             <div className="flex items-center gap-1 mb-2">
@@ -436,55 +530,42 @@ export default function Landing() {
       <Divider />
 
       {/* ════════════════════════════════════
-          PRICING CARD
+          BONUSES SECTION
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>Everything you get</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-6">When You Join Today</h2>
+        <SectionLabel>Free bonuses</SectionLabel>
+        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
+          Order Right Now and Get{" "}
+          <span className="text-primary">5 Exclusive Bonuses</span>
+          {" "}— Free
+        </h2>
+        <p className="text-center text-sm text-muted-foreground mb-7">
+          Total bonus value: <strong className="text-foreground">${BONUS_TOTAL}+</strong> — included at no extra cost.
+        </p>
 
-        <div className="bg-card border border-primary/30 rounded-2xl p-6 shadow-[0_0_50px_rgba(139,92,246,0.1)]">
-          <div className="flex items-baseline justify-between mb-6 border-b border-border pb-5">
-            <div>
-              <p className="text-4xl font-extrabold text-foreground">$47</p>
-              <p className="text-xs text-muted-foreground mt-0.5">one-time · no subscription</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground line-through">$197</p>
-              <p className="text-xs text-primary font-bold">76% off — today only</p>
-            </div>
-          </div>
-
-          <ul className="space-y-3.5 mb-7">
-            {[
-              { label: "Full 7-night CBT-I guided protocol", value: "$97" },
-              { label: "Personalised sleep profile + onboarding", value: "$27" },
-              { label: "Nightly guided audio sessions", value: "$37" },
-              { label: "Evening + morning sleep diary", value: "$17" },
-              { label: "Sleep efficiency score + visual charts", value: "$17" },
-              { label: "Progress tracking & history calendar", value: "$17" },
-              { label: "CSV export for your doctor", value: "Free" },
-              { label: "Lifetime access — no expiry", value: "Priceless" },
-            ].map((item) => (
-              <li key={item.label} className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">{item.label}</span>
+        <div className="space-y-3 mb-6">
+          {BONUSES.map((b, i) => (
+            <div key={b.name} className="flex gap-4 p-4 bg-card border border-border/50 rounded-2xl">
+              <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                <Gift className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-bold text-foreground">Bonus #{i + 1}: {b.name}</p>
+                  <span className="text-xs font-extrabold text-primary shrink-0 bg-primary/10 px-2 py-0.5 rounded-lg">{b.value}</span>
                 </div>
-                <span className="text-xs text-primary font-semibold shrink-0 mt-0.5">{item.value}</span>
-              </li>
-            ))}
-          </ul>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{b.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
 
-          <button
-            onClick={handleCTA}
-            disabled={isLoading}
-            className="w-full bg-primary text-primary-foreground font-bold text-base py-4 rounded-xl shadow-[0_0_30px_rgba(139,92,246,0.4)] hover:shadow-[0_0_50px_rgba(139,92,246,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer disabled:opacity-50"
-          >
-            Get Instant Access — $47
-          </button>
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            Secured by Stripe · Start in 60 seconds
+        <div className="bg-primary/8 border border-primary/30 rounded-2xl p-4 text-center">
+          <p className="text-sm font-bold text-foreground">
+            Total value: <span className="line-through text-muted-foreground">${47 + BONUS_TOTAL}</span>
           </p>
+          <p className="text-2xl font-extrabold text-primary mt-1">Your price today: $47</p>
+          <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">${(47 + BONUS_TOTAL) - 47}</strong></p>
         </div>
       </Section>
 
@@ -494,14 +575,8 @@ export default function Landing() {
           GUARANTEE
       ════════════════════════════════════ */}
       <Section className="py-8">
-        {/* Peaceful sleep image */}
         <div className="rounded-2xl overflow-hidden border border-border/40 mb-7">
-          <img
-            src={IMG.peaceful}
-            alt="Sleeping peacefully after protocol"
-            className="w-full object-cover"
-            style={{ aspectRatio: "16/9" }}
-          />
+          <img src={IMG.peaceful} alt="Sleeping peacefully" className="w-full object-cover" style={{ aspectRatio: "16/9" }} />
         </div>
 
         <div className="flex flex-col items-center text-center gap-4">
@@ -523,20 +598,60 @@ export default function Landing() {
       <Divider />
 
       {/* ════════════════════════════════════
-          FINAL CTA
+          MAIN ORDER FORM
       ════════════════════════════════════ */}
       <Section className="py-8">
         <SectionLabel>Don't wait another sleepless night</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-3 leading-snug">
-          Tonight Could Be the Last Night
-          <br />You Lie Awake Staring at the Ceiling.
+        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
+          Tonight Could Be the Last Night<br />You Lie Awake Staring at the Ceiling.
         </h2>
-        <p className="text-center text-sm text-muted-foreground mb-7">
+        <p className="text-center text-sm text-muted-foreground mb-6">
           The protocol takes 7 nights. Most people feel the difference by Night 3. The question is — how many more nights are you willing to lose?
         </p>
-        <CtaButton onClick={handleCTA}>
-          Yes — Fix My Sleep Tonight →
-        </CtaButton>
+
+        {/* Countdown timer */}
+        <div className="mb-6">
+          <CountdownTimer />
+        </div>
+
+        {/* The main order form */}
+        <OrderForm id="order-form" />
+      </Section>
+
+      <Divider />
+
+      {/* ════════════════════════════════════
+          UPSELL / WHAT'S NEXT
+      ════════════════════════════════════ */}
+      <Section className="py-8">
+        <SectionLabel>Optional upgrade</SectionLabel>
+        <h2 className="text-xl font-extrabold text-center mb-3 leading-snug">
+          Want to Go Deeper? Add the 90-Day Mastery Pack
+        </h2>
+        <p className="text-center text-sm text-muted-foreground mb-5">
+          After completing your 7-night reset, continue with our 90-day advanced protocol — habit stacking, sleep architecture optimisation, and monthly check-ins.
+        </p>
+        <div className="bg-card border border-border/50 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="font-bold text-foreground">90-Day Sleep Mastery Pack</p>
+              <p className="text-xs text-muted-foreground">Advanced protocol · 3-month access</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-extrabold text-foreground">$37</p>
+              <p className="text-xs text-muted-foreground line-through">$97</p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground italic mb-4">
+            * This offer will be available to you immediately after your purchase — no need to decide now.
+          </p>
+          <button
+            onClick={scrollToOrder}
+            className="w-full border border-primary/40 text-primary font-semibold py-3 rounded-xl text-sm hover:bg-primary/5 transition-colors"
+          >
+            Start with the 7-Night Reset First →
+          </button>
+        </div>
       </Section>
 
       <Divider />
@@ -549,26 +664,12 @@ export default function Landing() {
         <h2 className="text-xl font-extrabold text-center mb-6">Common Questions</h2>
 
         {[
-          {
-            q: "Is this the same as CBT-I therapy with a therapist?",
-            a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs $47 instead of $300/session, and you can start tonight. Ideal for people who want evidence-based results without a waitlist.",
-          },
-          {
-            q: "What if I've had insomnia for years?",
-            a: "CBT-I is specifically designed for chronic insomnia. The longer you've had it, the more entrenched the behavioral patterns — which means CBT-I often produces more dramatic results. Many users had 5–10 years of poor sleep before completing the protocol.",
-          },
-          {
-            q: "Do I need a specific wake-up time to make this work?",
-            a: "You'll set a consistent wake time during the protocol — it's central to building sleep pressure. The protocol adapts to your schedule, whether you wake at 6am or 10am.",
-          },
-          {
-            q: "Is there ongoing access after I finish Night 7?",
-            a: "Yes — lifetime access. The sleep diary and tracking tools are yours forever. Many users log their sleep indefinitely to maintain their results.",
-          },
-          {
-            q: "What if it doesn't work for me?",
-            a: "We back it with a full 7-night money-back guarantee. Complete the protocol and if your sleep doesn't measurably improve, email us for a full refund. No questions asked.",
-          },
+          { q: "Do I need to create an account before buying?", a: "No. Just enter your email and name, pay securely through Stripe, and you'll immediately be prompted to create your password. Your account is created automatically after payment — no sign-up friction." },
+          { q: "Is this the same as CBT-I therapy with a therapist?", a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs $47 instead of $300/session, and you can start tonight." },
+          { q: "What if I've had insomnia for years?", a: "CBT-I is specifically designed for chronic insomnia. The longer you've had it, the more entrenched the behavioral patterns — which means CBT-I often produces more dramatic results." },
+          { q: "Do I need a specific wake-up time to make this work?", a: "You'll set a consistent wake time during the protocol — it's central to building sleep pressure. The protocol adapts to your schedule, whether you wake at 6am or 10am." },
+          { q: "Is there ongoing access after I finish Night 7?", a: "Yes — lifetime access. The sleep diary and tracking tools are yours forever. Many users log their sleep indefinitely to maintain their results." },
+          { q: "What if it doesn't work for me?", a: "We back it with a full 7-night money-back guarantee. Complete the protocol and if your sleep doesn't measurably improve, email us for a full refund. No questions asked." },
         ].map((faq, i) => (
           <div key={i} className="border-b border-border/50 last:border-0">
             <button
@@ -576,15 +677,18 @@ export default function Landing() {
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
             >
               <span className="text-sm font-semibold text-foreground">{faq.q}</span>
-              <ChevronDown
-                className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`}
-              />
+              <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`} />
             </button>
             {openFaq === i && (
               <p className="text-sm text-muted-foreground leading-relaxed pb-4">{faq.a}</p>
             )}
           </div>
         ))}
+      </Section>
+
+      {/* ── Footer CTA ── */}
+      <Section className="py-6">
+        <CtaButton>Yes — Fix My Sleep Tonight →</CtaButton>
       </Section>
 
       {/* ── Footer ── */}
@@ -594,21 +698,13 @@ export default function Landing() {
           <span className="font-bold text-sm">Sleep Reset</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4 text-xs text-muted-foreground">
-          <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">
-            Sign in
-          </button>
+          <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">Sign in</button>
           <span className="text-border">·</span>
-          <button onClick={() => setLocation("/privacy-policy")} className="hover:text-foreground transition-colors">
-            Privacy Policy
-          </button>
+          <button onClick={() => setLocation("/privacy-policy")} className="hover:text-foreground transition-colors">Privacy Policy</button>
           <span className="text-border">·</span>
-          <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">
-            Terms of Service
-          </button>
+          <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms of Service</button>
           <span className="text-border">·</span>
-          <a href="mailto:support@sleepreset.com" className="hover:text-foreground transition-colors">
-            Contact
-          </a>
+          <a href="mailto:support@sleepreset.com" className="hover:text-foreground transition-colors">Contact</a>
         </div>
         <p className="text-xs text-muted-foreground">© 2026 Sleep Reset. All rights reserved.</p>
         <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
