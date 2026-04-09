@@ -3,7 +3,7 @@ import {
   Moon, CheckCircle2, Star, Shield, Play,
   ChevronDown, AlertTriangle, Clock, Zap, X, Gift, Lock
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,21 +73,25 @@ function CountdownTimer() {
         ))}
       </div>
       <p className="text-xs text-muted-foreground mt-3">
-        After this, price returns to <strong className="text-foreground">$97</strong>
+        After this, price returns to <strong className="text-foreground">${PRICE_ORIGINAL}</strong>
       </p>
     </div>
   );
 }
 
+// ─── Pricing constants (single source of truth) ───
+const PRICE_TODAY = 47;
+const PRICE_ORIGINAL = 197;
+const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 150
+
 // ─── Bonus list ───────────────────────────────────
 const BONUSES = [
-  { name: "Sleep Science Masterclass", desc: "The neuroscience behind why you can't sleep — explained so you finally understand the fix", value: "$47" },
+  { name: "Sleep Science Masterclass", desc: "The neuroscience behind why you can't sleep — and the exact reason CBT-I works when nothing else does", value: "$47" },
   { name: "Evening Wind-Down Ritual Guide", desc: "15 evidence-based habits that prime your nervous system for deep sleep", value: "$27" },
   { name: "Morning Recovery Protocol", desc: "Optimize the first 30 minutes of your day to anchor your sleep-wake cycle", value: "$27" },
   { name: "Sleep Efficiency Tracker Template", desc: "The same spreadsheet framework used in clinical CBT-I trials — yours forever", value: "$27" },
-  { name: "Lifetime Access + All Future Updates", desc: "New nights, features, and research added as the protocol evolves", value: "Priceless" },
+  { name: "Lifetime Access + All Future Updates", desc: "New nights, features, and research added as the protocol evolves — no extra charge", value: "$27" },
 ];
-const BONUS_TOTAL = 128; // numeric sum of dollar values
 
 // ─── Inline Order Form ────────────────────────────
 function OrderForm({ id }: { id?: string }) {
@@ -122,41 +126,43 @@ function OrderForm({ id }: { id?: string }) {
 
   return (
     <div id={id} className="bg-card border-2 border-primary/40 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.15)]">
-      {/* Header */}
+
+      {/* ── Order form header ── */}
       <div className="bg-primary px-5 py-4 text-center">
         <p className="text-sm font-extrabold text-primary-foreground uppercase tracking-wider">
-          Enter your details to get instant access
+          Enter your details below to get instant access
         </p>
       </div>
 
-      {/* Price comparison */}
-      <div className="px-5 pt-5 pb-4 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">7-Night Sleep Reset — Limited Offer</p>
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-extrabold text-foreground">$47</span>
-              <span className="text-lg text-muted-foreground line-through">$199</span>
-            </div>
-            <p className="text-xs text-primary font-bold mt-0.5">You save $152 today</p>
-          </div>
-          <div className="text-right">
-            <div className="bg-primary/10 border border-primary/30 rounded-xl px-3 py-2">
-              <p className="text-xs text-primary font-bold">Total value</p>
-              <p className="text-lg font-extrabold text-foreground">${47 + BONUS_TOTAL}+</p>
-            </div>
-          </div>
+      {/* ── Price block — crossed out original, big current price ── */}
+      <div className="px-5 pt-6 pb-5 border-b border-border/50 text-center">
+        {/* Crossed-out original */}
+        <p className="text-base text-muted-foreground line-through mb-1">
+          Regular price: ${PRICE_ORIGINAL}
+        </p>
+        {/* Hero price */}
+        <p className="text-6xl font-extrabold text-foreground leading-none mb-2">
+          $<span className="text-primary">{PRICE_TODAY}</span>
+        </p>
+        <p className="text-sm font-bold text-foreground mb-3">One-time payment · Instant access · No subscription</p>
+        {/* Savings badge */}
+        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
+          <span className="text-xs font-extrabold text-primary uppercase tracking-wider">
+            You save ${PRICE_SAVINGS} today — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off
+          </span>
         </div>
       </div>
 
-      {/* Bonus list inside the form */}
+      {/* ── What's included ── */}
       <div className="px-5 py-4 border-b border-border/50 space-y-2.5">
-        <p className="text-xs font-bold text-foreground uppercase tracking-wider">When you order right now, you get:</p>
+        <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">
+          ✅ When you order right now, you instantly get:
+        </p>
         <div className="flex items-start gap-2.5">
           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <div className="flex-1">
             <span className="text-sm text-foreground font-semibold">Full 7-Night CBT-I Protocol</span>
-            <span className="text-xs text-primary font-bold ml-2">($97 value)</span>
+            <span className="text-xs text-muted-foreground ml-2">(${PRICE_ORIGINAL} value)</span>
           </div>
         </div>
         {BONUSES.map((b) => (
@@ -164,10 +170,17 @@ function OrderForm({ id }: { id?: string }) {
             <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <div className="flex-1">
               <span className="text-sm text-foreground font-semibold">+ {b.name}</span>
-              <span className="text-xs text-primary font-bold ml-2">({b.value} value)</span>
+              <span className="text-xs text-muted-foreground ml-2">({b.value} value)</span>
             </div>
           </div>
         ))}
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
+          <span className="text-xs font-bold text-muted-foreground">Total value</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground line-through">$352+</span>
+            <span className="text-sm font-extrabold text-primary">Your price: $47</span>
+          </div>
+        </div>
       </div>
 
       {/* Form inputs */}
@@ -224,6 +237,24 @@ function OrderForm({ id }: { id?: string }) {
   );
 }
 
+// ─── Warning banner (reference-page style) ────────
+function WarningBanner() {
+  const { expired } = useMidnightCountdown();
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  return (
+    <div className="bg-yellow-400 text-gray-900 text-center py-3 px-4">
+      <p className="text-sm font-extrabold leading-snug">
+        <AlertTriangle className="inline w-4 h-4 mr-1.5 -mt-0.5" />
+        {expired
+          ? "⚠️ WARNING: This offer has expired. Price is now $197."
+          : `⚠️ WARNING: This page and the $${PRICE_TODAY} price may be REMOVED at Midnight on ${dateStr}.`}
+      </p>
+    </div>
+  );
+}
+
 // ─── Scroll-to-order helper ────────────────────────
 function scrollToOrder() {
   document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -253,13 +284,10 @@ export default function Landing() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
 
-      {/* ── Urgency banner ── */}
-      <div className="bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-400 text-center text-xs font-semibold py-2.5 px-4">
-        <AlertTriangle className="inline w-3.5 h-3.5 mr-1.5 -mt-0.5" />
-        LIMITED ACCESS — Introductory price of <strong>$47</strong> ends at midnight. After that, $97.
-      </div>
+      {/* ── WARNING banner — reference style ── */}
+      <WarningBanner />
 
-      {/* ── Nav ── */}
+      {/* ── Minimal nav — no Sign In to avoid distraction ── */}
       <header className="flex items-center justify-between px-5 py-4 max-w-lg mx-auto">
         <div className="flex items-center gap-2">
           <Moon className="w-5 h-5 text-primary" />
@@ -267,9 +295,9 @@ export default function Landing() {
         </div>
         <button
           onClick={() => setLocation("/sign-in")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
         >
-          Sign in
+          Already purchased? Sign in →
         </button>
       </header>
 
@@ -540,7 +568,7 @@ export default function Landing() {
           {" "}— Free
         </h2>
         <p className="text-center text-sm text-muted-foreground mb-7">
-          Total bonus value: <strong className="text-foreground">${BONUS_TOTAL}+</strong> — included at no extra cost.
+          Total bonus value: <strong className="text-foreground">$155+</strong> — included at no extra cost.
         </p>
 
         <div className="space-y-3 mb-6">
@@ -562,10 +590,10 @@ export default function Landing() {
 
         <div className="bg-primary/8 border border-primary/30 rounded-2xl p-4 text-center">
           <p className="text-sm font-bold text-foreground">
-            Total value: <span className="line-through text-muted-foreground">${47 + BONUS_TOTAL}</span>
+            Total value: <span className="line-through text-muted-foreground">$352+</span>
           </p>
-          <p className="text-2xl font-extrabold text-primary mt-1">Your price today: $47</p>
-          <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">${(47 + BONUS_TOTAL) - 47}</strong></p>
+          <p className="text-2xl font-extrabold text-primary mt-1">Your price today: ${PRICE_TODAY}</p>
+          <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">$305</strong> — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off the program alone</p>
         </div>
       </Section>
 
