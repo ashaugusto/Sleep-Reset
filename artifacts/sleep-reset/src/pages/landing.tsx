@@ -1,11 +1,11 @@
 import { useLocation } from "wouter";
 import { Moon, CheckCircle2, Headphones, BarChart2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useClerkUser } from "@/hooks/use-clerk-user";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
-  const { isSignedIn, isLoaded } = useClerkUser();
+  const { isSignedIn, isLoading } = useAuth();
 
   const handleCTA = () => {
     if (isSignedIn) {
@@ -45,7 +45,7 @@ export default function Landing() {
           </p>
           <Button
             onClick={handleCTA}
-            disabled={!isLoaded}
+            disabled={isLoading}
             className="w-full max-w-xs text-base py-6 font-semibold"
             size="lg"
           >
@@ -109,7 +109,7 @@ export default function Landing() {
         <div className="text-center">
           <Button
             onClick={handleCTA}
-            disabled={!isLoaded}
+            disabled={isLoading}
             className="w-full max-w-xs text-base py-6 font-semibold"
             size="lg"
           >

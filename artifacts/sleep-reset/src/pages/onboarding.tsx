@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useClerkUser } from "@/hooks/use-clerk-user";
+import { useAuth } from "@/hooks/use-auth";
 import { useUpdateSleepProfile } from "@workspace/api-client-react";
 import { SLEEP_TYPES, SleepTypeId } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
@@ -42,7 +42,7 @@ function formatTime(minutes: number) {
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
-  const { userId } = useClerkUser();
+  const { userId } = useAuth();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

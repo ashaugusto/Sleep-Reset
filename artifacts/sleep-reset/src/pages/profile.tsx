@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useClerk } from "@clerk/react";
-import { useClerkUser } from "@/hooks/use-clerk-user";
+import { useAuth } from "@/hooks/use-auth";
 import { useGetUser, getGetUserQueryKey, useUpdateSleepProfile } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -24,8 +23,7 @@ function parseMinutes(timeStr: string): number {
 }
 
 export default function Profile() {
-  const { userId } = useClerkUser();
-  const { signOut } = useClerk();
+  const { userId, signOut } = useAuth();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
@@ -67,8 +65,7 @@ export default function Profile() {
   };
 
   const handleSignOut = async () => {
-    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-    await signOut({ redirectUrl: `${base}/` });
+    await signOut();
   };
 
   const handleReset = async () => {

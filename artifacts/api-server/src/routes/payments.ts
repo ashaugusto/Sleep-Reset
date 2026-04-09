@@ -1,7 +1,6 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
-import { getAuth } from "@clerk/express";
 import { getStripeClient, isStripeConfigured } from "../stripeClient";
 import { requireAuth } from "../middlewares/requireAuth";
 
@@ -13,7 +12,7 @@ router.post("/checkout", requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  const { userId } = getAuth(req);
+  const userId = req.session.userId!;
   const { priceId } = req.body as { priceId: string };
 
   if (!priceId) {
@@ -26,14 +25,14 @@ router.post("/checkout", requireAuth, async (req: Request, res: Response) => {
   const [user] = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.id, userId!))
+    .where(eq(usersTable.id, userId))
     .limit(1);
 
   let customerId = user?.stripeCustomerId ?? undefined;
 
   if (!customerId) {
     const customer = await stripe.customers.create({
-      metadata: { clerkUserId: userId! },
+      metadata: { userId },
       email: user?.email ?? undefined,
     });
     customerId = customer.id;
@@ -41,7 +40,7 @@ router.post("/checkout", requireAuth, async (req: Request, res: Response) => {
     await db
       .update(usersTable)
       .set({ stripeCustomerId: customerId })
-      .where(eq(usersTable.id, userId!));
+      .where(eq(usersTable.id, userId));
   }
 
   const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
@@ -54,19 +53,19 @@ router.post("/checkout", requireAuth, async (req: Request, res: Response) => {
     mode: "payment",
     success_url: `${baseUrl}/onboarding?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/purchase?cancelled=1`,
-    metadata: { clerkUserId: userId! },
+    metadata: { userId },
   });
 
   res.json({ url: session.url });
 });
 
 router.get("/purchase-status", requireAuth, async (req: Request, res: Response) => {
-  const { userId } = getAuth(req);
+  const userId = req.session.userId!;
 
   const [user] = await db
     .select({ purchasedAt: usersTable.purchasedAt })
     .from(usersTable)
-    .where(eq(usersTable.id, userId!))
+    .where(eq(usersTable.id, userId))
     .limit(1);
 
   res.json({
@@ -98,14 +97,14 @@ export async function stripeWebhookHandler(req: Request, res: Response, _next: N
   }
 
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as { metadata?: { clerkUserId?: string } };
-    const clerkUserId = session.metadata?.clerkUserId;
+    const session = event.data.object as { metadata?: { userId?: string } };
+    const userId = session.metadata?.userId;
 
-    if (clerkUserId) {
+    if (userId) {
       await db
         .update(usersTable)
         .set({ purchasedAt: new Date() })
-        .where(eq(usersTable.id, clerkUserId));
+        .where(eq(usersTable.id, userId));
     }
   }
 

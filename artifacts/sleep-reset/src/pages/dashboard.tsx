@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useClerkUser } from "@/hooks/use-clerk-user";
+import { useAuth } from "@/hooks/use-auth";
 import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Moon, Headphones, BarChart2 } from "lucide-react";
@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  const { userId } = useClerkUser();
+  const { userId } = useAuth();
 
   const { data: user, isLoading } = useGetUser(userId || "", {
     query: {

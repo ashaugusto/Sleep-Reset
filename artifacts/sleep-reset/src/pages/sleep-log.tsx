@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useClerkUser } from "@/hooks/use-clerk-user";
+import { useAuth } from "@/hooks/use-auth";
 import { useListSleepLogs, useCreateSleepLog, useUpdateSleepLogMorning, getListSleepLogsQueryKey } from "@workspace/api-client-react";
 import type { SleepLog } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -163,7 +163,7 @@ function RatingRow({ label, value, onChange }: { label: string; value: string; o
 }
 
 export default function SleepLog() {
-  const { userId } = useClerkUser();
+  const { userId } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: logs, isLoading } = useListSleepLogs(userId || "", {
