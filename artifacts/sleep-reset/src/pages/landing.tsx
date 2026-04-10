@@ -13,7 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 //    Vimeo:    https://player.vimeo.com/video/VIDEO_ID
 //    Leave as "" to show placeholder.
 // ─────────────────────────────────────────────────
-const VSL_URL = "";
+// Set to your video path (e.g. "/videos/vsl.mp4") or a YouTube/Vimeo embed URL.
+// Leave as "" to show the placeholder.
+const VSL_URL = "/videos/vsl.mp4";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const IMG = {
@@ -333,13 +335,24 @@ export default function Landing() {
         <div className="relative rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
           {VSL_URL ? (
             <div className="aspect-video">
-              <iframe
-                src={VSL_URL}
-                className="w-full h-full"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-                title="The Sleep Rewire Protocol — Watch this first"
-              />
+              {VSL_URL.startsWith("/") ? (
+                <video
+                  src={`${base}${VSL_URL}`}
+                  className="w-full h-full"
+                  controls
+                  preload="metadata"
+                  playsInline
+                  title="The Sleep Rewire Protocol — Watch this first"
+                />
+              ) : (
+                <iframe
+                  src={VSL_URL}
+                  className="w-full h-full"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  title="The Sleep Rewire Protocol — Watch this first"
+                />
+              )}
             </div>
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-card to-background/60 px-8">
