@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 
 // ─── Config ───────────────────────────────────────
 const BRAND = "Sleep Rewire";
-const PRODUCT = "SleepCalm — Suplemento Natural do Sono";
+const PRODUCT = "SleepCalm — Natural Sleep Supplement";
 const CURRENCY = "€";
 const PRICE = 10;
-const WHATSAPP_NUMBER = "353000000000"; // substitua pelo número real (sem + ou espaços)
+const WHATSAPP_NUMBER = "353000000000"; // replace with real number (no + or spaces)
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  `Olá! Quero encomendar o ${PRODUCT} por ${CURRENCY}${PRICE}. Entrega em Dublin. 🌙`
+  `Hi! I'd like to order ${PRODUCT} for ${CURRENCY}${PRICE}. Delivery in Dublin. 🌙`
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 
@@ -52,8 +52,8 @@ function WarningBanner() {
       <p className="text-sm font-extrabold leading-snug">
         <AlertTriangle className="inline w-4 h-4 mr-1.5 -mt-0.5" />
         {expired
-          ? `⚠️ AVISO: Esta oferta expirou. Verifique disponibilidade no WhatsApp.`
-          : `⚠️ AVISO: Stock limitado disponível. Esta página pode ser removida a meia-noite de ${dateStr}.`}
+          ? `⚠️ WARNING: This offer may have expired — check availability on WhatsApp.`
+          : `⚠️ WARNING: Limited stock available. This page may be removed at midnight on ${dateStr}.`}
       </p>
     </div>
   );
@@ -65,7 +65,7 @@ function CountdownTimer() {
   return (
     <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-4 text-center">
       <p className="text-xs font-bold text-destructive uppercase tracking-wider mb-3">
-        {expired ? "Oferta pode ter expirado — contacte-nos no WhatsApp" : "⚡ Preço especial expira à meia-noite"}
+        {expired ? "Offer may have expired — contact us on WhatsApp" : "⚡ Special price expires at midnight"}
       </p>
       <div className="flex items-center justify-center gap-3">
         {[{ label: "HRS", val: h }, { label: "MIN", val: m }, { label: "SEC", val: s }].map(({ label, val }) => (
@@ -94,10 +94,10 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
           className="inline-flex items-center justify-center gap-3 w-full max-w-sm bg-[#25D366] text-white font-extrabold text-lg py-5 px-8 rounded-2xl shadow-[0_0_40px_rgba(37,211,102,0.4)] hover:shadow-[0_0_60px_rgba(37,211,102,0.6)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 cursor-pointer"
         >
           <MessageCircle className="w-6 h-6" />
-          Encomendar pelo WhatsApp →
+          Order via WhatsApp →
         </button>
         <p className="text-xs text-muted-foreground mt-2">
-          1 unidade · {CURRENCY}{PRICE} · Entrega grátis em Dublin
+          1 unit · {CURRENCY}{PRICE} · Free delivery in Dublin
         </p>
       </div>
     );
@@ -108,7 +108,7 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
       className="inline-flex items-center justify-center gap-2 w-full bg-[#25D366] text-white font-extrabold text-base py-4 rounded-xl shadow-[0_0_30px_rgba(37,211,102,0.35)] hover:shadow-[0_0_50px_rgba(37,211,102,0.55)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
     >
       <MessageCircle className="w-5 h-5" />
-      Quero encomendar agora →
+      I want to order now →
     </button>
   );
 }
@@ -143,28 +143,28 @@ export default function Solution() {
       <Section className="pt-4 pb-8 text-center">
         <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
           <Star className="w-3 h-3 fill-current" />
-          Fórmula natural · Sem dependência · Entrega grátis em Dublin
+          Natural formula · No dependency · Free delivery in Dublin
         </div>
 
         <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">
-          Finalmente uma solução natural para dormir melhor
+          Finally — a natural solution to sleep better
         </p>
 
         <h1 className="text-[2rem] font-extrabold leading-[1.15] mb-5">
-          Durma Profundamente Todas as Noites —{" "}
-          <span className="text-primary">Sem Prescrição Médica.</span>
+          Sleep Deeply Every Night —{" "}
+          <span className="text-primary">No Prescription Needed.</span>
         </h1>
 
         <p className="text-muted-foreground text-base leading-relaxed mb-7">
-          O <strong className="text-foreground">SleepCalm</strong> é um suplemento natural desenvolvido para quem sofre de ansiedade nocturna, pensamentos acelerados e dificuldade em adormecer. Ingredientes clinicamente estudados. Sem efeitos secundários. Sem habituação.
+          <strong className="text-foreground">SleepCalm</strong> is a natural supplement designed for people who suffer from night-time anxiety, racing thoughts, and difficulty falling asleep. Clinically studied ingredients. No side effects. No dependency.
         </p>
 
         {/* ── Delivery badge ── */}
         <div className="flex items-center justify-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 rounded-2xl p-4 mb-7">
           <Truck className="w-5 h-5 text-[#25D366] shrink-0" />
           <div className="text-left">
-            <p className="text-sm font-bold text-foreground">Entrega Grátis em Dublin</p>
-            <p className="text-xs text-muted-foreground">Enviamos para toda a cidade · Rápido e discreto</p>
+            <p className="text-sm font-bold text-foreground">Free Delivery in Dublin</p>
+            <p className="text-xs text-muted-foreground">We deliver across the city · Fast and discreet</p>
           </div>
         </div>
 
@@ -174,32 +174,32 @@ export default function Solution() {
       <Divider />
 
       {/* ════════════════════════════════════
-          3 SCENARIOS (familiar)
+          3 SCENARIOS
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>Reconhece-se nisto?</SectionLabel>
+        <SectionLabel>Sound familiar?</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-8 leading-snug">
-          Toda a noite, um destes{" "}
-          <span className="text-primary">3 cenários</span> acontece a quem dorme mal:
+          Every night, one of these{" "}
+          <span className="text-primary">3 scenarios</span> plays out for poor sleepers:
         </h2>
 
         {[
           {
             emoji: "😤",
-            title: "Cenário #1 — O cérebro não para",
-            desc: "Está exausto. Deita-se. Mas a mente liga-se como uma máquina — preocupações, conversas antigas, problemas de amanhã. O peito aperta. O coração não abranda. Quanto mais tenta forçar o sono, mais acordado fica. O relógio marca as 3 da manhã.",
+            title: "Scenario #1 — Your brain won't switch off",
+            desc: "You're exhausted. You lie down. But your mind turns on like a machine — worst-case scenarios, old conversations, tomorrow's problems. Your chest tightens. Your heart won't slow down. The harder you try to force sleep, the wider awake you become. The clock says 3am.",
             bad: true,
           },
           {
             emoji: "😰",
-            title: "Cenário #2 — Acorda a meio da noite",
-            desc: "Adormece depressa — mas acorda às 3 da manhã com um salto de ansiedade. A mente começa imediatamente a acelerar. Fica deitado a olhar para o tecto. Quando finalmente consegue adormecer, é quase hora de levantar. Todas. As. Noites.",
+            title: "Scenario #2 — You crash, then wake at 3am",
+            desc: "You fall asleep quickly — but bolt awake at 3am with a jolt of anxiety. Your mind immediately starts racing. You lie there staring at the ceiling, adrenaline running. By the time you finally drift off, it's almost time to get up. Every. Single. Night.",
             bad: true,
           },
           {
             emoji: "😴",
-            title: "Cenário #3 — Adormece e fica a dormir",
-            desc: "Está na cama, calmo. O ciclo ansioso não começa. O sono vem em 15 minutos. Dorme a noite toda. Acorda antes do despertador — genuinamente descansado. É isto que o SleepCalm ajuda o seu corpo a fazer de forma natural.",
+            title: "Scenario #3 — You fall asleep and stay asleep",
+            desc: "You're in bed, calm. The anxious loop doesn't start. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what SleepCalm helps your body do, naturally.",
             bad: false,
           },
         ].map((s) => (
@@ -220,7 +220,7 @@ export default function Solution() {
             <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             {!s.bad && (
               <p className="text-xs font-semibold text-primary mt-3">
-                ← Isto é possível. O SleepCalm prepara o seu corpo para isso.
+                ← This is achievable. SleepCalm prepares your body for exactly this.
               </p>
             )}
           </div>
@@ -233,19 +233,19 @@ export default function Solution() {
           PRODUCT DETAILS
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>O que está dentro</SectionLabel>
+        <SectionLabel>What's inside</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          Ingredientes Naturais,{" "}
-          <span className="text-primary">Resultados Reais</span>
+          Natural Ingredients,{" "}
+          <span className="text-primary">Real Results</span>
         </h2>
 
         <div className="space-y-3 mb-6">
           {[
-            { name: "Valeriana", desc: "Reduz o tempo para adormecer e melhora a qualidade do sono profundo" },
-            { name: "Melatonina (baixa dose)", desc: "Regula o ciclo circadiano de forma suave, sem criar dependência" },
-            { name: "Magnésio Bisglicinato", desc: "Relaxa o sistema muscular e nervoso, combate o cortisol nocturno" },
-            { name: "L-Teanina", desc: "Promove calma mental sem sedação — ideal para ansiedade nocturna" },
-            { name: "Extracto de Maracujá", desc: "Reduz pensamentos acelerados e facilita a transição para o sono" },
+            { name: "Valerian Root", desc: "Reduces time to fall asleep and improves deep sleep quality" },
+            { name: "Melatonin (low dose)", desc: "Gently regulates the circadian cycle without creating dependency" },
+            { name: "Magnesium Bisglycinate", desc: "Relaxes the muscular and nervous system, combats night-time cortisol" },
+            { name: "L-Theanine", desc: "Promotes calm focus without sedation — ideal for night-time anxiety" },
+            { name: "Passionflower Extract", desc: "Reduces racing thoughts and eases the transition into sleep" },
           ].map((item) => (
             <div key={item.name} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -259,7 +259,7 @@ export default function Solution() {
 
         <div className="bg-card border border-border/50 rounded-2xl p-5">
           <p className="text-sm text-foreground leading-relaxed">
-            <strong>100% natural, sem glúten, sem lactose.</strong> Fabricado dentro das normas GMP (Good Manufacturing Practice). Adequado para uso continuado sem risco de habituação ou dependência.
+            <strong>100% natural, gluten-free, dairy-free.</strong> Manufactured to GMP (Good Manufacturing Practice) standards. Safe for ongoing use with no risk of tolerance or dependency.
           </p>
         </div>
       </Section>
@@ -270,18 +270,18 @@ export default function Solution() {
           BENEFITS LIST
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>Para quem é?</SectionLabel>
+        <SectionLabel>Is this for you?</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          Este Suplemento É Para Si Se…
+          This Supplement Is For You If…
         </h2>
         <div className="space-y-3 mb-6">
           {[
-            "A mente acelera assim que tenta adormecer, mesmo estando esgotado",
-            "A ansiedade ou o stress são a principal razão por não conseguir dormir",
-            "Acorda a meio da noite com preocupações e não consegue voltar a adormecer",
-            "Sente-se cansado durante o dia mesmo depois de horas na cama",
-            "Já experimentou melatonina isolada ou apps de meditação — sem resultado",
-            "Quer uma solução natural sem receita, sem efeitos secundários, sem riscos",
+            "Your mind races the moment you try to sleep — even when you're exhausted",
+            "Anxiety or stress is the main reason you can't fall or stay asleep",
+            "You wake up at 3am with a jolt of worry and can't get back to sleep",
+            "You feel tired during the day even after hours in bed",
+            "You've tried plain melatonin or meditation apps — with no results",
+            "You want a natural solution with no prescription, no side effects, no risks",
           ].map((item) => (
             <div key={item} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -297,10 +297,10 @@ export default function Solution() {
           SOCIAL PROOF
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>O que dizem os clientes</SectionLabel>
+        <SectionLabel>What customers are saying</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          Pessoas Reais,{" "}
-          <span className="text-primary">Resultados Reais</span>
+          Real People,{" "}
+          <span className="text-primary">Real Results</span>
         </h2>
 
         <div className="space-y-4">
@@ -308,19 +308,19 @@ export default function Solution() {
             {
               name: "Ana R.",
               location: "Dublin 4",
-              text: "Há meses que não dormia mais de 4 horas seguidas. Na segunda noite a tomar o SleepCalm já estava a dormir 6 horas. Continuei e agora durmo a noite toda. Mudou a minha vida.",
+              text: "I hadn't slept more than 4 hours straight in months. By the second night taking SleepCalm I was already sleeping 6 hours. I kept going and now I sleep through the night. It changed my life.",
               stars: 5,
             },
             {
               name: "Miguel S.",
               location: "Dublin 2",
-              text: "Estava céptico, mas depois de 3 semanas com outros suplementos sem resultado, decidi experimentar. A diferença foi imediata — adormeço mais depressa e já não acordo às 3 da manhã.",
+              text: "I was sceptical, but after 3 weeks of other supplements with no results I decided to try it. The difference was immediate — I fall asleep faster and I no longer wake up at 3am.",
               stars: 5,
             },
             {
               name: "Carla M.",
               location: "Dublin 8",
-              text: "Finalmente um produto que funciona sem me deixar zonza de manhã. Sinto-me descansada a acordar pela primeira vez em anos. E a entrega foi super rápida!",
+              text: "Finally a product that works without leaving me groggy in the morning. I feel rested when I wake up for the first time in years. And the delivery was super fast!",
               stars: 5,
             },
           ].map((r) => (
@@ -356,7 +356,7 @@ export default function Solution() {
           {/* Header */}
           <div className="bg-primary px-5 py-4 text-center">
             <p className="text-sm font-extrabold text-primary-foreground uppercase tracking-wider">
-              Encomendar agora — via WhatsApp
+              Order now — via WhatsApp
             </p>
           </div>
 
@@ -366,13 +366,13 @@ export default function Solution() {
               {CURRENCY}<span className="text-primary">{PRICE}</span>
             </p>
             <p className="text-sm font-bold text-foreground mb-4">
-              1 embalagem · Pagamento na entrega disponível
+              1 unit · Pay on delivery available
             </p>
 
             <div className="flex items-center justify-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 rounded-full px-4 py-1.5 mb-2">
               <Truck className="w-3.5 h-3.5 text-[#25D366]" />
               <span className="text-xs font-extrabold text-[#25D366] uppercase tracking-wider">
-                Entrega grátis em Dublin
+                Free delivery in Dublin
               </span>
             </div>
           </div>
@@ -380,13 +380,13 @@ export default function Solution() {
           {/* What's included */}
           <div className="px-5 py-5 border-b border-border/50 space-y-3">
             <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">
-              ✅ Ao encomendar recebe:
+              ✅ When you order you get:
             </p>
             {[
-              { icon: Package, label: "1 embalagem SleepCalm (30 cápsulas — 1 mês de uso)" },
-              { icon: Truck, label: "Entrega grátis em Dublin — rápida e discreta" },
-              { icon: Clock, label: "Suporte via WhatsApp — resposta em menos de 1 hora" },
-              { icon: Shield, label: "Garantia de satisfação — se não funcionar, devolvemos" },
+              { icon: Package, label: "1 pack of SleepCalm (30 capsules — 1 month supply)" },
+              { icon: Truck, label: "Free delivery in Dublin — fast and discreet" },
+              { icon: Clock, label: "WhatsApp support — response in under 1 hour" },
+              { icon: Shield, label: "Satisfaction guarantee — if it doesn't work, we sort it out" },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-start gap-2.5">
                 <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -405,15 +405,15 @@ export default function Solution() {
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Truck className="w-3 h-3" />
-                Entrega grátis Dublin
+                Free Dublin delivery
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Zap className="w-3 h-3" />
-                Resposta rápida
+                Fast response
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground/70 text-center">
-              Sem subscrição · Sem compromisso · Pague apenas o que encomendou
+              No subscription · No commitment · Pay only for what you ordered
             </p>
           </div>
         </div>
@@ -434,32 +434,32 @@ export default function Solution() {
           FAQ
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>Perguntas frequentes</SectionLabel>
+        <SectionLabel>Frequently asked questions</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          Tem Dúvidas?
+          Got Questions?
         </h2>
 
         <div className="space-y-3">
           {[
             {
-              q: "Como funciona o processo de encomenda?",
-              a: "É simples: clique no botão de WhatsApp, envie-nos uma mensagem e nós confirmamos a sua encomenda. Combinamos a entrega em Dublin e pode pagar por transferência ou na entrega.",
+              q: "How does the ordering process work?",
+              a: "It's simple: click the WhatsApp button, send us a message and we confirm your order. We arrange delivery in Dublin and you can pay by bank transfer or on delivery.",
             },
             {
-              q: "Quanto tempo demora a entrega em Dublin?",
-              a: "Entregamos normalmente no mesmo dia ou no dia seguinte, dependendo da sua localização em Dublin. A entrega é totalmente grátis.",
+              q: "How long does delivery in Dublin take?",
+              a: "We usually deliver the same day or the next day, depending on your location in Dublin. Delivery is completely free.",
             },
             {
-              q: "É seguro? Tem efeitos secundários?",
-              a: "O SleepCalm é 100% natural e fabricado com ingredientes clinicamente estudados. Não cria dependência e não causa sonolência residual de manhã. Como com qualquer suplemento, consulte o seu médico se estiver grávida ou a tomar medicação.",
+              q: "Is it safe? Does it have side effects?",
+              a: "SleepCalm is 100% natural and made with clinically studied ingredients. It does not cause dependency and does not leave you groggy the next morning. As with any supplement, consult your doctor if you are pregnant or taking medication.",
             },
             {
-              q: "E se não funcionar?",
-              a: "Temos uma garantia de satisfação. Se não ficar satisfeito com os resultados após 2 semanas de uso, contacte-nos pelo WhatsApp e resolvemos.",
+              q: "What if it doesn't work?",
+              a: "We offer a satisfaction guarantee. If you're not happy with the results after 2 weeks of use, contact us on WhatsApp and we'll make it right.",
             },
             {
-              q: "Posso encomendar mais do que uma embalagem?",
-              a: "Claro! Muitos clientes encomendam 2 ou 3 unidades para ter stock. Fale connosco pelo WhatsApp e combinamos.",
+              q: "Can I order more than one unit?",
+              a: "Of course! Many customers order 2 or 3 units to keep in stock. Just message us on WhatsApp and we'll sort it out.",
             },
           ].map((item, i) => (
             <FaqItem key={i} q={item.q} a={item.a} />
@@ -472,14 +472,14 @@ export default function Solution() {
       ════════════════════════════════════ */}
       <Section className="py-10 text-center">
         <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-4">
-          Não deixe para outra noite
+          Don't leave it for another night
         </p>
         <h2 className="text-2xl font-extrabold mb-4 leading-snug">
-          Esta noite pode ser{" "}
-          <span className="text-primary">a última noite</span> a dormir mal.
+          Tonight could be{" "}
+          <span className="text-primary">the last night</span> you sleep badly.
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed mb-7">
-          Por apenas {CURRENCY}{PRICE} com entrega grátis em Dublin — comece já a dormir melhor.
+          Just {CURRENCY}{PRICE} with free delivery in Dublin — start sleeping better tonight.
         </p>
         <WhatsAppButton size="large" />
       </Section>
@@ -492,10 +492,10 @@ export default function Solution() {
             <span className="text-sm font-bold text-foreground">{BRAND}</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Suplemento alimentar. Não substitui tratamento médico. Mantenha fora do alcance de crianças.
+            Food supplement. Does not replace medical treatment. Keep out of reach of children.
           </p>
           <p className="text-xs text-muted-foreground">
-            Para encomendas e suporte:{" "}
+            Orders and support:{" "}
             <button
               onClick={() => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer")}
               className="text-[#25D366] hover:underline font-semibold"
