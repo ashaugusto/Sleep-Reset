@@ -1,14 +1,40 @@
 import { useLocation } from "wouter";
 import {
-  Moon, CheckCircle2, Star, Shield, Play,
-  ChevronDown, AlertTriangle, Clock, Zap, X, Gift, Lock
+  Moon, CheckCircle2, Star, Shield,
+  ChevronDown, AlertTriangle, X, Gift, Lock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 import { gtm } from "@/lib/gtm";
 
-const VSL_URL = "https://player.vimeo.com/video/1182232180?title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479";
+const VTURB_ID = "vid-69da9fe6ccd7dd53185cf510";
+const VTURB_SCRIPT = "https://scripts.converteai.net/dc533977-8fef-4dfd-bced-2f9fa805f669/players/69da9fe6ccd7dd53185cf510/v4/player.js";
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "vturb-smartplayer": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { id?: string };
+    }
+  }
+}
+
+function VturbPlayer() {
+  useEffect(() => {
+    if (document.querySelector(`script[src="${VTURB_SCRIPT}"]`)) return;
+    const s = document.createElement("script");
+    s.src = VTURB_SCRIPT;
+    s.async = true;
+    document.head.appendChild(s);
+  }, []);
+
+  return (
+    <vturb-smartplayer
+      id={VTURB_ID}
+      style={{ display: "block", margin: "0 auto", width: "100%" }}
+    />
+  );
+}
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const IMG = {
@@ -328,58 +354,8 @@ export default function Landing() {
         </p>
 
         {/* ── VSL ── */}
-        <div className="relative rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
-          {VSL_URL ? (
-            <div
-              className="aspect-video relative"
-              onContextMenu={(e) => e.preventDefault()}
-              style={{ userSelect: "none" }}
-            >
-              {VSL_URL.startsWith("/") ? (
-                <video
-                  className="w-full h-full"
-                  controls
-                  preload="auto"
-                  playsInline
-                  title="Sleep Protocol — Video"
-                >
-                  <source src={`${base}${VSL_URL}`} type="video/mp4" />
-                </video>
-              ) : (
-                <iframe
-                  src={VSL_URL}
-                  className="w-full h-full"
-                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                  allowFullScreen
-                  title="Sleep Protocol — Video"
-                  frameBorder="0"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-              )}
-              <div
-                className="absolute inset-0 z-10 pointer-events-none select-none"
-                onContextMenu={(e) => e.preventDefault()}
-                style={{ background: "transparent" }}
-              />
-            </div>
-          ) : (
-            <div className="aspect-video flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-card to-background/60 px-8">
-              <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary/50 flex items-center justify-center">
-                <Play className="w-7 h-7 text-primary fill-primary ml-1" />
-              </div>
-              <div className="space-y-1 text-center">
-                <p className="text-sm font-bold text-foreground">Your Video Goes Here</p>
-                <p className="text-xs text-muted-foreground max-w-[220px] mx-auto">
-                  Set <code className="text-primary bg-primary/10 px-1 py-0.5 rounded text-[10px]">VSL_URL</code> at the top of{" "}
-                  <code className="text-primary bg-primary/10 px-1 py-0.5 rounded text-[10px]">landing.tsx</code> to embed your video
-                </p>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Night 1 starts tonight</span>
-                <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> Results by Night 4</span>
-              </div>
-            </div>
-          )}
+        <div className="rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
+          <VturbPlayer />
         </div>
 
         <CtaButton>Yes — Rewire My Sleep Tonight →</CtaButton>
