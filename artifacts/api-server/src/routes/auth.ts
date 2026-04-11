@@ -103,12 +103,15 @@ router.post("/auth/register", async (req, res) => {
   if (existing) {
     // Already registered — just sign them in
     req.session.userId = existing.id;
-    res.json({
-      id: existing.id,
-      email: existing.email,
-      name: existing.name,
-      onboardingComplete: existing.onboardingComplete,
-      purchasedAt: existing.purchasedAt,
+    req.session.save((err) => {
+      if (err) { res.status(500).json({ message: "Session error. Please try again." }); return; }
+      res.json({
+        id: existing.id,
+        email: existing.email,
+        name: existing.name,
+        onboardingComplete: existing.onboardingComplete,
+        purchasedAt: existing.purchasedAt,
+      });
     });
     return;
   }
@@ -130,14 +133,16 @@ router.post("/auth/register", async (req, res) => {
 
   req.session.userId = user.id;
 
-  sendWelcomeEmail({ email: user.email!, name: user.name }).catch(() => {});
-
-  res.json({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    onboardingComplete: user.onboardingComplete,
-    purchasedAt: user.purchasedAt,
+  req.session.save((err) => {
+    if (err) { res.status(500).json({ message: "Session error. Please try again." }); return; }
+    sendWelcomeEmail({ email: user.email!, name: user.name }).catch(() => {});
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      onboardingComplete: user.onboardingComplete,
+      purchasedAt: user.purchasedAt,
+    });
   });
 });
 
@@ -169,12 +174,18 @@ router.post("/auth/login", async (req, res) => {
 
   req.session.userId = user.id;
 
-  res.json({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    onboardingComplete: user.onboardingComplete,
-    purchasedAt: user.purchasedAt,
+  req.session.save((err) => {
+    if (err) {
+      res.status(500).json({ message: "Session error. Please try again." });
+      return;
+    }
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      onboardingComplete: user.onboardingComplete,
+      purchasedAt: user.purchasedAt,
+    });
   });
 });
 
