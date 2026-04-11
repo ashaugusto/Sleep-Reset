@@ -1,0 +1,157 @@
+2026-04-11 13:13:09.23
+f88a1aca
+System
+registered static handler for artifact path=/ publicDir=artifacts/sleep-reset/dist/public
+2026-04-11 13:13:09.23
+f88a1aca
+System
+forwarding local port 0 to external port 80 (mapped as 1104)
+2026-04-11 13:13:09.23
+f88a1aca
+System
+waiting for runnable artifact ports ports=[8080]
+2026-04-11 13:13:09.23
+f88a1aca
+System
+starting artifact processes count=1
+2026-04-11 13:13:09.23
+f88a1aca
+System
+starting artifact process artifact=artifacts/api-server args=[node --enable-source-maps artifacts/api-server/dist/index.mjs] port=8080
+2026-04-11 13:13:09.25
+f88a1aca
+System
+artifact process started artifact=artifacts/api-server pid=20
+2026-04-11 13:13:10.65
+f88a1aca
+User
+[video] workspace root: /home/runner/workspace
+2026-04-11 13:13:10.65
+f88a1aca
+User
+[video] video path: /home/runner/workspace/artifacts/sleep-reset/public/videos/vsl.mp4 — exists: true
+2026-04-11 13:13:10.68
+f88a1aca
+System
+artifact port detected detected=1 expected=1 port=8080
+2026-04-11 13:13:10.68
+f88a1aca
+System
+all artifact ports detected
+2026-04-11 13:13:10.68
+f88a1aca
+System
+artifact processes running, waiting for signal or process exit
+2026-04-11 13:13:10.68
+f88a1aca
+User
+(node:20) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-04-11 13:13:10.68
+f88a1aca
+User
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+2026-04-11 13:13:10.68
+f88a1aca
+User
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-04-11 13:13:10.68
+f88a1aca
+User
+To prepare for this change:
+2026-04-11 13:13:11.29
+f88a1aca
+User
+dataType: undefined,
+2026-04-11 13:13:11.29
+f88a1aca
+User
+schema: undefined,
+2026-04-11 13:13:11.29
+f88a1aca
+User
+column: undefined,
+2026-04-11 13:13:11.29
+f88a1aca
+User
+table: undefined,
+2026-04-11 13:15:24.34
+f88a1aca
+User
+(node:20) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-04-11 13:15:24.35
+f88a1aca
+User
+(node:20) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+2026-04-11 13:15:24.53
+f88a1aca
+User
+{"level":30,"time":1775906124536,"pid":20,"hostname":"localhost","req":{"id":2,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":200},"responseTime":190,"msg":"request completed"}
+2026-04-11 13:17:06.61
+57677c70
+System
+sending SIGTERM to artifact process artifact=artifacts/api-server
+2026-04-11 13:17:06.61
+57677c70
+System
+received signal, shutting down artifact processes signal=terminated
+2026-04-11 13:17:06.63
+57677c70
+System
+all artifact processes stopped
+2026-04-11 13:17:06.63
+57677c70
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-04-11 13:17:06.63
+57677c70
+System
+main done, exiting
+2026-04-11 13:28:36.35
+f88a1aca
+User
+{"level":30,"time":1775906916351,"pid":20,"hostname":"localhost","req":{"id":3,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":200},"responseTime":227,"msg":"request completed"}
+2026-04-11 13:34:15.32
+f88a1aca
+User
+{"level":30,"time":1775907255328,"pid":20,"hostname":"localhost","req":{"id":4,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":76,"msg":"request completed"}
+2026-04-11 13:34:15.52
+f88a1aca
+User
+{"level":30,"time":1775907255524,"pid":20,"hostname":"localhost","req":{"id":5,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6.6.0/dist/clerk.browser.js"},"res":{"statusCode":200},"responseTime":122,"msg":"request completed"}
+2026-04-11 13:34:15.68
+f88a1aca
+User
+{"level":30,"time":1775907255682,"pid":20,"hostname":"localhost","req":{"id":6,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":70,"msg":"request completed"}
+2026-04-11 13:34:15.79
+f88a1aca
+User
+{"level":30,"time":1775907255797,"pid":20,"hostname":"localhost","req":{"id":7,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/ui.browser.js"},"res":{"statusCode":200},"responseTime":71,"msg":"request completed"}
+2026-04-11 13:34:16.13
+f88a1aca
+User
+{"level":30,"time":1775907256134,"pid":20,"hostname":"localhost","req":{"id":9,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":208,"msg":"request completed"}
+2026-04-11 13:34:16.14
+f88a1aca
+User
+{"level":30,"time":1775907256149,"pid":20,"hostname":"localhost","req":{"id":8,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":225,"msg":"request completed"}
+2026-04-11 13:34:16.26
+f88a1aca
+User
+{"level":30,"time":1775907256265,"pid":20,"hostname":"localhost","req":{"id":10,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/framework_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":67,"msg":"request completed"}
+2026-04-11 13:34:16.31
+f88a1aca
+User
+{"level":30,"time":1775907256311,"pid":20,"hostname":"localhost","req":{"id":11,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/ui-common_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":110,"msg":"request completed"}
+2026-04-11 13:34:16.46
+f88a1aca
+User
+{"level":30,"time":1775907256467,"pid":20,"hostname":"localhost","req":{"id":13,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/subscriptionDetails_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":72,"msg":"request completed"}
+
+2026-04-11 13:34:16.48
+f88a1aca
+User
+{"level":30,"time":1775907256486,"pid":20,"hostname":"localhost","req":{"id":14,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/vendors_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":89,"msg":"request completed"}
+2026-04-11 13:34:16.53
+f88a1aca
+User
+{"level":30,"time":1775907256530,"pid":20,"hostname":"localhost","req":{"id":12,"method":"GET","url":"/api/video/vsl.mp4"},"res":{"statusCode":206},"responseTime":297,"msg":"request aborted"}
