@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Moon, CheckCircle2, Loader2 } from "lucide-react";
+import { gtm } from "@/lib/gtm";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -11,6 +12,7 @@ export default function Welcome() {
   const [verifyState, setVerifyState] = useState<"loading" | "ok" | "error">("loading");
   const [email, setEmail] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const purchaseFired = useRef(false);
 
   useEffect(() => {
     if (!sessionId) {
@@ -31,6 +33,10 @@ export default function Welcome() {
         setEmail(data.email ?? null);
         sessionStorage.setItem("pendingSessionId", sessionId);
         setVerifyState("ok");
+        if (!purchaseFired.current) {
+          purchaseFired.current = true;
+          gtm.purchase(sessionId, data.email ?? null);
+        }
       })
       .catch(() => {
         setErrorMsg("Network error. Please refresh the page.");

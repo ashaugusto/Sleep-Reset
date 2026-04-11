@@ -6,6 +6,7 @@ import {
 import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
+import { gtm } from "@/lib/gtm";
 
 const VSL_URL = "https://app.heygen.com/embeds/fc12d8846e39489d938ed44860103732";
 
@@ -113,6 +114,7 @@ function OrderForm({ id }: { id?: string }) {
         return;
       }
       const { url } = await r.json();
+      gtm.initiateCheckout(email.trim());
       window.location.href = url;
     } catch {
       toast({ title: "Network error. Please try again.", variant: "destructive" });
@@ -277,6 +279,8 @@ function CtaButton({ children }: { children: React.ReactNode }) {
 export default function Landing() {
   const [, setLocation] = useLocation();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => { gtm.viewContent(); }, []);
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">

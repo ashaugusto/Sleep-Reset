@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useUser } from "@clerk/react";
 import { Loader2, Moon, CheckCircle2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { gtm } from "@/lib/gtm";
 
 export default function Claim() {
   const { user: clerkUser, isLoaded } = useUser();
@@ -34,6 +35,7 @@ export default function Claim() {
         }
         sessionStorage.removeItem("pendingSessionId");
         queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+        gtm.completeRegistration(clerkUser.primaryEmailAddress?.emailAddress ?? null);
         setDone(true);
         setTimeout(() => setLocation("/onboarding"), 1200);
       })
