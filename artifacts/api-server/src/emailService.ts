@@ -11,6 +11,8 @@ function getResend(): Resend | null {
 
 const FROM = process.env.RESEND_FROM || "Sleep Rewire <onboarding@resend.dev>";
 const APP_URL = () => process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
+// In dev the app is mounted at /sleep-reset; in production it lives at the root
+const BASE_PATH = () => (process.env.APP_URL ? "" : "/sleep-reset");
 
 // ─── Welcome email (sent after account activation) ───────────────────────────
 export async function sendWelcomeEmail({
@@ -27,7 +29,7 @@ export async function sendWelcomeEmail({
   }
 
   const firstName = name?.split(" ")[0] || "there";
-  const loginUrl = `${APP_URL()}/sleep-reset/sign-in`;
+  const loginUrl = `${APP_URL()}${BASE_PATH()}/sign-in`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
