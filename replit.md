@@ -92,8 +92,10 @@ A mobile-first web app guiding users through a 7-night sleep improvement protoco
 - `pnpm --filter @workspace/sleep-reset run dev` — run frontend locally
 
 **Stripe setup (one-time):**
-1. Connect Stripe integration in Replit → sets STRIPE_SECRET_KEY
-2. Run `npx ts-node --esm artifacts/api-server/src/scripts/seed-stripe-product.ts` to create product/price
+NOTE: The Replit Stripe integration was dismissed by the user. Do NOT attempt proposeIntegration for Stripe.
+Instead, ask the user for their Stripe Secret Key and store it as a secret STRIPE_SECRET_KEY.
+1. User provides STRIPE_SECRET_KEY → store as env secret
+2. Run `pnpm --filter @workspace/api-server run seed-stripe` to create product/price
 3. Set `VITE_STRIPE_PRICE_ID` to the Price ID from seed script output
 4. Set `STRIPE_WEBHOOK_SECRET` from Stripe dashboard webhook
 
