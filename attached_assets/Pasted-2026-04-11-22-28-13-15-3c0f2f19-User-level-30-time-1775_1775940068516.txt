@@ -1,0 +1,157 @@
+2026-04-11 22:28:13.15
+3c0f2f19
+User
+{"level":30,"time":1775939293152,"pid":20,"hostname":"localhost","req":{"id":349,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":203,"msg":"request completed"}
+2026-04-11 22:28:13.18
+3c0f2f19
+User
+{"level":30,"time":1775939293182,"pid":20,"hostname":"localhost","req":{"id":351,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/vendors_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":67,"msg":"request completed"}
+2026-04-11 22:28:13.21
+3c0f2f19
+User
+{"level":30,"time":1775939293212,"pid":20,"hostname":"localhost","req":{"id":352,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/subscriptionDetails_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":67,"msg":"request completed"}
+2026-04-11 22:28:13.39
+3c0f2f19
+User
+{"level":30,"time":1775939293395,"pid":20,"hostname":"localhost","req":{"id":353,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":53,"msg":"request completed"}
+2026-04-11 22:28:15.88
+3c0f2f19
+User
+{"level":30,"time":1775939295885,"pid":20,"hostname":"localhost","req":{"id":364,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/subscriptionDetails_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":69,"msg":"request completed"}
+2026-04-11 22:28:15.89
+3c0f2f19
+User
+{"level":30,"time":1775939295890,"pid":20,"hostname":"localhost","req":{"id":363,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/vendors_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":76,"msg":"request completed"}
+2026-04-11 22:28:17.82
+3c0f2f19
+User
+{"level":30,"time":1775939297825,"pid":20,"hostname":"localhost","req":{"id":365,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":64,"msg":"request completed"}
+2026-04-11 22:28:18.17
+3c0f2f19
+User
+{"level":30,"time":1775939298173,"pid":20,"hostname":"localhost","req":{"id":366,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/ui.browser.js"},"res":{"statusCode":200},"responseTime":87,"msg":"request completed"}
+2026-04-11 22:30:53.23
+3c0f2f19
+User
+{"level":30,"time":1775939453238,"pid":20,"hostname":"localhost","req":{"id":367,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":65,"msg":"request completed"}
+2026-04-11 22:30:53.53
+3c0f2f19
+User
+{"level":30,"time":1775939453530,"pid":20,"hostname":"localhost","req":{"id":368,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6.6.0/dist/clerk.browser.js"},"res":{"statusCode":200},"responseTime":81,"msg":"request completed"}
+2026-04-11 22:30:54.21
+3c0f2f19
+User
+{"level":30,"time":1775939454218,"pid":20,"hostname":"localhost","req":{"id":369,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":58,"msg":"request completed"}
+2026-04-11 22:30:54.78
+3c0f2f19
+User
+{"level":30,"time":1775939454789,"pid":20,"hostname":"localhost","req":{"id":370,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/ui.browser.js"},"res":{"statusCode":200},"responseTime":72,"msg":"request completed"}
+2026-04-11 22:30:56.19
+3c0f2f19
+User
+{"level":30,"time":1775939456196,"pid":20,"hostname":"localhost","req":{"id":371,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":189,"msg":"request completed"}
+2026-04-11 22:30:56.22
+3c0f2f19
+User
+{"level":30,"time":1775939456228,"pid":20,"hostname":"localhost","req":{"id":372,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":220,"msg":"request completed"}
+2026-04-11 22:30:56.57
+3c0f2f19
+User
+{"level":30,"time":1775939456576,"pid":20,"hostname":"localhost","req":{"id":373,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/ui-common_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":79,"msg":"request completed"}
+2026-04-11 22:30:56.64
+3c0f2f19
+User
+{"level":30,"time":1775939456645,"pid":20,"hostname":"localhost","req":{"id":374,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/framework_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":92,"msg":"request completed"}
+2026-04-11 22:30:57.61
+3c0f2f19
+User
+{"level":30,"time":1775939457614,"pid":20,"hostname":"localhost","req":{"id":375,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/subscriptionDetails_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":68,"msg":"request completed"}
+2026-04-11 22:30:57.62
+3c0f2f19
+User
+{"level":30,"time":1775939457624,"pid":20,"hostname":"localhost","req":{"id":376,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1.5.0/dist/vendors_ui_d8ecb5_1.5.0.js"},"res":{"statusCode":200},"responseTime":76,"msg":"request completed"}
+2026-04-11 22:36:38.10
+3c0f2f19
+User
+{"level":30,"time":1775939798108,"pid":20,"hostname":"localhost","req":{"id":377,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":72,"msg":"request completed"}
+2026-04-11 22:36:38.54
+3c0f2f19
+User
+{"level":30,"time":1775939798540,"pid":20,"hostname":"localhost","req":{"id":378,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":56,"msg":"request completed"}
+2026-04-11 22:36:39.15
+3c0f2f19
+User
+{"level":30,"time":1775939799151,"pid":20,"hostname":"localhost","req":{"id":379,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":209,"msg":"request completed"}
+2026-04-11 22:36:39.63
+3c0f2f19
+User
+{"level":30,"time":1775939799633,"pid":20,"hostname":"localhost","req":{"id":380,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":240,"msg":"request completed"}
+2026-04-11 22:37:46.46
+3c0f2f19
+User
+{"level":30,"time":1775939866466,"pid":20,"hostname":"localhost","req":{"id":381,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":98,"msg":"request completed"}
+2026-04-11 22:37:46.83
+3c0f2f19
+User
+{"level":30,"time":1775939866832,"pid":20,"hostname":"localhost","req":{"id":382,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":59,"msg":"request completed"}
+2026-04-11 22:37:47.37
+3c0f2f19
+User
+{"level":30,"time":1775939867376,"pid":20,"hostname":"localhost","req":{"id":383,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":202,"msg":"request completed"}
+2026-04-11 22:37:47.84
+3c0f2f19
+User
+{"level":30,"time":1775939867840,"pid":20,"hostname":"localhost","req":{"id":384,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":216,"msg":"request completed"}
+2026-04-11 22:37:57.41
+3c0f2f19
+User
+{"level":30,"time":1775939877411,"pid":20,"hostname":"localhost","req":{"id":385,"method":"POST","url":"/api/checkout/public"},"res":{"statusCode":200},"responseTime":654,"msg":"request completed"}
+2026-04-11 22:38:29.48
+3c0f2f19
+User
+{"level":30,"time":1775939909482,"pid":20,"hostname":"localhost","req":{"id":386,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":68,"msg":"request completed"}
+2026-04-11 22:38:29.89
+3c0f2f19
+User
+{"level":30,"time":1775939909899,"pid":20,"hostname":"localhost","req":{"id":387,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":69,"msg":"request completed"}
+2026-04-11 22:38:30.44
+3c0f2f19
+User
+{"level":30,"time":1775939910443,"pid":20,"hostname":"localhost","req":{"id":388,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":205,"msg":"request completed"}
+2026-04-11 22:38:30.46
+3c0f2f19
+User
+{"level":30,"time":1775939910467,"pid":20,"hostname":"localhost","req":{"id":389,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":199,"msg":"request completed"}
+2026-04-11 22:39:32.86
+3c0f2f19
+User
+{"level":30,"time":1775939972863,"pid":20,"hostname":"localhost","req":{"id":390,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":61,"msg":"request completed"}
+2026-04-11 22:39:32.96
+3c0f2f19
+User
+{"level":30,"time":1775939972960,"pid":20,"hostname":"localhost","req":{"id":391,"method":"GET","url":"/api/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js"},"res":{"statusCode":307},"responseTime":57,"msg":"request completed"}
+2026-04-11 22:39:33.04
+3c0f2f19
+User
+{"level":30,"time":1775939973042,"pid":20,"hostname":"localhost","req":{"id":392,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":72,"msg":"request completed"}
+2026-04-11 22:39:33.37
+3c0f2f19
+User
+{"level":30,"time":1775939973375,"pid":20,"hostname":"localhost","req":{"id":394,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":196,"msg":"request completed"}
+
+2026-04-11 22:39:33.40
+3c0f2f19
+User
+{"level":30,"time":1775939973401,"pid":20,"hostname":"localhost","req":{"id":393,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":223,"msg":"request completed"}
+2026-04-11 22:39:33.92
+3c0f2f19
+User
+{"level":30,"time":1775939973920,"pid":20,"hostname":"localhost","req":{"id":395,"method":"GET","url":"/api/__clerk/npm/@clerk/ui@1/dist/ui.browser.js"},"res":{"statusCode":307},"responseTime":54,"msg":"request completed"}
+2026-04-11 22:39:35.06
+3c0f2f19
+User
+{"level":30,"time":1775939975062,"pid":20,"hostname":"localhost","req":{"id":396,"method":"GET","url":"/api/__clerk/v1/environment"},"res":{"statusCode":200},"responseTime":191,"msg":"request completed"}
+2026-04-11 22:39:35.15
+3c0f2f19
+User
+{"level":30,"time":1775939975155,"pid":20,"hostname":"localhost","req":{"id":397,"method":"GET","url":"/api/__clerk/v1/client"},"res":{"statusCode":200},"responseTime":237,"msg":"request completed"}

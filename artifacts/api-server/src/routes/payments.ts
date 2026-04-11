@@ -38,7 +38,9 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   }
 
   const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  const baseUrl = `${appUrl}/sleep-reset`;
+  // In dev the app is mounted at /sleep-reset; in production (APP_URL set) it lives at the root
+  const basePath = process.env.APP_URL ? "" : "/sleep-reset";
+  const baseUrl = `${appUrl}${basePath}`;
 
   const session = await stripe.checkout.sessions.create({
     customer: customer.id,
