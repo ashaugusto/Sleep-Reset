@@ -5,6 +5,7 @@ import { getStripeClient, isStripeConfigured } from "../stripeClient";
 import { requireAuth } from "../middlewares/requireAuth";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "../emailService";
 
 const router: IRouter = Router();
 
@@ -244,6 +245,10 @@ router.post("/auth/claim", async (req: Request, res: Response) => {
     }
 
     req.session.userId = user.id;
+
+    // Send welcome email (non-blocking — never fails the request)
+    sendWelcomeEmail({ email: user.email, name: user.name }).catch(() => {});
+
     res.json({
       id: user.id,
       email: user.email,
