@@ -6,6 +6,7 @@ export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email"),
   name: text("name"),
+  passwordHash: text("password_hash"),
   sleepDisruptorPrimary: text("sleep_disruptor_primary"),
   sleepDisruptorFrequency: text("sleep_disruptor_frequency"),
   usualBedtimeMinutes: integer("usual_bedtime_minutes"),

@@ -1,4 +1,3 @@
-import { useUser, useClerk } from "@clerk/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface AppUser {
@@ -17,38 +16,28 @@ async function fetchAppUser(): Promise<AppUser | null> {
 }
 
 export function useAuth() {
-  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
-  const { signOut: clerkSignOut } = useClerk();
   const queryClient = useQueryClient();
 
-  const isSignedIn = clerkLoaded && !!clerkUser;
-
-  const {
-    data: user,
-    isLoading: appUserLoading,
-  } = useQuery<AppUser | null>({
-    queryKey: ["auth", "me", clerkUser?.id],
+  const { data: user, isLoading } = useQuery<AppUser | null>({
+    queryKey: ["auth", "me"],
     queryFn: fetchAppUser,
-    enabled: isSignedIn,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });
 
-  const isLoading = !clerkLoaded || (isSignedIn && appUserLoading);
-  const userId = clerkUser?.id ?? null;
+  const isSignedIn = !isLoading && !!user;
 
   async function signOut() {
-    await clerkSignOut();
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     queryClient.clear();
-    window.location.href = "/sleep-reset/";
+    window.location.href = "/";
   }
 
   return {
-    user: isSignedIn ? (user ?? null) : null,
-    userId,
+    user: user ?? null,
+    userId: user?.id ?? null,
     isLoading,
     isSignedIn,
     signOut,
-    clerkUser,
   };
 }

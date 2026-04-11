@@ -1,5 +1,10 @@
-import { getAuth } from "@clerk/express";
 import type { Request, Response, NextFunction } from "express";
+
+declare module "express-session" {
+  interface SessionData {
+    userId?: string;
+  }
+}
 
 declare global {
   namespace Express {
@@ -10,7 +15,7 @@ declare global {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const { userId } = getAuth(req);
+  const userId = req.session?.userId;
   if (!userId) {
     res.status(401).json({ message: "Unauthorized" });
     return;

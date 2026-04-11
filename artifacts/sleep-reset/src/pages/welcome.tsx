@@ -11,6 +11,7 @@ export default function Welcome() {
 
   const [verifyState, setVerifyState] = useState<"loading" | "ok" | "error">("loading");
   const [email, setEmail] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const purchaseFired = useRef(false);
 
@@ -31,7 +32,7 @@ export default function Welcome() {
         }
         const data = await r.json();
         setEmail(data.email ?? null);
-        sessionStorage.setItem("pendingSessionId", sessionId);
+        setName(data.name ?? null);
         setVerifyState("ok");
         if (!purchaseFired.current) {
           purchaseFired.current = true;
@@ -45,7 +46,12 @@ export default function Welcome() {
   }, [sessionId]);
 
   function handleCreateAccount() {
-    setLocation("/sign-up");
+    const query = new URLSearchParams({
+      session_id: sessionId,
+      ...(email ? { email } : {}),
+      ...(name ? { name } : {}),
+    });
+    setLocation(`/sign-up?${query.toString()}`);
   }
 
   return (

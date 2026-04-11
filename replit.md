@@ -13,7 +13,7 @@ A mobile-first web app guiding users through a 7-night sleep improvement protoco
 - **Frontend**: React + Vite (artifacts/sleep-reset) — dark mode first, mobile-first PWA
 - **API framework**: Express 5 (artifacts/api-server)
 - **Database**: PostgreSQL + Drizzle ORM
-- **Auth**: Clerk (@clerk/react on frontend, @clerk/express on backend)
+- **Auth**: Custom session-based auth (express-session + bcryptjs, no Clerk)
 - **Payments**: Stripe (one-time $47 purchase, webhook at /api/stripe/webhook)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec in lib/api-spec/openapi.yaml)
@@ -28,8 +28,8 @@ A mobile-first web app guiding users through a 7-night sleep improvement protoco
 
 **Route structure:**
 - `/` — Public landing/marketing page (unauthenticated users)
-- `/sign-in` — Clerk hosted sign-in
-- `/sign-up` — Clerk hosted sign-up
+- `/sign-in` — Custom email + password sign-in form
+- `/sign-up` — Set-password form (post-payment only, receives email/name from /welcome via query params)
 - `/purchase` — Payment wall (auth required, redirects to sign-in if not logged in)
 - `/onboarding` — 5-question sleep profile setup (auth + purchased required)
 - `/dashboard` — 7-night progress (auth + purchased required)
@@ -39,16 +39,17 @@ A mobile-first web app guiding users through a 7-night sleep improvement protoco
 - `/profile` — Settings + sign-out (auth + purchased required)
 
 **Key hooks:**
-- `useClerkUser()` (artifacts/sleep-reset/src/hooks/use-clerk-user.ts) — wraps Clerk's useUser, auto-syncs user to our DB on first login
+- `useAuth()` (artifacts/sleep-reset/src/hooks/use-auth.ts) — calls GET /api/auth/me, returns user from server session
 - `AuthGuard` component (App.tsx) — checks auth + purchasedAt before rendering protected content
 
 **Auth flow:**
-1. Land → sign up → purchase ($47) → onboarding → dashboard
-2. Returning user: sign in → dashboard (or purchase if not paid)
+1. Land → pay (Stripe) → /welcome (verifies payment, shows email) → /sign-up (set password) → /onboarding → /dashboard
+2. Returning user: /sign-in (email + password) → /dashboard
 
 ### Backend (artifacts/api-server, served at /api)
-- **Clerk middleware**: `clerkMiddleware()` processes JWT on all requests
-- **requireAuth middleware**: Checks `getAuth(req).userId`, returns 401 if missing
+- **Session middleware**: `express-session` with `connect-pg-simple` (sessions stored in PostgreSQL `session` table)
+- **requireAuth middleware**: Checks `req.session.userId`, returns 401 if missing
+- **Auth endpoints**: POST /api/auth/register (post-payment account creation), POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me
 - **Stripe webhook**: `POST /api/stripe/webhook` (uses raw body, mounted before express.json())
 - **Checkout**: `POST /api/checkout` (auth required) — creates Stripe checkout session
 - **Purchase status**: `GET /api/purchase-status` (auth required) — checks purchasedAt

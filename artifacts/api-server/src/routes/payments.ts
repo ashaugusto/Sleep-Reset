@@ -1,13 +1,12 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
 import { getStripeClient, isStripeConfigured } from "../stripeClient";
 import { requireAuth } from "../middlewares/requireAuth";
-import { sendWelcomeEmail } from "../emailService";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-// ─── Public checkout — no account required ──────────────────────────────────
+// ─── Public checkout — no account required ───────────────────────────────────
 router.post("/checkout/public", async (req: Request, res: Response) => {
   if (!isStripeConfigured()) {
     res.status(503).json({ message: "Payment is not configured yet. Please try again shortly." });
@@ -38,7 +37,6 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   }
 
   const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  // In dev the app is mounted at /sleep-reset; in production (APP_URL set) it lives at the root
   const basePath = process.env.APP_URL ? "" : "/sleep-reset";
   const baseUrl = `${appUrl}${basePath}`;
 
@@ -55,7 +53,7 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   res.json({ url: session.url });
 });
 
-// ─── Verify payment session (GET — fetch email from Stripe session) ─────────
+// ─── Verify payment session (GET — returns email/name from Stripe) ────────────
 router.get("/auth/claim", async (req: Request, res: Response) => {
   if (!isStripeConfigured()) {
     res.status(503).json({ message: "Not configured" });
@@ -95,96 +93,7 @@ router.get("/auth/claim", async (req: Request, res: Response) => {
   }
 });
 
-// ─── Claim account after payment (requires Clerk auth) ──────────────────────
-router.post("/auth/claim", requireAuth, async (req: Request, res: Response) => {
-  if (!isStripeConfigured()) {
-    res.status(503).json({ message: "Not configured" });
-    return;
-  }
-
-  const clerkUserId = req.userId!;
-  const { session_id } = req.body as { session_id?: string };
-
-  if (!session_id) {
-    res.status(400).json({ message: "session_id is required" });
-    return;
-  }
-
-  try {
-    const stripe = getStripeClient();
-    const session = await stripe.checkout.sessions.retrieve(session_id, { expand: ["customer"] });
-
-    if (session.payment_status !== "paid") {
-      res.status(402).json({ message: "Payment not completed" });
-      return;
-    }
-
-    const email =
-      (session.customer as { email?: string } | null)?.email ??
-      session.customer_details?.email ??
-      session.metadata?.email ??
-      null;
-
-    const name =
-      (session.customer as { name?: string } | null)?.name ??
-      session.customer_details?.name ??
-      session.metadata?.name ??
-      null;
-
-    const stripeCustomerId =
-      typeof session.customer === "string"
-        ? session.customer
-        : (session.customer as { id?: string } | null)?.id ?? null;
-
-    const emailLower = email?.toLowerCase().trim() ?? null;
-
-    const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.id, clerkUserId)).limit(1);
-
-    let user;
-    if (existingUser) {
-      const [updated] = await db
-        .update(usersTable)
-        .set({
-          purchasedAt: existingUser.purchasedAt ?? new Date(),
-          stripeCustomerId: existingUser.stripeCustomerId ?? stripeCustomerId,
-          email: existingUser.email ?? emailLower,
-          name: existingUser.name ?? name,
-        })
-        .where(eq(usersTable.id, clerkUserId))
-        .returning();
-      user = updated;
-    } else {
-      const [created] = await db
-        .insert(usersTable)
-        .values({
-          id: clerkUserId,
-          email: emailLower,
-          name,
-          purchasedAt: new Date(),
-          stripeCustomerId,
-        })
-        .returning();
-      user = created;
-
-      if (user.email) {
-        sendWelcomeEmail({ email: user.email, name: user.name }).catch(() => {});
-      }
-    }
-
-    res.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      onboardingComplete: user.onboardingComplete,
-      purchasedAt: user.purchasedAt,
-    });
-  } catch (err) {
-    console.error("Claim error:", err);
-    res.status(400).json({ message: "Invalid or expired session" });
-  }
-});
-
-// ─── Purchase status ─────────────────────────────────────────────────────────
+// ─── Purchase status ──────────────────────────────────────────────────────────
 router.get("/purchase-status", requireAuth, async (req: Request, res: Response) => {
   const userId = req.userId!;
   const [user] = await db.select({ purchasedAt: usersTable.purchasedAt }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
