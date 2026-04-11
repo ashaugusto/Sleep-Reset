@@ -8,7 +8,7 @@ import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 import { gtm } from "@/lib/gtm";
 
-const VSL_URL = "https://app.heygen.com/embeds/fc12d8846e39489d938ed44860103732";
+const VSL_URL = "https://player.vimeo.com/video/1182232180?title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const IMG = {
@@ -349,11 +349,11 @@ export default function Landing() {
                 <iframe
                   src={VSL_URL}
                   className="w-full h-full"
-                  allow="encrypted-media; fullscreen;"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                   allowFullScreen
                   title="Sleep Protocol — Video"
                   frameBorder="0"
-                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                  referrerPolicy="strict-origin-when-cross-origin"
                 />
               )}
               <div
