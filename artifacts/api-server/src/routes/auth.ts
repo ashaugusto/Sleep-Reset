@@ -186,4 +186,48 @@ router.post("/auth/logout", (req, res) => {
   });
 });
 
+// ─── POST /api/admin/reset-password ──────────────────────────────────────────
+// Admin-only: reset any user's password. Protected by SESSION_SECRET token.
+router.post("/admin/reset-password", async (req, res) => {
+  const token = req.headers["x-admin-token"];
+  const adminSecret = process.env.SESSION_SECRET;
+
+  if (!adminSecret || token !== adminSecret) {
+    res.status(403).json({ message: "Forbidden" });
+    return;
+  }
+
+  const { email, password } = req.body as { email?: string; password?: string };
+
+  if (!email || !password) {
+    res.status(400).json({ message: "email and password are required" });
+    return;
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({ message: "Password must be at least 6 characters" });
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, email.toLowerCase().trim()))
+    .limit(1);
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  await db
+    .update(usersTable)
+    .set({ passwordHash })
+    .where(eq(usersTable.id, user.id));
+
+  res.json({ ok: true, email: user.email, name: user.name });
+});
+
 export default router;
