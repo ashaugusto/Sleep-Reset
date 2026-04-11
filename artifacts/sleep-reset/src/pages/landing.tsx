@@ -7,15 +7,7 @@ import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 
-// ─────────────────────────────────────────────────
-// 🎬 VSL VIDEO — paste your YouTube or Vimeo embed
-//    YouTube:  https://www.youtube.com/embed/VIDEO_ID
-//    Vimeo:    https://player.vimeo.com/video/VIDEO_ID
-//    Leave as "" to show placeholder.
-// ─────────────────────────────────────────────────
-// Set to your video path (e.g. "/videos/vsl.mp4") or a YouTube/Vimeo embed URL.
-// Leave as "" to show the placeholder.
-const VSL_URL = "/api/video/vsl.mp4";
+const VSL_URL = "https://app.heygen.com/embeds/fc12d8846e39489d938ed44860103732";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const IMG = {
@@ -334,14 +326,18 @@ export default function Landing() {
         {/* ── VSL ── */}
         <div className="relative rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
           {VSL_URL ? (
-            <div className="aspect-video">
+            <div
+              className="aspect-video relative"
+              onContextMenu={(e) => e.preventDefault()}
+              style={{ userSelect: "none" }}
+            >
               {VSL_URL.startsWith("/") ? (
                 <video
                   className="w-full h-full"
                   controls
                   preload="auto"
                   playsInline
-                  title="The Sleep Rewire Protocol — Watch this first"
+                  title="Sleep Protocol — Video"
                 >
                   <source src={`${base}${VSL_URL}`} type="video/mp4" />
                 </video>
@@ -349,11 +345,18 @@ export default function Landing() {
                 <iframe
                   src={VSL_URL}
                   className="w-full h-full"
-                  allow="autoplay; fullscreen; picture-in-picture"
+                  allow="encrypted-media; fullscreen;"
                   allowFullScreen
-                  title="The Sleep Rewire Protocol — Watch this first"
+                  title="Sleep Protocol — Video"
+                  frameBorder="0"
+                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                 />
               )}
+              <div
+                className="absolute inset-0 z-10 pointer-events-none select-none"
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ background: "transparent" }}
+              />
             </div>
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-card to-background/60 px-8">
