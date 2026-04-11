@@ -1,0 +1,160 @@
+Deployment
+Source
+Log
+2026-04-11 11:38:00.23
+46dc4f1f
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-04-11 11:52:18.36
+46dc4f1f
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-04-11 12:02:30.38
+8b4bacb6
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-04-11 12:15:36.22
+dccc2f99
+System
+artifact process exited with error artifact=artifacts/api-server error=signal: terminated
+2026-04-11 13:13:10.68
+f88a1aca
+User
+To prepare for this change:
+2026-04-11 13:13:10.68
+f88a1aca
+User
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-04-11 13:13:10.68
+f88a1aca
+User
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+2026-04-11 13:13:10.68
+f88a1aca
+User
+(node:20) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-04-11 13:13:11.29
+f88a1aca
+User
+table: undefined,
+2026-04-11 13:13:11.29
+f88a1aca
+User
+column: undefined,
+2026-04-11 13:13:11.29
+f88a1aca
+User
+schema: undefined,
+2026-04-11 13:13:11.29
+f88a1aca
+User
+dataType: undefined,
+2026-04-11 13:15:24.34
+f88a1aca
+User
+(node:20) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-04-11 13:15:24.35
+f88a1aca
+User
+(node:20) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+2026-04-11 13:17:06.63
+57677c70
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-04-11 13:42:55.66
+9a4c4652
+User
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+2026-04-11 13:42:55.66
+9a4c4652
+User
+To prepare for this change:
+2026-04-11 13:42:55.66
+9a4c4652
+User
+(node:18) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-04-11 13:42:55.66
+9a4c4652
+User
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+2026-04-11 13:42:56.13
+9a4c4652
+User
+schema: undefined,
+2026-04-11 13:42:56.13
+9a4c4652
+User
+column: undefined,
+2026-04-11 13:47:28.11
+f88a1aca
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+To prepare for this change:
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+(Use `node --trace-warnings ...` to show where the warning was created)
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+(node:19) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+2026-04-11 13:53:43.38
+2d5f7fed
+User
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+at async PostgresClient.getAccountIdByApiKeyHash (/home/runner/workspace/node_modules/.pnpm/stripe-replit-sync@1.0.0_stripe@22.0.0_@types+node@25.3.5_/node_modules/stripe-replit-sync/dist/index.js:239:20)
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+detail: undefined,
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+internalPosition: undefined,
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+where: undefined,
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+at async StripeSync.getAccountId (/home/runner/workspace/node_modules/.pnpm/stripe-replit-sync@1.0.0_stripe@22.0.0_@types+node@25.3.5_/node_modules/stripe-replit-sync/dist/index.js:583:25)
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+schema: undefined,
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+dataType: undefined,
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+length: 114,
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+at async StripeSync.findOrCreateManagedWebhook (/home/runner/workspace/node_modules/.pnpm/stripe-replit-sync@1.0.0_stripe@22.0.0_@types+node@25.3.5_/node_modules/stripe-replit-sync/dist/index.js:2145:23)
+2026-04-11 13:53:58.43
+2d5f7fed
+User
+hint: undefined,
