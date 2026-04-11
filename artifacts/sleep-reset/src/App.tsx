@@ -22,6 +22,7 @@ import Profile from "@/pages/profile";
 import Welcome from "@/pages/welcome";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
+import Solution from "@/pages/solution";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
@@ -116,6 +117,7 @@ function Router() {
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
+      <Route path="/solution" component={Solution} />
       <Route>
         <AppLayout showNav={false}><NotFound /></AppLayout>
       </Route>
