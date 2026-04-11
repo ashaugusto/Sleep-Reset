@@ -14,50 +14,45 @@ function findWorkspaceRoot(dir: string): string {
 const WORKSPACE_ROOT = findWorkspaceRoot(process.cwd());
 const VIDEO_PATH = path.join(WORKSPACE_ROOT, "artifacts/sleep-reset/public/videos/vsl.mp4");
 
-console.log(`[video] workspace root: ${WORKSPACE_ROOT}`);
-console.log(`[video] video path: ${VIDEO_PATH} — exists: ${fs.existsSync(VIDEO_PATH)}`);
+const COMMON_HEADERS = {
+  "Content-Type": "video/mp4",
+  "Accept-Ranges": "bytes",
+  "Cache-Control": "public, max-age=86400",
+};
 
 router.get("/video/vsl.mp4", (req: Request, res: Response) => {
   if (!fs.existsSync(VIDEO_PATH)) {
-    res.status(404).json({ message: "Video not found", path: VIDEO_PATH });
+    res.status(404).json({ message: "Video not found" });
     return;
   }
 
   const stat = fs.statSync(VIDEO_PATH);
   const fileSize = stat.size;
-  const range = req.headers.range;
+  const rawRange = req.headers.range;
 
-  if (range) {
-    const parts = range.replace(/bytes=/, "").split("-");
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-    const chunkSize = end - start + 1;
+  let start = 0;
+  let end = fileSize - 1;
 
-    res.writeHead(206, {
-      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-      "Accept-Ranges": "bytes",
-      "Content-Length": chunkSize,
-      "Content-Type": "video/mp4",
-      "Cache-Control": "public, max-age=86400",
-    });
-
-    const stream = fs.createReadStream(VIDEO_PATH, { start, end });
-    stream.on("error", () => res.end());
-    req.on("close", () => stream.destroy());
-    stream.pipe(res);
+  if (rawRange) {
+    const parts = rawRange.replace(/bytes=/, "").split("-");
+    start = parseInt(parts[0], 10) || 0;
+    end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
   } else {
-    res.writeHead(200, {
-      "Content-Length": fileSize,
-      "Content-Type": "video/mp4",
-      "Accept-Ranges": "bytes",
-      "Cache-Control": "public, max-age=86400",
-    });
-
-    const stream = fs.createReadStream(VIDEO_PATH);
-    stream.on("error", () => res.end());
-    req.on("close", () => stream.destroy());
-    stream.pipe(res);
+    end = Math.min(65535, fileSize - 1);
   }
+
+  const chunkSize = end - start + 1;
+
+  res.writeHead(206, {
+    ...COMMON_HEADERS,
+    "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+    "Content-Length": chunkSize,
+  });
+
+  const stream = fs.createReadStream(VIDEO_PATH, { start, end });
+  stream.on("error", () => res.end());
+  req.on("close", () => stream.destroy());
+  stream.pipe(res);
 });
 
 export default router;
