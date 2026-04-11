@@ -150,7 +150,7 @@ export async function sendWelcomeEmail({
             <td style="padding:28px 0 0;text-align:center;">
               <p style="margin:0 0 8px;font-size:12px;color:#6e7681;">
                 Questions? Reply to this email or contact us at
-                <a href="mailto:support@sleepwire.com" style="color:#58a6ff;">support@sleepwire.com</a>
+                <a href="mailto:support@sleepwired.com" style="color:#58a6ff;">support@sleepwired.com</a>
               </p>
               <p style="margin:0;font-size:11px;color:#484f58;">
                 © 2026 Sleep Rewire. All rights reserved.<br />

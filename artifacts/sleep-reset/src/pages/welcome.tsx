@@ -102,8 +102,8 @@ export default function Welcome() {
                 Sign in here
               </button>
               {" "}or email{" "}
-              <a href="mailto:support@sleepreset.com" className="text-primary underline">
-                support@sleepreset.com
+              <a href="mailto:support@sleepwired.com" className="text-primary underline">
+                support@sleepwired.com
               </a>
             </p>
           </div>

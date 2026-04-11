@@ -67,7 +67,7 @@ The purchase grants you **lifetime access** to the program for your personal, no
           },
           {
             title: "5. Refund Policy",
-            content: `We offer a full 7-night money-back guarantee. If you complete all 7 nights of the protocol and do not notice a measurable improvement in your sleep quality, you may request a full refund within 30 days of purchase by emailing us at support@sleepwire.com.
+            content: `We offer a full 7-night money-back guarantee. If you complete all 7 nights of the protocol and do not notice a measurable improvement in your sleep quality, you may request a full refund within 30 days of purchase by emailing us at support@sleepwired.com.
 
 We reserve the right to refuse refund requests that show no evidence of program completion, or where the refund policy is being abused.
 
@@ -93,7 +93,7 @@ Our total liability to you for any claim arising from these Terms or use of the 
             title: "8. Termination",
             content: `We reserve the right to suspend or terminate your account at our sole discretion if you violate these Terms, engage in abusive behaviour, or attempt to circumvent payment. In such cases, no refund will be issued.
 
-You may delete your account at any time by contacting us at support@sleepwire.com.`,
+You may delete your account at any time by contacting us at support@sleepwired.com.`,
           },
           {
             title: "9. Changes to Terms",
@@ -107,7 +107,7 @@ You may delete your account at any time by contacting us at support@sleepwire.co
             title: "11. Contact",
             content: `For any questions about these Terms, contact us at:
 
-**Email:** support@sleepwire.com`,
+**Email:** support@sleepwired.com`,
           },
         ].map((section) => (
           <div key={section.title} className="space-y-3">

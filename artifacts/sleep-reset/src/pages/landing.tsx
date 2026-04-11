@@ -749,7 +749,7 @@ export default function Landing() {
           <span className="text-border">·</span>
           <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms of Service</button>
           <span className="text-border">·</span>
-          <a href="mailto:support@sleepwire.com" className="hover:text-foreground transition-colors">Contact</a>
+          <a href="mailto:support@sleepwired.com" className="hover:text-foreground transition-colors">Contact</a>
         </div>
         <p className="text-xs text-muted-foreground">© 2026 Sleep Rewire. All rights reserved.</p>
         <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">

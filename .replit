@@ -30,7 +30,7 @@ timeoutMs = 20000
 [userenv.shared]
 VITE_STRIPE_PRICE_ID = "price_1TJQYqLAWigHrMOfqTMHV1vE"
 RESEND_API_KEY = "re_4KT3MeuR_CvRFDFb2vCaYpdZhVziqbBMF"
-RESEND_FROM = "Sleep Rewire <onboarding@resend.dev>"
+RESEND_FROM = "Sleep Rewire <noreply@sleepwired.com>"
 
 [nix]
 channel = "stable-25_05"

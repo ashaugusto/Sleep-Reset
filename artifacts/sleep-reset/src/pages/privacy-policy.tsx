@@ -93,7 +93,7 @@ To exercise any of these rights, email us at the address in Section 7.`,
             title: "7. Contact",
             content: `For any privacy-related questions or requests, contact us at:
 
-**Email:** privacy@sleepwire.com
+**Email:** privacy@sleepwired.com
 
 We aim to respond to all requests within 5 business days.`,
           },
