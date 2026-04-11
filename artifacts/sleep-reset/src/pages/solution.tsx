@@ -158,6 +158,12 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
 export default function Solution() {
   const geoStatus = useGeoGate();
 
+  useEffect(() => {
+    if (geoStatus === "allowed") {
+      trackSolution("solution_view_content");
+    }
+  }, [geoStatus]);
+
   if (geoStatus === "checking") {
     return (
       <div className="min-h-[100dvh] bg-background flex items-center justify-center">
@@ -165,12 +171,6 @@ export default function Solution() {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (geoStatus === "allowed") {
-      trackSolution("solution_view_content");
-    }
-  }, [geoStatus]);
 
   if (geoStatus === "blocked") {
     return null;
