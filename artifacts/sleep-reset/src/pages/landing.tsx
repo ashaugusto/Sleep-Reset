@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 // ─────────────────────────────────────────────────
 // Set to your video path (e.g. "/videos/vsl.mp4") or a YouTube/Vimeo embed URL.
 // Leave as "" to show the placeholder.
-const VSL_URL = "/videos/vsl.mp4";
+const VSL_URL = "/api/video/vsl.mp4";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const IMG = {

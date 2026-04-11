@@ -41,7 +41,10 @@ router.get("/video/vsl.mp4", (req: Request, res: Response) => {
       "Cache-Control": "public, max-age=86400",
     });
 
-    fs.createReadStream(VIDEO_PATH, { start, end }).pipe(res);
+    const stream = fs.createReadStream(VIDEO_PATH, { start, end });
+    stream.on("error", () => res.end());
+    req.on("close", () => stream.destroy());
+    stream.pipe(res);
   } else {
     res.writeHead(200, {
       "Content-Length": fileSize,
@@ -50,7 +53,10 @@ router.get("/video/vsl.mp4", (req: Request, res: Response) => {
       "Cache-Control": "public, max-age=86400",
     });
 
-    fs.createReadStream(VIDEO_PATH).pipe(res);
+    const stream = fs.createReadStream(VIDEO_PATH);
+    stream.on("error", () => res.end());
+    req.on("close", () => stream.destroy());
+    stream.pipe(res);
   }
 });
 
