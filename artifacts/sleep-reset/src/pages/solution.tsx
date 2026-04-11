@@ -529,7 +529,7 @@ export default function Solution() {
             },
             {
               q: "How long does delivery in Dublin take?",
-              a: "We usually deliver the same day or the next day, depending on your location in Dublin. Delivery is completely free.",
+              a: "We offer free delivery across Dublin city centre and surrounding areas. Same-day delivery available 7 days a week, from 1pm to midnight — or schedule it for whenever suits you best.",
             },
             {
               q: "Is the delivery discreet?",
@@ -541,7 +541,7 @@ export default function Solution() {
             },
             {
               q: "Can I order more than the minimum?",
-              a: "Of course. Many customers order 6+ units at a time. Just let us know on WhatsApp and we'll sort it out.",
+              a: "Absolutely — and the more you order, the bigger the discount. Our most popular deal is 12 units for €80. Minimum order is 3 units. Just message us on WhatsApp and we'll sort out the best price for your quantity.",
             },
           ].map((item, i) => (
             <FaqItem key={i} q={item.q} a={item.a} />
