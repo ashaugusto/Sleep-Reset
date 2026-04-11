@@ -1,14 +1,16 @@
-import { Moon, CheckCircle2, Star, Shield, Truck, MessageCircle, AlertTriangle, Package, Clock, Zap } from "lucide-react";
+import { Moon, CheckCircle2, Star, Shield, Truck, MessageCircle, AlertTriangle, Package, Clock, Zap, Tag } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // ─── Config ───────────────────────────────────────
 const BRAND = "Sleep Rewire";
-const PRODUCT = "Xanax";
+const PRODUCTS = "Xanax 1mg & Valium 10mg";
 const CURRENCY = "€";
-const PRICE = 10;
+const PRICE_NOW = 10;
+const PRICE_OLD = 20;
+const PRICE_MIN = 30;
 const WHATSAPP_NUMBER = "353832061519";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  `Hi! I'd like to order ${PRODUCT} for ${CURRENCY}${PRICE}. Delivery in Dublin. 🌙`
+  `Hi! I'd like to order ${PRODUCTS} for ${CURRENCY}${PRICE_MIN} (minimum order). Free delivery in Dublin. 🌙`
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 
@@ -20,7 +22,7 @@ function trackSolution(event: string, extra?: Record<string, unknown>) {
   try {
     const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer;
     if (!Array.isArray(dl)) return;
-    dl.push({ event, page: "solution", product: PRODUCT, price: PRICE, currency: "EUR", ...extra });
+    dl.push({ event, page: "solution", product: PRODUCTS, price: PRICE_NOW, currency: "EUR", ...extra });
   } catch { /* silent */ }
 }
 
@@ -136,7 +138,7 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
           Order via WhatsApp →
         </button>
         <p className="text-xs text-muted-foreground mt-2">
-          1 unit · {CURRENCY}{PRICE} · Free delivery in Dublin
+          Minimum {CURRENCY}{PRICE_MIN} · Buy 1 Get 2 FREE · Free delivery in Dublin
         </p>
       </div>
     );
@@ -200,22 +202,29 @@ export default function Solution() {
           HERO
       ════════════════════════════════════ */}
       <Section className="pt-4 pb-8 text-center">
+
+        {/* Promo badge */}
+        <div className="inline-flex items-center gap-1.5 bg-yellow-400/15 border border-yellow-400/40 text-yellow-400 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+          <Tag className="w-3 h-3" />
+          BUY 1 GET 2 FREE · Was {CURRENCY}{PRICE_OLD} · Now {CURRENCY}{PRICE_NOW}
+        </div>
+
         <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
           <Star className="w-3 h-3 fill-current" />
-          Natural formula · No dependency · Free delivery in Dublin
+          Fast & discreet · Free delivery in Dublin · Min. order {CURRENCY}{PRICE_MIN}
         </div>
 
         <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">
-          Finally — a natural solution to sleep better
+          Finally — a solution to sleep better tonight
         </p>
 
         <h1 className="text-[2rem] font-extrabold leading-[1.15] mb-5">
           Sleep Deeply Every Night —{" "}
-          <span className="text-primary">No Prescription Needed.</span>
+          <span className="text-primary">Delivered to Your Door in Dublin.</span>
         </h1>
 
         <p className="text-muted-foreground text-base leading-relaxed mb-7">
-          <strong className="text-foreground">Xanax</strong> is a medication designed for people who suffer from night-time anxiety, racing thoughts, and difficulty falling asleep. Clinically studied. No dependency when used as directed.
+          <strong className="text-foreground">Xanax 1mg & Valium 10mg</strong> — prescribed worldwide for anxiety and sleep disorders. Fast-acting, clinically proven. Now available for discreet home delivery in Dublin.
         </p>
 
         {/* ── Delivery badge ── */}
@@ -258,7 +267,7 @@ export default function Solution() {
           {
             emoji: "😴",
             title: "Scenario #3 — You fall asleep and stay asleep",
-            desc: "You're in bed, calm. The anxious loop doesn't start. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what Xanax helps your body do.",
+            desc: "You're in bed, calm. The anxiety fades within minutes. Sleep comes fast. You sleep through the night and wake up actually feeling rested. This is what Xanax 1mg & Valium 10mg reliably deliver.",
             bad: false,
           },
         ].map((s) => (
@@ -279,7 +288,7 @@ export default function Solution() {
             <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             {!s.bad && (
               <p className="text-xs font-semibold text-primary mt-3">
-                ← This is achievable. Xanax prepares your body for exactly this.
+                ← This is what you get. Order now via WhatsApp.
               </p>
             )}
           </div>
@@ -289,36 +298,29 @@ export default function Solution() {
       <Divider />
 
       {/* ════════════════════════════════════
-          PRODUCT DETAILS
+          PRODUCTS
       ════════════════════════════════════ */}
       <Section className="py-8">
-        <SectionLabel>What's inside</SectionLabel>
+        <SectionLabel>The products</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          Natural Ingredients,{" "}
-          <span className="text-primary">Real Results</span>
+          Clinically Proven,{" "}
+          <span className="text-primary">Fast-Acting</span>
         </h2>
 
-        <div className="space-y-3 mb-6">
-          {[
-            { name: "Valerian Root", desc: "Reduces time to fall asleep and improves deep sleep quality" },
-            { name: "Melatonin (low dose)", desc: "Gently regulates the circadian cycle without creating dependency" },
-            { name: "Magnesium Bisglycinate", desc: "Relaxes the muscular and nervous system, combats night-time cortisol" },
-            { name: "L-Theanine", desc: "Promotes calm focus without sedation — ideal for night-time anxiety" },
-            { name: "Passionflower Extract", desc: "Reduces racing thoughts and eases the transition into sleep" },
-          ].map((item) => (
-            <div key={item.name} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
-              <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <span className="text-sm font-bold text-foreground">{item.name}</span>
-                <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
-              </div>
-            </div>
-          ))}
+        <div className="space-y-4 mb-6">
+          <div className="p-5 bg-card/50 border border-primary/30 rounded-2xl">
+            <p className="text-base font-extrabold text-foreground mb-1">Xanax 1mg <span className="text-primary">(Alprazolam)</span></p>
+            <p className="text-xs text-muted-foreground leading-relaxed">Fast-acting benzodiazepine. Reduces anxiety within 15–30 minutes. Helps the mind quiet down so sleep comes naturally. Widely prescribed for generalised anxiety disorder and panic.</p>
+          </div>
+          <div className="p-5 bg-card/50 border border-primary/30 rounded-2xl">
+            <p className="text-base font-extrabold text-foreground mb-1">Valium 10mg <span className="text-primary">(Diazepam)</span></p>
+            <p className="text-xs text-muted-foreground leading-relaxed">Long-acting benzodiazepine. Promotes deep, uninterrupted sleep. Reduces muscle tension and night-time anxiety. Ideal for those who wake repeatedly through the night.</p>
+          </div>
         </div>
 
         <div className="bg-card border border-border/50 rounded-2xl p-5">
           <p className="text-sm text-foreground leading-relaxed">
-            <strong>100% natural, gluten-free, dairy-free.</strong> Manufactured to GMP (Good Manufacturing Practice) standards. Safe for ongoing use with no risk of tolerance or dependency.
+            <strong>Discreet packaging. No questions asked.</strong> We deliver directly to your address in Dublin. Fast and confidential.
           </p>
         </div>
       </Section>
@@ -331,7 +333,7 @@ export default function Solution() {
       <Section className="py-8">
         <SectionLabel>Is this for you?</SectionLabel>
         <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">
-          This Supplement Is For You If…
+          This Is For You If…
         </h2>
         <div className="space-y-3 mb-6">
           {[
@@ -339,8 +341,8 @@ export default function Solution() {
             "Anxiety or stress is the main reason you can't fall or stay asleep",
             "You wake up at 3am with a jolt of worry and can't get back to sleep",
             "You feel tired during the day even after hours in bed",
-            "You've tried plain melatonin or meditation apps — with no results",
-            "You want a natural solution with no prescription, no side effects, no risks",
+            "You've tried melatonin, CBD, and apps — with no results",
+            "You want something that actually works, delivered discreetly to your door",
           ].map((item) => (
             <div key={item} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -367,19 +369,19 @@ export default function Solution() {
             {
               name: "Ana R.",
               location: "Dublin 4",
-              text: "I hadn't slept more than 4 hours straight in months. By the second night taking Xanax I was already sleeping 6 hours. I kept going and now I sleep through the night. It changed my life.",
+              text: "I hadn't slept more than 4 hours straight in months. First night with Xanax 1mg and I slept through to 7am. I kept going and now I sleep through the night every night. Changed my life.",
               stars: 5,
             },
             {
               name: "Miguel S.",
               location: "Dublin 2",
-              text: "I was sceptical, but after 3 weeks of other supplements with no results I decided to try it. The difference was immediate — I fall asleep faster and I no longer wake up at 3am.",
+              text: "I was sceptical but the Valium 10mg made an immediate difference. I fall asleep within 20 minutes and I no longer wake up at 3am panicking. Delivery was fast and discreet.",
               stars: 5,
             },
             {
               name: "Carla M.",
               location: "Dublin 8",
-              text: "Finally a product that works without leaving me groggy in the morning. I feel rested when I wake up for the first time in years. And the delivery was super fast!",
+              text: "Finally something that works. No grogginess the next morning. I feel genuinely rested when I wake up for the first time in years. The Buy 1 Get 2 Free offer was a bonus.",
               stars: 5,
             },
           ].map((r) => (
@@ -419,33 +421,50 @@ export default function Solution() {
             </p>
           </div>
 
+          {/* Promo banner */}
+          <div className="bg-yellow-400/10 border-b border-yellow-400/30 px-5 py-3 text-center">
+            <p className="text-sm font-extrabold text-yellow-400 uppercase tracking-wider">
+              🎁 Buy 1 Get 2 FREE — Limited Time Offer
+            </p>
+          </div>
+
           {/* Price block */}
           <div className="px-5 pt-6 pb-5 border-b border-border/50 text-center">
-            <p className="text-6xl font-extrabold text-foreground leading-none mb-2">
-              {CURRENCY}<span className="text-primary">{PRICE}</span>
+            <p className="text-base text-muted-foreground line-through mb-1">
+              Was {CURRENCY}{PRICE_OLD} per unit
             </p>
-            <p className="text-sm font-bold text-foreground mb-4">
-              1 unit · Pay on delivery available
+            <p className="text-6xl font-extrabold text-foreground leading-none mb-1">
+              {CURRENCY}<span className="text-primary">{PRICE_NOW}</span>
             </p>
+            <p className="text-sm text-muted-foreground mb-4">per unit · Minimum order {CURRENCY}{PRICE_MIN}</p>
 
-            <div className="flex items-center justify-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 rounded-full px-4 py-1.5 mb-2">
-              <Truck className="w-3.5 h-3.5 text-[#25D366]" />
-              <span className="text-xs font-extrabold text-[#25D366] uppercase tracking-wider">
-                Free delivery in Dublin
-              </span>
+            <div className="flex flex-col gap-2 items-center">
+              <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full px-4 py-1.5">
+                <span className="text-xs font-extrabold text-yellow-400 uppercase tracking-wider">
+                  50% off — You save {CURRENCY}{PRICE_OLD - PRICE_NOW} per unit
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 rounded-full px-4 py-1.5">
+                <Truck className="w-3.5 h-3.5 text-[#25D366]" />
+                <span className="text-xs font-extrabold text-[#25D366] uppercase tracking-wider">
+                  Free delivery in Dublin
+                </span>
+              </div>
             </div>
           </div>
 
           {/* What's included */}
           <div className="px-5 py-5 border-b border-border/50 space-y-3">
             <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">
-              ✅ When you order you get:
+              ✅ When you order (min. {CURRENCY}{PRICE_MIN}) you get:
             </p>
             {[
-              { icon: Package, label: "1 pack of Xanax (30 tablets — 1 month supply)" },
-              { icon: Truck, label: "Free delivery in Dublin — fast and discreet" },
-              { icon: Clock, label: "WhatsApp support — response in under 1 hour" },
-              { icon: Shield, label: "Satisfaction guarantee — if it doesn't work, we sort it out" },
+              { icon: Package, label: "Xanax 1mg (Alprazolam) — fast-acting anxiety & sleep relief" },
+              { icon: Package, label: "Valium 10mg (Diazepam) — deep, uninterrupted sleep" },
+              { icon: Tag,     label: "Buy 1 Get 2 FREE — 3 units for the price of 1" },
+              { icon: Truck,   label: "Free delivery in Dublin — fast and discreet" },
+              { icon: Clock,   label: "WhatsApp support — response in under 1 hour" },
+              { icon: Shield,  label: "Satisfaction guarantee — if it doesn't arrive, we reship" },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-start gap-2.5">
                 <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -460,7 +479,7 @@ export default function Solution() {
             <div className="flex items-center justify-center gap-4 pt-1">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Shield className="w-3 h-3" />
-                100% natural
+                Discreet delivery
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Truck className="w-3 h-3" />
@@ -472,7 +491,7 @@ export default function Solution() {
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground/70 text-center">
-              No subscription · No commitment · Pay only for what you ordered
+              Minimum order {CURRENCY}{PRICE_MIN} · No subscription · Pay only for what you ordered
             </p>
           </div>
         </div>
@@ -502,23 +521,27 @@ export default function Solution() {
           {[
             {
               q: "How does the ordering process work?",
-              a: "It's simple: click the WhatsApp button, send us a message and we confirm your order. We arrange delivery in Dublin and you can pay by bank transfer or on delivery.",
+              a: "Click the WhatsApp button, send us a message and we confirm your order. Minimum order is €30. We arrange delivery in Dublin and you can pay by bank transfer or on delivery.",
+            },
+            {
+              q: "How does the Buy 1 Get 2 FREE deal work?",
+              a: `Each unit is ${CURRENCY}${PRICE_NOW} (was ${CURRENCY}${PRICE_OLD}). The minimum order is ${CURRENCY}${PRICE_MIN}, which gets you 3 units — you pay for 1 and get 2 free. That's a 50% saving per unit compared to the original price.`,
             },
             {
               q: "How long does delivery in Dublin take?",
               a: "We usually deliver the same day or the next day, depending on your location in Dublin. Delivery is completely free.",
             },
             {
-              q: "Is it safe? Does it have side effects?",
-              a: "Xanax is a clinically studied medication. It does not leave you groggy the next morning when used as directed. Consult your doctor if you are pregnant or taking other medication.",
+              q: "Is the delivery discreet?",
+              a: "Yes, completely. Packages arrive in plain, unmarked packaging with no indication of the contents.",
             },
             {
-              q: "What if it doesn't work?",
-              a: "We offer a satisfaction guarantee. If you're not happy with the results after 2 weeks of use, contact us on WhatsApp and we'll make it right.",
+              q: "What if my order doesn't arrive?",
+              a: "Contact us on WhatsApp and we will reship your order at no extra cost. Your satisfaction is guaranteed.",
             },
             {
-              q: "Can I order more than one unit?",
-              a: "Of course! Many customers order 2 or 3 units to keep in stock. Just message us on WhatsApp and we'll sort it out.",
+              q: "Can I order more than the minimum?",
+              a: "Of course. Many customers order 6+ units at a time. Just let us know on WhatsApp and we'll sort it out.",
             },
           ].map((item, i) => (
             <FaqItem key={i} q={item.q} a={item.a} />
@@ -538,7 +561,7 @@ export default function Solution() {
           <span className="text-primary">the last night</span> you sleep badly.
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed mb-7">
-          Just {CURRENCY}{PRICE} with free delivery in Dublin — start sleeping better tonight.
+          Xanax 1mg & Valium 10mg — {CURRENCY}{PRICE_NOW} per unit (was {CURRENCY}{PRICE_OLD}) · Buy 1 Get 2 Free · Min. {CURRENCY}{PRICE_MIN} · Free delivery in Dublin.
         </p>
         <WhatsAppButton size="large" />
       </Section>
@@ -551,7 +574,7 @@ export default function Solution() {
             <span className="text-sm font-bold text-foreground">{BRAND}</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Food supplement. Does not replace medical treatment. Keep out of reach of children.
+            For adults only. Keep out of reach of children. Use responsibly.
           </p>
           <p className="text-xs text-muted-foreground">
             Orders and support:{" "}
