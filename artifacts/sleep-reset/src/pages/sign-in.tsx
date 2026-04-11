@@ -17,7 +17,6 @@ export default function SignInPage() {
         <SignIn
           routing="path"
           path={`${basePath}/sign-in`}
-          signUpUrl={`${basePath}/sign-up`}
           fallbackRedirectUrl={`${basePath}/dashboard`}
         />
       </div>
