@@ -33,7 +33,7 @@ RESEND_API_KEY = "re_4KT3MeuR_CvRFDFb2vCaYpdZhVziqbBMF"
 RESEND_FROM = "Sleep Rewire <noreply@sleepwired.com>"
 
 [userenv.production]
-APP_URL = "https://sleep-reset.replit.app"
+APP_URL = "https://sleepwired.com"
 
 [nix]
 channel = "stable-25_05"
