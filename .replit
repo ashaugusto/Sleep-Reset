@@ -32,5 +32,8 @@ VITE_STRIPE_PRICE_ID = "price_1TJQYqLAWigHrMOfqTMHV1vE"
 RESEND_API_KEY = "re_4KT3MeuR_CvRFDFb2vCaYpdZhVziqbBMF"
 RESEND_FROM = "Sleep Rewire <noreply@sleepwired.com>"
 
+[userenv.production]
+APP_URL = "https://sleep-reset.replit.app"
+
 [nix]
 channel = "stable-25_05"
