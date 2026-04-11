@@ -6,11 +6,40 @@ const BRAND = "Sleep Rewire";
 const PRODUCT = "SleepCalm — Natural Sleep Supplement";
 const CURRENCY = "€";
 const PRICE = 10;
-const WHATSAPP_NUMBER = "353000000000"; // replace with real number (no + or spaces)
+const WHATSAPP_NUMBER = "353832061519";
 const WHATSAPP_MESSAGE = encodeURIComponent(
   `Hi! I'd like to order ${PRODUCT} for ${CURRENCY}${PRICE}. Delivery in Dublin. 🌙`
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+
+const ALLOWED_COUNTRIES = ["IE", "CH"];
+const REDIRECT_URL = "https://sleepwired.com";
+
+// ─── Geo-gate hook ────────────────────────────────
+function useGeoGate() {
+  const [status, setStatus] = useState<"checking" | "allowed" | "blocked">("checking");
+
+  useEffect(() => {
+    async function check() {
+      try {
+        const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(5000) });
+        const data = await res.json();
+        const country: string = data?.country_code ?? "";
+        if (ALLOWED_COUNTRIES.includes(country)) {
+          setStatus("allowed");
+        } else {
+          setStatus("blocked");
+          window.location.replace(REDIRECT_URL);
+        }
+      } catch {
+        setStatus("allowed");
+      }
+    }
+    check();
+  }, []);
+
+  return status;
+}
 
 // ─── Countdown ────────────────────────────────────
 function useMidnightCountdown() {
@@ -117,6 +146,20 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
 // Main component
 // ─────────────────────────────────────────────────
 export default function Solution() {
+  const geoStatus = useGeoGate();
+
+  if (geoStatus === "checking") {
+    return (
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (geoStatus === "blocked") {
+    return null;
+  }
+
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
 
