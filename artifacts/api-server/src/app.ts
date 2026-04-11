@@ -11,6 +11,10 @@ import { isStripeConfigured } from "./stripeClient";
 
 const app: Express = express();
 
+// Trust Replit's reverse proxy so req.secure reflects the original HTTPS connection.
+// Without this, express-session refuses to set secure cookies (sees req.secure=false).
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,

@@ -1,0 +1,61 @@
+2026-04-11 23:24:18.66
+0d32a705
+System
+artifact processes running, waiting for signal or process exit
+2026-04-11 23:24:18.66
+0d32a705
+System
+all artifact ports detected
+2026-04-11 23:24:18.66
+0d32a705
+User
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+2026-04-11 23:24:18.66
+0d32a705
+User
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-04-11 23:24:18.66
+0d32a705
+User
+(Use `node --trace-warnings ...` to show where the warning was created)
+2026-04-11 23:24:18.66
+0d32a705
+User
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+2026-04-11 23:24:18.66
+0d32a705
+User
+To prepare for this change:
+2026-04-11 23:24:18.66
+0d32a705
+User
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+2026-04-11 23:24:18.66
+0d32a705
+User
+(node:21) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-04-11 23:24:19.14
+0d32a705
+User
+file: 'parse_relation.c',
+2026-04-11 23:25:02.30
+0d32a705
+User
+{"level":30,"time":1775942702302,"pid":21,"hostname":"localhost","req":{"id":2,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":249,"msg":"request completed"}
+2026-04-11 23:25:02.36
+0d32a705
+User
+{"level":30,"time":1775942702363,"pid":21,"hostname":"localhost","req":{"id":3,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+2026-04-11 23:25:39.54
+0d32a705
+User
+{"level":30,"time":1775942739549,"pid":21,"hostname":"localhost","req":{"id":4,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":231,"msg":"request completed"}
+2026-04-11 23:25:39.61
+0d32a705
+User
+{"level":30,"time":1775942739610,"pid":21,"hostname":"localhost","req":{"id":5,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:25:39.61
+0d32a705
+User
+{"level":30,"time":1775942739610,"pid":21,"hostname":"localhost","req":{"id":5,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"response

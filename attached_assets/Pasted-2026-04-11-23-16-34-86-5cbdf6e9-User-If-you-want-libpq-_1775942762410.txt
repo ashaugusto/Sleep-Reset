@@ -1,0 +1,89 @@
+2026-04-11 23:16:34.86
+5cbdf6e9
+User
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-04-11 23:16:34.86
+5cbdf6e9
+User
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+
+2026-04-11 23:16:34.86
+5cbdf6e9
+User
+(Use `node --trace-warnings ...` to show where the warning was created)
+2026-04-11 23:16:34.86
+5cbdf6e9
+User
+(node:18) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-04-11 23:16:34.86
+5cbdf6e9
+User
+{"level":30,"time":1775942194863,"pid":18,"hostname":"localhost","port":8080,"msg":"Server listening"}
+2026-04-11 23:16:35.80
+5cbdf6e9
+User
+{"level":30,"time":1775942195801,"pid":18,"hostname":"localhost","req":{"id":1,"method":"GET","url":"/api/healthz"},"res":{"statusCode":200},"responseTime":39,"msg":"request completed"}
+2026-04-11 23:16:36.37
+5cbdf6e9
+User
+{ autoExpandLists: undefined, stripeApiVersion: undefined } StripeSync initialized
+2026-04-11 23:16:36.58
+5cbdf6e9
+User
+constraint: undefined,
+2026-04-11 23:16:36.58
+5cbdf6e9
+User
+dataType: undefined,
+2026-04-11 23:16:36.58
+5cbdf6e9
+User
+error: relation "stripe.accounts" does not exist
+2026-04-11 23:17:30.22
+5cbdf6e9
+User
+{"level":30,"time":1775942250222,"pid":18,"hostname":"localhost","req":{"id":2,"method":"POST","url":"/api/admin/reset-password"},"res":{"statusCode":404},"responseTime":118,"msg":"request completed"}
+2026-04-11 23:17:58.48
+5cbdf6e9
+User
+{"level":30,"time":1775942278479,"pid":18,"hostname":"localhost","req":{"id":3,"method":"POST","url":"/api/admin/reset-password"},"res":{"statusCode":200},"responseTime":230,"msg":"request completed"}
+2026-04-11 23:18:26.57
+5cbdf6e9
+User
+{"level":30,"time":1775942306569,"pid":18,"hostname":"localhost","req":{"id":4,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":237,"msg":"request completed"}
+2026-04-11 23:18:26.90
+5cbdf6e9
+User
+{"level":30,"time":1775942306906,"pid":18,"hostname":"localhost","req":{"id":5,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:18:29.01
+5cbdf6e9
+User
+{"level":30,"time":1775942309016,"pid":18,"hostname":"localhost","req":{"id":6,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":137,"msg":"request completed"}
+2026-04-11 23:18:29.07
+5cbdf6e9
+User
+{"level":30,"time":1775942309074,"pid":18,"hostname":"localhost","req":{"id":7,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:18:48.90
+5cbdf6e9
+User
+{"level":30,"time":1775942328899,"pid":18,"hostname":"localhost","req":{"id":8,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":226,"msg":"request completed"}
+2026-04-11 23:18:48.96
+5cbdf6e9
+User
+{"level":30,"time":1775942328960,"pid":18,"hostname":"localhost","req":{"id":9,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+2026-04-11 23:18:48.96
+5cbdf6e9
+User
+{"level":30,"time":1775942328960,"pid":18,"hostname":"localhost","req":{"id":9,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+2026-04-11 23:19:27.10
+5cbdf6e9
+User
+{"level":30,"time":1775942367106,"pid":18,"hostname":"localhost","req":{"id":10,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":216,"msg":"request completed"}
+2026-04-11 23:19:27.21
+5cbdf6e9
+User
+{"level":30,"time":1775942367217,"pid":18,"hostname":"localhost","req":{"id":11,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:19:27.89
+5cbdf6e9
+User
+{"level":30,"time":1775942367891,"pid":18,"hostname":"localhost","req":{"id":12,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"res
