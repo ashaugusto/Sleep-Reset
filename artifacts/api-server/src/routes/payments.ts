@@ -46,7 +46,7 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     line_items: [{ price: priceId, quantity: 1 }],
     mode: "payment",
     success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl}/`,
+    cancel_url: `${appUrl}/`,
     metadata: { email: emailTrimmed, name: nameTrimmed ?? "" },
   });
 
