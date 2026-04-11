@@ -337,13 +337,14 @@ export default function Landing() {
             <div className="aspect-video">
               {VSL_URL.startsWith("/") ? (
                 <video
-                  src={`${base}${VSL_URL}`}
                   className="w-full h-full"
                   controls
-                  preload="metadata"
+                  preload="auto"
                   playsInline
                   title="The Sleep Rewire Protocol — Watch this first"
-                />
+                >
+                  <source src={`${base}${VSL_URL}`} type="video/mp4" />
+                </video>
               ) : (
                 <iframe
                   src={VSL_URL}
