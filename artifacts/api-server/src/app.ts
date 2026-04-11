@@ -61,12 +61,23 @@ app.use(express.urlencoded({ extended: true }));
 
 const PgSession = connectPgSimple(session);
 
+// Create the session table if it doesn't exist — done inline to avoid
+// connect-pg-simple's table.sql file lookup which breaks in bundled builds.
+pool.query(`
+  CREATE TABLE IF NOT EXISTS "session" (
+    "sid" varchar NOT NULL COLLATE "default",
+    "sess" json NOT NULL,
+    "expire" timestamp(6) NOT NULL,
+    CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+  );
+  CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+`).catch((err: Error) => logger.warn({ err }, "Session table setup warning"));
+
 app.use(
   session({
     store: new PgSession({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pool: pool as any,
-      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || "fallback-dev-secret-change-in-prod",
     resave: false,

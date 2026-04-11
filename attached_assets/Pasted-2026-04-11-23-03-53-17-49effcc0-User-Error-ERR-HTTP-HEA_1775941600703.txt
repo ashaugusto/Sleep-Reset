@@ -1,0 +1,164 @@
+2026-04-11 23:03:53.17
+49effcc0
+User
+Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+2026-04-11 23:03:53.17
+49effcc0
+User
+at ServerResponse.header (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:686:10)
+2026-04-11 23:03:53.17
+49effcc0
+User
+at Layer.handleError (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+2026-04-11 23:03:53.17
+49effcc0
+User
+at Immediate.next (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+2026-04-11 23:03:53.17
+49effcc0
+User
+at ServerResponse.json3 (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:252:15)
+2026-04-11 23:03:53.17
+49effcc0
+User
+at ServerResponse.send2 (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:163:12)
+2026-04-11 23:03:53.17
+49effcc0
+User
+{"level":50,"time":1775941433172,"pid":19,"hostname":"localhost","err":{"type":"Error","message":"ENOENT: no such file or directory, open '/home/runner/workspace/artifacts/api-server/dist/table.sql'","stack":"Error: ENOENT: no such file or directory, open '/home/runner/workspace/artifacts/api-server/dist/table.sql'\n at async open (node:internal/fs/promises:637:25)\n at async Object.readFile (node:internal/fs/promises:1269:14)\n at async PGStore._rawEnsureSessionStoreTable (/home/runner/workspace/node_modules/.pnpm/connect-pg-simple@10.0.0/node_modules/connect-pg-simple/index.js:183:32)\n at async PGStore._asyncQuery (/home/runner/workspace/node_modules/.pnpm/connect-pg-simple@10.0.0/node_modules/connect-pg-simple/index.js:315:7)","errno":-2,"code":"ENOENT","syscall":"open","path":"/home/runner/workspace/artifacts/api-server/dist/table.sql"},"msg":"Unhandled error"}
+2026-04-11 23:03:53.17
+49effcc0
+User
+at ServerResponse.setHeader (node:_http_outgoing:642:11)
+2026-04-11 23:03:53.46
+49effcc0
+User
+{"level":30,"time":1775941433467,"pid":19,"hostname":"localhost","req":{"id":14,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:04:23.62
+49effcc0
+User
+{"level":30,"time":1775941463620,"pid":19,"hostname":"localhost","req":{"id":15,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":408,"msg":"request completed"}
+2026-04-11 23:04:23.62
+49effcc0
+User
+{"level":50,"time":1775941463620,"pid":19,"hostname":"localhost","err":{"type":"Error","message":"ENOENT: no such file or directory, open '/home/runner/workspace/artifacts/api-server/dist/table.sql'","stack":"Error: ENOENT: no such file or directory, open '/home/runner/workspace/artifacts/api-server/dist/table.sql'\n at async open (node:internal/fs/promises:637:25)\n at async Object.readFile (node:internal/fs/promises:1269:14)\n at async PGStore._rawEnsureSessionStoreTable (/home/runner/workspace/node_modules/.pnpm/connect-pg-simple@10.0.0/node_modules/connect-pg-simple/index.js:183:32)\n at async PGStore._asyncQuery (/home/runner/workspace/node_modules/.pnpm/connect-pg-simple@10.0.0/node_modules/connect-pg-simple/index.js:315:7)","errno":-2,"code":"ENOENT","syscall":"open","path":"/home/runner/workspace/artifacts/api-server/dist/table.sql"},"msg":"Unhandled error"}
+2026-04-11 23:04:23.62
+49effcc0
+User
+at <anonymous> (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9)
+2026-04-11 23:04:23.62
+49effcc0
+User
+Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+2026-04-11 23:04:23.62
+49effcc0
+User
+at ServerResponse.json3 (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:252:15)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at ServerResponse.setHeader (node:_http_outgoing:642:11)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at ServerResponse.send2 (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:163:12)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at Immediate.next (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at processParams (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at <anonymous> (/home/runner/workspace/artifacts/api-server/src/app.ts:91:19)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at trimPrefix (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at Layer.handleError (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+2026-04-11 23:04:23.62
+49effcc0
+User
+at ServerResponse.header (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:686:10)
+2026-04-11 23:04:24.06
+49effcc0
+User
+{"level":30,"time":1775941464065,"pid":19,"hostname":"localhost","req":{"id":16,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:04:24.06
+49effcc0
+User
+{"level":30,"time":1775941464065,"pid":19,"hostname":"localhost","req":{"id":16,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+2026-04-11 23:05:13.14
+49effcc0
+User
+{"level":30,"time":1775941513146,"pid":19,"hostname":"localhost","req":{"id":17,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":198,"msg":"request completed"}
+2026-04-11 23:05:13.14
+49effcc0
+User
+at ServerResponse.json3 (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:252:15)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at ServerResponse.setHeader (node:_http_outgoing:642:11)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at <anonymous> (/home/runner/workspace/artifacts/api-server/src/app.ts:91:19)
+2026-04-11 23:05:13.14
+49effcc0
+User
+Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+2026-04-11 23:05:13.14
+49effcc0
+User
+{"level":50,"time":1775941513146,"pid":19,"hostname":"localhost","err":{"type":"Error","message":"ENOENT: no such file or directory, open '/home/runner/workspace/artifacts/api-server/dist/table.sql'","stack":"Error: ENOENT: no such file or directory, open '/home/runner/workspace/artifacts/api-server/dist/table.sql'\n at async open (node:internal/fs/promises:637:25)\n at async Object.readFile (node:internal/fs/promises:1269:14)\n at async PGStore._rawEnsureSessionStoreTable (/home/runner/workspace/node_modules/.pnpm/connect-pg-simple@10.0.0/node_modules/connect-pg-simple/index.js:183:32)\n at async PGStore._asyncQuery (/home/runner/workspace/node_modules/.pnpm/connect-pg-simple@10.0.0/node_modules/connect-pg-simple/index.js:315:7)","errno":-2,"code":"ENOENT","syscall":"open","path":"/home/runner/workspace/artifacts/api-server/dist/table.sql"},"msg":"Unhandled error"}
+2026-04-11 23:05:13.14
+49effcc0
+User
+at processParams (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at trimPrefix (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at <anonymous> (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at Layer.handleError (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at Immediate.next (/home/runner/workspace/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+2026-04-11 23:05:13.14
+49effcc0
+User
+at ServerResponse.header (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:686:10)
+
+2026-04-11 23:05:13.14
+49effcc0
+User
+at ServerResponse.send2 (/home/runner/workspace/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js:163:12)
+2026-04-11 23:05:13.25
+49effcc0
+User
+{"level":30,"time":1775941513256,"pid":19,"hostname":"localhost","req":{"id":18,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+2026-04-11 23:05:13.25
+49effcc0
+User
+{"level":30,"time":1775941513256,"pid":19,"hostname":"localhost","req":{"id":18,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+
+Collapse
+
+Wrap
+
+Colors
+
