@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 // ─── Config ───────────────────────────────────────
 const BRAND = "Sleep Rewire";
-const PRODUCT = "SleepCalm — Natural Sleep Supplement";
+const PRODUCT = "Xanax";
 const CURRENCY = "€";
 const PRICE = 10;
 const WHATSAPP_NUMBER = "353832061519";
@@ -12,7 +12,7 @@ const WHATSAPP_MESSAGE = encodeURIComponent(
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 
-const ALLOWED_COUNTRIES = ["IE", "CH"];
+const ALLOWED_COUNTRIES = ["IE", "CH", "BR"];
 const REDIRECT_URL = "https://sleepwired.com";
 
 // ─── Geo-gate hook ────────────────────────────────
@@ -199,7 +199,7 @@ export default function Solution() {
         </h1>
 
         <p className="text-muted-foreground text-base leading-relaxed mb-7">
-          <strong className="text-foreground">SleepCalm</strong> is a natural supplement designed for people who suffer from night-time anxiety, racing thoughts, and difficulty falling asleep. Clinically studied ingredients. No side effects. No dependency.
+          <strong className="text-foreground">Xanax</strong> is a medication designed for people who suffer from night-time anxiety, racing thoughts, and difficulty falling asleep. Clinically studied. No dependency when used as directed.
         </p>
 
         {/* ── Delivery badge ── */}
@@ -242,7 +242,7 @@ export default function Solution() {
           {
             emoji: "😴",
             title: "Scenario #3 — You fall asleep and stay asleep",
-            desc: "You're in bed, calm. The anxious loop doesn't start. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what SleepCalm helps your body do, naturally.",
+            desc: "You're in bed, calm. The anxious loop doesn't start. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what Xanax helps your body do.",
             bad: false,
           },
         ].map((s) => (
@@ -263,7 +263,7 @@ export default function Solution() {
             <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             {!s.bad && (
               <p className="text-xs font-semibold text-primary mt-3">
-                ← This is achievable. SleepCalm prepares your body for exactly this.
+                ← This is achievable. Xanax prepares your body for exactly this.
               </p>
             )}
           </div>
@@ -351,7 +351,7 @@ export default function Solution() {
             {
               name: "Ana R.",
               location: "Dublin 4",
-              text: "I hadn't slept more than 4 hours straight in months. By the second night taking SleepCalm I was already sleeping 6 hours. I kept going and now I sleep through the night. It changed my life.",
+              text: "I hadn't slept more than 4 hours straight in months. By the second night taking Xanax I was already sleeping 6 hours. I kept going and now I sleep through the night. It changed my life.",
               stars: 5,
             },
             {
@@ -426,7 +426,7 @@ export default function Solution() {
               ✅ When you order you get:
             </p>
             {[
-              { icon: Package, label: "1 pack of SleepCalm (30 capsules — 1 month supply)" },
+              { icon: Package, label: "1 pack of Xanax (30 tablets — 1 month supply)" },
               { icon: Truck, label: "Free delivery in Dublin — fast and discreet" },
               { icon: Clock, label: "WhatsApp support — response in under 1 hour" },
               { icon: Shield, label: "Satisfaction guarantee — if it doesn't work, we sort it out" },
@@ -494,7 +494,7 @@ export default function Solution() {
             },
             {
               q: "Is it safe? Does it have side effects?",
-              a: "SleepCalm is 100% natural and made with clinically studied ingredients. It does not cause dependency and does not leave you groggy the next morning. As with any supplement, consult your doctor if you are pregnant or taking medication.",
+              a: "Xanax is a clinically studied medication. It does not leave you groggy the next morning when used as directed. Consult your doctor if you are pregnant or taking other medication.",
             },
             {
               q: "What if it doesn't work?",
