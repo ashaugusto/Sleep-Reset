@@ -1,0 +1,160 @@
+e
+Deployment
+Source
+Log
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+registered static handler for artifact path=/ publicDir=artifacts/sleep-reset/dist/public
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+artifact mode enabled runnable=1 static=1
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+starting artifact processes for monorepo deployment
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+starting up user application
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+waiting for runnable artifact ports ports=[8080]
+
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+forwarding local port 0 to external port 80 (mapped as 1104)
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+starting artifact processes count=1
+2026-04-11 11:03:37.86
+46dc4f1f
+System
+starting artifact process artifact=artifacts/api-server args=[node --enable-source-maps artifacts/api-server/dist/index.mjs] port=8080
+2026-04-11 11:03:37.87
+46dc4f1f
+System
+artifact process started artifact=artifacts/api-server pid=19
+2026-04-11 11:03:38.82
+46dc4f1f
+System
+all artifact ports detected
+2026-04-11 11:03:38.82
+46dc4f1f
+System
+artifact processes running, waiting for signal or process exit
+2026-04-11 11:03:38.82
+46dc4f1f
+System
+artifact port detected port=8080 expected=1 detected=1
+2026-04-11 11:03:38.82
+46dc4f1f
+User
+{"level":30,"time":1775898218824,"pid":19,"hostname":"localhost","port":8080,"msg":"Server listening"}
+2026-04-11 11:03:39.70
+46dc4f1f
+User
+{"level":30,"time":1775898219706,"pid":19,"hostname":"localhost","req":{"id":1,"method":"GET","url":"/api/healthz"},"res":{"statusCode":200},"responseTime":37,"msg":"request completed"}
+2026-04-11 11:04:28.29
+46dc4f1f
+User
+{"level":30,"time":1775898268293,"pid":19,"hostname":"localhost","req":{"id":2,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":3,"msg":"request completed"}
+2026-04-11 11:05:48.46
+46dc4f1f
+User
+{"level":30,"time":1775898348465,"pid":19,"hostname":"localhost","req":{"id":3,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":5,"msg":"request completed"}
+2026-04-11 11:07:43.00
+46dc4f1f
+User
+{"level":30,"time":1775898463000,"pid":19,"hostname":"localhost","req":{"id":4,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":2,"msg":"request completed"}
+2026-04-11 11:09:56.74
+46dc4f1f
+User
+{"level":30,"time":1775898596743,"pid":19,"hostname":"localhost","req":{"id":5,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-04-11 11:13:07.01
+46dc4f1f
+User
+{"level":30,"time":1775898787010,"pid":19,"hostname":"localhost","req":{"id":6,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":2,"msg":"request completed"}
+2026-04-11 11:17:08.26
+46dc4f1f
+User
+{"level":30,"time":1775899028266,"pid":19,"hostname":"localhost","req":{"id":7,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-04-11 11:22:56.13
+46dc4f1f
+User
+{"level":30,"time":1775899376130,"pid":19,"hostname":"localhost","req":{"id":8,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-04-11 11:29:15.11
+46dc4f1f
+User
+{"level":30,"time":1775899755115,"pid":19,"hostname":"localhost","req":{"id":9,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-04-11 11:30:59.75
+46dc4f1f
+User
+{"level":30,"time":1775899859756,"pid":19,"hostname":"localhost","req":{"id":10,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-04-11 11:31:51.06
+46dc4f1f
+User
+{"level":30,"time":1775899911063,"pid":19,"hostname":"localhost","req":{"id":11,"method":"GET","url":"/api/__clerk/v1/proxy-health"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+2026-04-11 11:33:00.39
+46dc4f1f
+System
+artifact mode enabled runnable=1 static=1
+2026-04-11 11:33:00.39
+46dc4f1f
+System
+starting up user application
+2026-04-11 11:33:00.39
+46dc4f1f
+System
+starting artifact processes for monorepo deployment
+2026-04-11 11:33:00.39
+46dc4f1f
+System
+registered static handler for artifact publicDir=artifacts/sleep-reset/dist/public path=/
+2026-04-11 11:33:00.39
+46dc4f1f
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-04-11 11:33:00.40
+46dc4f1f
+System
+starting artifact processes count=1
+2026-04-11 11:33:00.40
+46dc4f1f
+System
+forwarding local port 0 to external port 80 (mapped as 1104)
+2026-04-11 11:33:00.40
+46dc4f1f
+System
+waiting for runnable artifact ports ports=[8080]
+2026-04-11 11:33:00.40
+46dc4f1f
+System
+starting artifact process artifact=artifacts/api-server args=[node --enable-source-maps artifacts/api-server/dist/index.mjs] port=8080
+2026-04-11 11:33:00.41
+46dc4f1f
+System
+artifact process started artifact=artifacts/api-server pid=20
+2026-04-11 11:33:01.22
+46dc4f1f
+System
+all artifact ports detected
+2026-04-11 11:33:01.22
+46dc4f1f
+System
+artifact port detected port=8080 detected=1 expected=1
+2026-04-11 11:33:01.22
+46dc4f1f
+System
+artifact processes running, waiting for signal or process exit
+2026-04-11 11:33:01.22
+46dc4f1f
+User

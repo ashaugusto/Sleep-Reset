@@ -1,7 +1,7 @@
-import { getStripeClient } from "../stripeClient";
+import { getUncachableStripeClient } from "../stripeClient";
 
 async function main() {
-  const stripe = getStripeClient();
+  const stripe = await getUncachableStripeClient();
 
   const product = await stripe.products.create({
     name: "7-Night Sleep Reset",

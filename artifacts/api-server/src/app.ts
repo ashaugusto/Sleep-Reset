@@ -1,19 +1,12 @@
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
+import { clerkMiddleware } from "@clerk/express";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { stripeWebhookHandler } from "./routes/payments";
-
-declare module "express-session" {
-  interface SessionData {
-    userId: string;
-  }
-}
-
-const PgSession = connectPgSimple(session);
+import { WebhookHandlers } from "./webhookHandlers";
+import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
+import { isStripeConfigured } from "./stripeClient";
 
 const app: Express = express();
 
@@ -31,10 +24,30 @@ app.use(
   }),
 );
 
+app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),
-  stripeWebhookHandler,
+  async (req: Request, res: Response) => {
+    if (!isStripeConfigured()) {
+      res.status(503).send("Stripe not configured");
+      return;
+    }
+    const signature = req.headers["stripe-signature"];
+    if (!signature) {
+      res.status(400).json({ error: "Missing stripe-signature" });
+      return;
+    }
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      res.status(200).json({ received: true });
+    } catch (error) {
+      logger.error(error, "Webhook error");
+      res.status(400).json({ error: "Webhook processing error" });
+    }
+  },
 );
 
 app.use(
@@ -47,27 +60,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const sessionSecret = process.env.SESSION_SECRET || "sleep-reset-dev-secret-change-in-prod";
-
-app.use(
-  session({
-    store: new PgSession({
-      conString: process.env.DATABASE_URL,
-      createTableIfMissing: true,
-      tableName: "sessions",
-    }),
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    name: "sid",
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    },
-  }),
-);
+app.use(clerkMiddleware());
 
 app.use("/api", router);
 
