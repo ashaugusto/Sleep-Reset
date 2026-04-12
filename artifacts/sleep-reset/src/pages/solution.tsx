@@ -1,5 +1,6 @@
 import { Moon, CheckCircle2, Star, Shield, Truck, MessageCircle, AlertTriangle, Package, Clock, Zap, Tag } from "lucide-react";
 import { useState, useEffect } from "react";
+import { solutionEvents } from "@/lib/gtm";
 
 // ─── Config ───────────────────────────────────────
 const BRAND = "Sleep Rewire";
@@ -21,12 +22,12 @@ const PACKS = [
 const ALLOWED_COUNTRIES = ["IE", "CH", "BR"];
 const REDIRECT_URL = "https://sleepwired.com";
 
-// ─── Tracking — isolated from main app events ─────
+// ─── Tracking — uses centralized gtm events ──────
 function trackSolution(event: string, extra?: Record<string, unknown>) {
   try {
     const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer;
     if (!Array.isArray(dl)) return;
-    dl.push({ event, page: "solution", product: PRODUCTS, price: PRICE_NOW, currency: "EUR", ...extra });
+    dl.push({ event, page_type: "solution", product: PRODUCTS, currency: "EUR", ...extra });
   } catch { /* silent */ }
 }
 
@@ -128,7 +129,7 @@ function CountdownTimer() {
 // ─── CTA Button → WhatsApp ────────────────────────
 function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
   function handleClick() {
-    trackSolution("solution_whatsapp_click", { button_size: size });
+    solutionEvents.whatsappClick(size);
     window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
   }
   if (size === "large") {
@@ -166,7 +167,7 @@ export default function Solution() {
 
   useEffect(() => {
     if (geoStatus === "allowed") {
-      trackSolution("solution_view_content");
+      solutionEvents.viewSolution();
     }
   }, [geoStatus]);
 
@@ -194,7 +195,7 @@ export default function Solution() {
           <span className="font-bold text-base tracking-tight">{BRAND}</span>
         </div>
         <button
-          onClick={() => { trackSolution("solution_whatsapp_click", { button_size: "nav" }); window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer"); }}
+          onClick={() => { solutionEvents.whatsappClick("nav"); window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer"); }}
           className="flex items-center gap-1.5 text-xs text-[#25D366] hover:text-[#1ebe5a] transition-colors font-semibold"
         >
           <MessageCircle className="w-4 h-4" />
@@ -576,7 +577,7 @@ export default function Solution() {
           <p className="text-xs text-muted-foreground">
             Orders and support:{" "}
             <button
-              onClick={() => { trackSolution("solution_whatsapp_click", { button_size: "footer" }); window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer"); }}
+              onClick={() => { solutionEvents.whatsappClick("footer"); window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer"); }}
               className="text-[#25D366] hover:underline font-semibold"
             >
               WhatsApp

@@ -306,7 +306,7 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  useEffect(() => { gtm.viewContent(); }, []);
+  useEffect(() => { gtm.viewVSL(); }, []);
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
