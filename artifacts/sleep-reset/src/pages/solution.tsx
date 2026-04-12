@@ -5,14 +5,18 @@ import { useState, useEffect } from "react";
 const BRAND = "Sleep Rewire";
 const PRODUCTS = "Xanax 1mg & Valium 10mg";
 const CURRENCY = "€";
-const PRICE_NOW = 10;
-const PRICE_OLD = 20;
-const PRICE_MIN = 30;
 const WHATSAPP_NUMBER = "353832061519";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  `Hi! I'd like to order ${PRODUCTS} for ${CURRENCY}${PRICE_MIN} (minimum order). Free delivery in Dublin. 🌙`
+  `Hi! I'd like to order from Sleep Rewire. Can you tell me about the packs? 🌙`
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+
+const PACKS = [
+  { name: "Trial Pack", qty: 4, price: 30, bonus: "", label: "" },
+  { name: "Starter Pack", qty: 7, price: 45, bonus: "5 + 2 free", label: "" },
+  { name: "Value Pack", qty: 12, price: 70, bonus: "10 + 2 free", label: "POPULAR" },
+  { name: "Best Deal", qty: 18, price: 90, bonus: "15 + 3 free", label: "BEST VALUE" },
+];
 
 const ALLOWED_COUNTRIES = ["IE", "CH", "BR"];
 const REDIRECT_URL = "https://sleepwired.com";
@@ -135,10 +139,10 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
           className="inline-flex items-center justify-center gap-3 w-full max-w-sm bg-[#25D366] text-white font-extrabold text-lg py-5 px-8 rounded-2xl shadow-[0_0_40px_rgba(37,211,102,0.4)] hover:shadow-[0_0_60px_rgba(37,211,102,0.6)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 cursor-pointer"
         >
           <MessageCircle className="w-6 h-6" />
-          Order via WhatsApp →
+          Message us now →
         </button>
         <p className="text-xs text-muted-foreground mt-2">
-          Minimum {CURRENCY}{PRICE_MIN} · Buy 1 Get 2 FREE · Free delivery in Dublin
+          Packs from {CURRENCY}30 · Delivery included · Dublin
         </p>
       </div>
     );
@@ -149,7 +153,7 @@ function WhatsAppButton({ size = "default" }: { size?: "default" | "large" }) {
       className="inline-flex items-center justify-center gap-2 w-full bg-[#25D366] text-white font-extrabold text-base py-4 rounded-xl shadow-[0_0_30px_rgba(37,211,102,0.35)] hover:shadow-[0_0_50px_rgba(37,211,102,0.55)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
     >
       <MessageCircle className="w-5 h-5" />
-      I want to order now →
+      Message us now →
     </button>
   );
 }
@@ -204,37 +208,43 @@ export default function Solution() {
       <Section className="pt-4 pb-8 text-center">
 
         {/* Promo badge */}
-        <div className="inline-flex items-center gap-1.5 bg-yellow-400/15 border border-yellow-400/40 text-yellow-400 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-          <Tag className="w-3 h-3" />
-          BUY 1 GET 2 FREE · Was {CURRENCY}{PRICE_OLD} · Now {CURRENCY}{PRICE_NOW}
-        </div>
-
         <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
           <Star className="w-3 h-3 fill-current" />
-          Fast & discreet · Free delivery in Dublin · Min. order {CURRENCY}{PRICE_MIN}
+          Fast & discreet · All prices include delivery
         </div>
 
         <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">
-          Finally — a solution to sleep better tonight
+          Sleep Sorted. Delivered.
         </p>
 
         <h1 className="text-[2rem] font-extrabold leading-[1.15] mb-5">
-          Sleep Deeply Every Night —{" "}
-          <span className="text-primary">Delivered to Your Door in Dublin.</span>
+          Struggling to switch off?{" "}
+          <span className="text-primary">We deliver real sleep support straight to your door in Dublin.</span>
         </h1>
 
-        <p className="text-muted-foreground text-base leading-relaxed mb-7">
-          <strong className="text-foreground">Xanax 1mg & Valium 10mg</strong> — prescribed worldwide for anxiety and sleep disorders. Fast-acting, clinically proven. Now available for discreet home delivery in Dublin.
+        <p className="text-muted-foreground text-base leading-relaxed mb-5">
+          <strong className="text-foreground">{PRODUCTS}</strong> — prescribed worldwide for anxiety and sleep disorders. Fast-acting, clinically proven. No waiting lists, no hassle.
         </p>
 
-        {/* ── Delivery badge ── */}
-        <div className="flex items-center justify-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 rounded-2xl p-4 mb-7">
-          <Truck className="w-5 h-5 text-[#25D366] shrink-0" />
-          <div className="text-left">
-            <p className="text-sm font-bold text-foreground">Free Delivery in Dublin</p>
-            <p className="text-xs text-muted-foreground">We deliver across the city · Fast and discreet</p>
-          </div>
+        {/* ── Pack pricing ── */}
+        <div className="space-y-2.5 mb-7">
+          {PACKS.map((pack) => (
+            <div key={pack.name} className={`flex items-center justify-between p-4 rounded-2xl border ${pack.label === "BEST VALUE" ? "border-primary/50 bg-primary/5 shadow-[0_0_30px_rgba(139,92,246,0.12)]" : pack.label === "POPULAR" ? "border-yellow-400/40 bg-yellow-400/5" : "border-border/50 bg-card/40"}`}>
+              <div className="text-left">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-extrabold text-foreground">{pack.name}</p>
+                  {pack.label && <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${pack.label === "BEST VALUE" ? "bg-primary/20 text-primary" : "bg-yellow-400/20 text-yellow-400"}`}>{pack.label}</span>}
+                </div>
+                <p className="text-xs text-muted-foreground">{pack.qty} units{pack.bonus ? ` (${pack.bonus})` : ""} · delivered</p>
+              </div>
+              <p className="text-xl font-extrabold text-foreground">{CURRENCY}{pack.price}</p>
+            </div>
+          ))}
         </div>
+
+        <p className="text-xs text-muted-foreground text-center mb-5">
+          All prices include delivery up to 10km from Dublin city centre. Most orders arrive within 30 minutes.
+        </p>
 
         <WhatsAppButton size="large" />
       </Section>
@@ -421,48 +431,35 @@ export default function Solution() {
             </p>
           </div>
 
-          {/* Promo banner */}
-          <div className="bg-yellow-400/10 border-b border-yellow-400/30 px-5 py-3 text-center">
-            <p className="text-sm font-extrabold text-yellow-400 uppercase tracking-wider">
-              🎁 Buy 1 Get 2 FREE — Limited Time Offer
-            </p>
-          </div>
-
-          {/* Price block */}
-          <div className="px-5 pt-6 pb-5 border-b border-border/50 text-center">
-            <p className="text-base text-muted-foreground line-through mb-1">
-              Was {CURRENCY}{PRICE_OLD} per unit
-            </p>
-            <p className="text-6xl font-extrabold text-foreground leading-none mb-1">
-              {CURRENCY}<span className="text-primary">{PRICE_NOW}</span>
-            </p>
-            <p className="text-sm text-muted-foreground mb-4">per unit · Minimum order {CURRENCY}{PRICE_MIN}</p>
-
-            <div className="flex flex-col gap-2 items-center">
-              <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full px-4 py-1.5">
-                <span className="text-xs font-extrabold text-yellow-400 uppercase tracking-wider">
-                  50% off — You save {CURRENCY}{PRICE_OLD - PRICE_NOW} per unit
-                </span>
-              </div>
-              <div className="inline-flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/30 rounded-full px-4 py-1.5">
-                <Truck className="w-3.5 h-3.5 text-[#25D366]" />
-                <span className="text-xs font-extrabold text-[#25D366] uppercase tracking-wider">
-                  Free delivery in Dublin
-                </span>
-              </div>
+          {/* Pack pricing */}
+          <div className="px-5 pt-6 pb-5 border-b border-border/50">
+            <p className="text-xs font-bold text-foreground uppercase tracking-wider text-center mb-4">Choose your pack</p>
+            <div className="space-y-2.5">
+              {PACKS.map((pack) => (
+                <div key={pack.name} className={`flex items-center justify-between p-3.5 rounded-xl border ${pack.label === "BEST VALUE" ? "border-primary/50 bg-primary/5" : pack.label === "POPULAR" ? "border-yellow-400/40 bg-yellow-400/5" : "border-border/40 bg-card/30"}`}>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-foreground">{pack.name}</p>
+                      {pack.label && <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${pack.label === "BEST VALUE" ? "bg-primary/20 text-primary" : "bg-yellow-400/20 text-yellow-400"}`}>{pack.label}</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{pack.qty} units{pack.bonus ? ` (${pack.bonus})` : ""}</p>
+                  </div>
+                  <p className="text-lg font-extrabold text-foreground">{CURRENCY}{pack.price}</p>
+                </div>
+              ))}
             </div>
+            <p className="text-[11px] text-muted-foreground text-center mt-3">All prices include delivery · Most orders arrive within 30 minutes</p>
           </div>
 
           {/* What's included */}
           <div className="px-5 py-5 border-b border-border/50 space-y-3">
             <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">
-              ✅ When you order (min. {CURRENCY}{PRICE_MIN}) you get:
+              ✅ Every order includes:
             </p>
             {[
               { icon: Package, label: "Xanax 1mg (Alprazolam) — fast-acting anxiety & sleep relief" },
               { icon: Package, label: "Valium 10mg (Diazepam) — deep, uninterrupted sleep" },
-              { icon: Tag,     label: "Buy 1 Get 2 FREE — 3 units for the price of 1" },
-              { icon: Truck,   label: "Free delivery in Dublin — fast and discreet" },
+              { icon: Truck,   label: "Delivery included — up to 10km from Dublin city centre" },
               { icon: Clock,   label: "WhatsApp support — response in under 1 hour" },
               { icon: Shield,  label: "Satisfaction guarantee — if it doesn't arrive, we reship" },
             ].map(({ icon: Icon, label }) => (
@@ -491,7 +488,7 @@ export default function Solution() {
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground/70 text-center">
-              Minimum order {CURRENCY}{PRICE_MIN} · No subscription · Pay only for what you ordered
+              Packs from {CURRENCY}30 · Delivery included · No subscription
             </p>
           </div>
         </div>
@@ -521,15 +518,15 @@ export default function Solution() {
           {[
             {
               q: "How does the ordering process work?",
-              a: "Click the WhatsApp button, send us a message and we confirm your order. Minimum order is €30. We arrange delivery in Dublin and you can pay by bank transfer or on delivery.",
+              a: "Click the WhatsApp button, choose your pack and we confirm your order. We arrange delivery in Dublin — most orders arrive within 30 minutes.",
             },
             {
-              q: "How does the Buy 1 Get 2 FREE deal work?",
-              a: `Each unit is ${CURRENCY}${PRICE_NOW} (was ${CURRENCY}${PRICE_OLD}). The minimum order is ${CURRENCY}${PRICE_MIN}, which gets you 3 units — you pay for 1 and get 2 free. That's a 50% saving per unit compared to the original price.`,
+              q: "What packs are available?",
+              a: "Trial Pack (4 for €30), Starter Pack (7 for €45, includes 2 free), Value Pack (12 for €70, includes 2 free), and our Best Deal (18 for €90, includes 3 free). All prices include delivery.",
             },
             {
-              q: "How long does delivery in Dublin take?",
-              a: "We offer free delivery across Dublin city centre and surrounding areas. Same-day delivery available 7 days a week, from 1pm to midnight — or schedule it for whenever suits you best.",
+              q: "How long does delivery take?",
+              a: "We deliver within 10km of Dublin city centre. Most orders arrive within 30 minutes. Same-day delivery available 7 days a week, from 1pm to midnight.",
             },
             {
               q: "Is the delivery discreet?",
@@ -540,8 +537,8 @@ export default function Solution() {
               a: "Contact us on WhatsApp and we will reship your order at no extra cost. Your satisfaction is guaranteed.",
             },
             {
-              q: "Can I order more than the minimum?",
-              a: "Absolutely — and the more you order, the bigger the discount. Our most popular deal is 12 units for €80. Minimum order is 3 units. Just message us on WhatsApp and we'll sort out the best price for your quantity.",
+              q: "Are delivery costs included?",
+              a: "Yes — all prices include delivery up to 10km from Dublin city centre. No hidden fees, no surprises. What you see is what you pay.",
             },
           ].map((item, i) => (
             <FaqItem key={i} q={item.q} a={item.a} />
@@ -561,7 +558,7 @@ export default function Solution() {
           <span className="text-primary">the last night</span> you sleep badly.
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed mb-7">
-          Xanax 1mg & Valium 10mg — {CURRENCY}{PRICE_NOW} per unit (was {CURRENCY}{PRICE_OLD}) · Buy 1 Get 2 Free · Min. {CURRENCY}{PRICE_MIN} · Free delivery in Dublin.
+          {PRODUCTS} — Packs from {CURRENCY}30. All prices include delivery in Dublin.
         </p>
         <WhatsAppButton size="large" />
       </Section>
