@@ -95,7 +95,11 @@ app.use(
   }),
 );
 
+// Mount at both /api and / to support:
+// - Direct access (dev/Replit): frontend calls /api/auth/login → Express sees /api/auth/login
+// - DO App Platform: strips /api prefix → Express sees /auth/login
 app.use("/api", router);
+app.use("/", router);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err && typeof err === "object" && "issues" in err) {
