@@ -104,13 +104,13 @@ function CountdownTimer() {
 const BRAND = "Sleep Rewire";
 const PRODUCT = "The Sleep Rewire Protocol";
 const CURRENCY = "€";
-const PRICE_TODAY = 47;
-const PRICE_ORIGINAL = 197;
-const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 150
+const PRICE_TODAY = 9.99;
+const PRICE_ORIGINAL = 47;
+const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 37.01
 
 // ─── Bonus list ───────────────────────────────────
 const BONUSES = [
-  { name: "Anxiety & Sleep Masterclass", desc: "Why anxiety hijacks your sleep — and the exact neuroscience behind why the Rewire Protocol shuts it off", value: "€47" },
+  { name: "Anxiety & Sleep Masterclass", desc: "Why anxiety hijacks your sleep — and the exact neuroscience behind why the Rewire Protocol shuts it off", value: "€27" },
   { name: "Evening Wind-Down Ritual Guide", desc: "15 evidence-based habits that calm your nervous system and prime your brain for deep, unbroken sleep", value: "€27" },
   { name: "Morning Recovery Protocol", desc: "Optimise the first 30 minutes of your day to anchor your sleep-wake cycle and reduce night-time anxiety", value: "€27" },
   { name: "Sleep Efficiency Tracker Template", desc: "The same spreadsheet framework used in clinical CBT-I trials — track your progress every night", value: "€27" },
@@ -202,8 +202,8 @@ function OrderForm({ id }: { id?: string }) {
         <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
           <span className="text-xs font-bold text-muted-foreground">Total value</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground line-through">{CURRENCY}352+</span>
-            <span className="text-sm font-extrabold text-primary">Your price: {CURRENCY}47</span>
+            <span className="text-sm text-muted-foreground line-through">{CURRENCY}155+</span>
+            <span className="text-sm font-extrabold text-primary">Your price: {CURRENCY}{PRICE_TODAY}</span>
           </div>
         </div>
       </div>
@@ -294,7 +294,7 @@ function CtaButton({ children }: { children: React.ReactNode }) {
       >
         {children}
       </button>
-      <p className="text-xs text-muted-foreground mt-2">One-time {CURRENCY}47 · Lifetime access · 7-Night Guarantee</p>
+      <p className="text-xs text-muted-foreground mt-2">One-time {CURRENCY}{PRICE_TODAY} · Lifetime access · 7-Night Guarantee</p>
     </div>
   );
 }
@@ -479,7 +479,7 @@ export default function Landing() {
 
       {/* ── Mid-page CTA ── */}
       <Section className="py-6">
-        <CtaButton>Start My Sleep Rewire — {CURRENCY}47</CtaButton>
+        <CtaButton>Start My Sleep Rewire — {CURRENCY}{PRICE_TODAY}</CtaButton>
       </Section>
 
       <Divider />
@@ -590,7 +590,7 @@ export default function Landing() {
 
         <div className="bg-primary/8 border border-primary/30 rounded-2xl p-4 text-center">
           <p className="text-sm font-bold text-foreground">
-            Total value: <span className="line-through text-muted-foreground">{CURRENCY}352+</span>
+            Total value: <span className="line-through text-muted-foreground">{CURRENCY}155+</span>
           </p>
           <p className="text-2xl font-extrabold text-primary mt-1">Your price today: {CURRENCY}{PRICE_TODAY}</p>
           <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">{CURRENCY}{PRICE_SAVINGS}</strong> — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off the program alone</p>
@@ -694,7 +694,7 @@ export default function Landing() {
         {[
           { q: "Do I need to create an account before buying?", a: "No. Just enter your email and name, pay securely through Stripe, and you'll immediately be prompted to create your password. Your account is created automatically after payment — no sign-up friction." },
           { q: "Does this work specifically for anxiety-related insomnia?", a: "Yes — this is exactly what CBT-I was designed for. Anxiety-driven insomnia (lying awake with a racing mind, waking at 3am with a jolt of worry) responds extremely well to the techniques in this protocol. The Cognitive Restructuring and Brain Dump sessions directly target the anxiety loop." },
-          { q: "Is this the same as CBT-I therapy with a therapist?", a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs €47 instead of €300/session, and you can start tonight." },
+          { q: "Is this the same as CBT-I therapy with a therapist?", a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs less than a single coffee run instead of €300/session, and you can start tonight." },
           { q: "What if I've had insomnia for years?", a: "CBT-I is specifically designed for chronic insomnia. The longer you've had it, the more entrenched the behavioral patterns — which means CBT-I often produces more dramatic results." },
           { q: "Do I need a specific wake-up time to make this work?", a: "You'll set a consistent wake time during the protocol — it's central to building sleep pressure. The protocol adapts to your schedule, whether you wake at 6am or 10am." },
           { q: "Is there ongoing access after I finish Night 7?", a: "Yes — lifetime access. The sleep diary and tracking tools are yours forever. Many users log their sleep indefinitely to maintain their results." },

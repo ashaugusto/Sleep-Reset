@@ -32,7 +32,7 @@ export const gtm = {
       content_category: "Digital Product",
       content_type: "product",
       page_type: "vsl",
-      value: 47,
+      value: 9.99,
       currency: "EUR",
     });
     push({
@@ -40,7 +40,7 @@ export const gtm = {
       ecommerce: {
         currency: "EUR",
         value: 47,
-        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 47, quantity: 1 }],
+        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 9.99, quantity: 1 }],
       },
     });
   },
@@ -55,7 +55,7 @@ export const gtm = {
       event: "InitiateCheckout",
       content_name: "The Sleep Rewire Protocol",
       page_type: "vsl",
-      value: 47,
+      value: 9.99,
       currency: "EUR",
       num_items: 1,
       email,
@@ -65,7 +65,7 @@ export const gtm = {
       ecommerce: {
         currency: "EUR",
         value: 47,
-        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 47, quantity: 1 }],
+        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 9.99, quantity: 1 }],
       },
     });
   },
@@ -75,7 +75,7 @@ export const gtm = {
       event: "Purchase",
       content_name: "The Sleep Rewire Protocol",
       page_type: "vsl",
-      value: 47,
+      value: 9.99,
       currency: "EUR",
       transaction_id: sessionId,
       num_items: 1,
@@ -87,7 +87,7 @@ export const gtm = {
         transaction_id: sessionId,
         currency: "EUR",
         value: 47,
-        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 47, quantity: 1 }],
+        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 9.99, quantity: 1 }],
       },
     });
   },
