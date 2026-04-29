@@ -8,7 +8,7 @@ import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 import { gtm } from "@/lib/gtm";
 
-const VIMEO_SRC = "https://player.vimeo.com/video/1182232180?badge=0&autopause=0&player_id=0&app_id=58479";
+const VIMEO_SRC = "https://player.vimeo.com/video/1182232180?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&playsinline=1&byline=0&portrait=0&title=0";
 const VIMEO_API = "https://player.vimeo.com/api/player.js";
 
 function VimeoPlayer() {
