@@ -8,31 +8,29 @@ import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 import { gtm } from "@/lib/gtm";
 
-const VTURB_ID = "vid-69da9fe6ccd7dd53185cf510";
-const VTURB_SCRIPT = "https://scripts.converteai.net/dc533977-8fef-4dfd-bced-2f9fa805f669/players/69da9fe6ccd7dd53185cf510/v4/player.js";
+const VIMEO_SRC = "https://player.vimeo.com/video/1182232180?badge=0&autopause=0&player_id=0&app_id=58479";
+const VIMEO_API = "https://player.vimeo.com/api/player.js";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "vturb-smartplayer": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { id?: string };
-    }
-  }
-}
-
-function VturbPlayer() {
+function VimeoPlayer() {
   useEffect(() => {
-    if (document.querySelector(`script[src="${VTURB_SCRIPT}"]`)) return;
+    if (document.querySelector(`script[src="${VIMEO_API}"]`)) return;
     const s = document.createElement("script");
-    s.src = VTURB_SCRIPT;
+    s.src = VIMEO_API;
     s.async = true;
     document.head.appendChild(s);
   }, []);
 
   return (
-    <vturb-smartplayer
-      id={VTURB_ID}
-      style={{ display: "block", margin: "0 auto", width: "100%" }}
-    />
+    <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
+      <iframe
+        src={VIMEO_SRC}
+        frameBorder={0}
+        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+        title="The Sleep Rewire Protocol - VSL_1080p_caption"
+      />
+    </div>
   );
 }
 
@@ -355,7 +353,7 @@ export default function Landing() {
 
         {/* ── VSL ── */}
         <div className="rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
-          <VturbPlayer />
+          <VimeoPlayer />
         </div>
 
         <CtaButton>Yes — Rewire My Sleep Tonight →</CtaButton>
