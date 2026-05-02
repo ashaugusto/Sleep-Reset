@@ -102,9 +102,9 @@ function CountdownTimer() {
 const BRAND = "Sleep Rewire";
 const PRODUCT = "The Sleep Rewire Protocol";
 const CURRENCY = "€";
-const PRICE_TODAY = 9.99;
+const PRICE_TODAY = 27;
 const PRICE_ORIGINAL = 47;
-const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 37.01
+const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 20
 
 // ─── Bonus list ───────────────────────────────────
 const BONUSES = [

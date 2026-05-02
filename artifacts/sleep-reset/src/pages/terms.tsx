@@ -59,7 +59,7 @@ Individual results vary. We make no guarantee that the program will resolve your
             content: `To access the full program, you must:
 
 1. Create an account with a valid email address and password
-2. Complete a one-time purchase of €47 via Stripe
+2. Complete a one-time purchase of €27 via Stripe
 
 Your account is personal and non-transferable. You are responsible for maintaining the security of your credentials. Do not share your account with others.
 
@@ -87,7 +87,7 @@ Your purchase grants you a personal, non-exclusive, non-transferable licence to 
             title: "7. Limitation of Liability",
             content: `To the maximum extent permitted by applicable law, Sleep Rewire shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
 
-Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program (€47).`,
+Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program (€27).`,
           },
           {
             title: "8. Termination",

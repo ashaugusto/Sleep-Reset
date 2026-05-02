@@ -88,7 +88,7 @@ export default function Purchase() {
 
         <Card className="w-full p-6 mb-6 border-primary/30 bg-card">
           <div className="flex items-baseline justify-between mb-4">
-            <span className="text-2xl font-bold">€47</span>
+            <span className="text-2xl font-bold">€27</span>
             <span className="text-muted-foreground text-sm">one-time</span>
           </div>
           <ul className="space-y-2 mb-6">
@@ -111,7 +111,7 @@ export default function Purchase() {
             className="w-full py-6 text-base font-semibold"
             size="lg"
           >
-            {isPending ? "Redirecting…" : "Pay €47 & start tonight"}
+            {isPending ? "Redirecting…" : "Pay €27 & start tonight"}
           </Button>
         </Card>
 

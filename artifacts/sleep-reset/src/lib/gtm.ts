@@ -32,15 +32,15 @@ export const gtm = {
       content_category: "Digital Product",
       content_type: "product",
       page_type: "vsl",
-      value: 9.99,
+      value: 27,
       currency: "EUR",
     });
     push({
       event: "view_item",
       ecommerce: {
         currency: "EUR",
-        value: 47,
-        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 9.99, quantity: 1 }],
+        value: 27,
+        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 27, quantity: 1 }],
       },
     });
   },
@@ -55,7 +55,7 @@ export const gtm = {
       event: "InitiateCheckout",
       content_name: "The Sleep Rewire Protocol",
       page_type: "vsl",
-      value: 9.99,
+      value: 27,
       currency: "EUR",
       num_items: 1,
       email,
@@ -64,8 +64,8 @@ export const gtm = {
       event: "begin_checkout",
       ecommerce: {
         currency: "EUR",
-        value: 47,
-        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 9.99, quantity: 1 }],
+        value: 27,
+        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 27, quantity: 1 }],
       },
     });
   },
@@ -75,7 +75,7 @@ export const gtm = {
       event: "Purchase",
       content_name: "The Sleep Rewire Protocol",
       page_type: "vsl",
-      value: 9.99,
+      value: 27,
       currency: "EUR",
       transaction_id: sessionId,
       num_items: 1,
@@ -86,8 +86,8 @@ export const gtm = {
       ecommerce: {
         transaction_id: sessionId,
         currency: "EUR",
-        value: 47,
-        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 9.99, quantity: 1 }],
+        value: 27,
+        items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 27, quantity: 1 }],
       },
     });
   },
@@ -98,7 +98,7 @@ export const gtm = {
       content_name: "The Sleep Rewire Protocol",
       page_type: "vsl",
       currency: "EUR",
-      value: 47,
+      value: 27,
       ...(email ? { email } : {}),
     });
     push({ event: "sign_up", method: "email" });
