@@ -64,7 +64,7 @@ export default function Purchase() {
       <header className="flex items-center px-6 py-4 max-w-lg mx-auto w-full">
         <button onClick={() => setLocation("/")} className="flex items-center gap-2">
           <Moon className="w-5 h-5 text-primary" />
-          <span className="font-semibold">Sleep Rewire</span>
+          <span className="font-semibold">Sleep Wired</span>
         </button>
       </header>
 
@@ -82,7 +82,7 @@ export default function Purchase() {
           </div>
           <h1 className="text-3xl font-bold mb-3">Get full access</h1>
           <p className="text-muted-foreground">
-            One-time payment. No subscription. Access The Sleep Rewire Protocol — 7 nights.
+            One-time payment. No subscription. Access The Cognitive Shutdown Method — 7 nights.
           </p>
         </div>
 

@@ -8,65 +8,132 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-NXBDB792');</script>
     <!-- End Google Tag Manager -->
+
+    <!-- Meta Pixel SLEEP-2 (swiss-chf-1) — dual-fire alongside SLEEP-1 via GTM -->
+    <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1277058757910786');
+    fbq('track', 'PageView');
+    (function(){
+      var dl = window.dataLayer = window.dataLayer || [];
+      var orig = dl.push;
+      dl.push = function() {
+        for (var i=0; i<arguments.length; i++) {
+          var ev = arguments[i] && arguments[i].event;
+          var v = arguments[i] && arguments[i].value;
+          var c = arguments[i] && arguments[i].currency;
+          if (ev === 'ViewContent' || ev === 'InitiateCheckout' || ev === 'Purchase' || ev === 'Lead' || ev === 'CompleteRegistration') {
+            try { fbq('trackSingle','1277058757910786', ev, v ? {value:v, currency:c||'EUR'} : {}); } catch(e){}
+          }
+        }
+        return orig.apply(this, arguments);
+      };
+    })();
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1277058757910786&ev=PageView&noscript=1"/></noscript>
+    <!-- End Meta Pixel SLEEP-2 -->
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 
     <!-- Primary SEO -->
-    <title>The Sleep Rewire Protocol — Stop Anxiety Keeping You Awake | Sleep Rewire</title>
-    <meta name="description" content="Rewire your anxious brain to sleep deeply in 7 nights. The clinically-proven CBT-I protocol — specifically designed for anxiety-driven insomnia. No pills. One-time €27. Start tonight." />
-    <meta name="keywords" content="anxiety insomnia, sleep anxiety, CBT-I, sleep rewire protocol, fix insomnia naturally, sleep better, chronic insomnia, racing mind at night, cognitive behavioral therapy insomnia, sleep restriction therapy" />
-    <meta name="robots" content="index, follow" />
-    <meta name="author" content="Sleep Rewire" />
+    <title>Sleep Wired — Fall asleep in 15 minutes. Stay asleep until your alarm.</title>
+    <meta name="description" content="The Cognitive Shutdown Method™ — a 7-night CBT-I protocol used by sleep clinics. No pills, no meditation, no willpower. Launch price €27 (€97 from May 24). 60-day refund, keep everything." />
+    <meta name="keywords" content="anxiety insomnia, CBT-I, cognitive shutdown method, racing mind at night, 3am wake-ups, fix chronic insomnia, sleep restriction therapy, sleep rewire" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="Sleep Wired" />
+    <link rel="canonical" href="https://sleepwired.com/" />
 
-    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp, Slack) -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="The Sleep Rewire Protocol — Stop Anxiety Keeping You Awake" />
-    <meta property="og:description" content="Rewire your anxious brain to sleep deeply in 7 nights. The clinically-proven CBT-I protocol. No pills. One-time €27. Start tonight." />
-    <meta property="og:image" content="/images/sleep-peaceful.png" />
+    <meta property="og:url" content="https://sleepwired.com/" />
+    <meta property="og:title" content="Fall asleep in 15 minutes. Stay asleep until your alarm. In 7 nights." />
+    <meta property="og:description" content="The Cognitive Shutdown Method™ — a 7-night CBT-I protocol used by sleep clinics. No pills, no meditation, no willpower. Launch price €27 — increases to €97 from May 24. 60-day refund." />
+    <meta property="og:image" content="https://sleepwired.com/opengraph.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:site_name" content="Sleep Rewire" />
+    <meta property="og:site_name" content="Sleep Wired" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="The Sleep Rewire Protocol — Stop Anxiety Keeping You Awake" />
-    <meta name="twitter:description" content="Rewire your anxious brain to sleep deeply in 7 nights. The clinically-proven CBT-I protocol. No pills. €27 one-time." />
-    <meta name="twitter:image" content="/images/sleep-peaceful.png" />
+    <meta name="twitter:title" content="Fall asleep in 15 minutes. Stay asleep until your alarm." />
+    <meta name="twitter:description" content="The Cognitive Shutdown Method™ — a 7-night CBT-I protocol used by sleep clinics. Launch price €27 (€97 from May 24). 60-day refund." />
+    <meta name="twitter:image" content="https://sleepwired.com/opengraph.jpg" />
 
-    <!-- PWA -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- PWA / Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0d1117" />
+    <meta name="theme-color" content="#FAFAF7" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Sleep Rewire" />
+    <meta name="apple-mobile-web-app-title" content="Sleep Wired" />
 
     <!-- Fonts: Inter 400–800 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Structured Data — Product schema for Google rich results -->
+    <!-- Structured Data — Product + Organization + FAQPage -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Product",
-      "name": "The Sleep Rewire Protocol",
-      "description": "A 7-night self-guided CBT-I protocol to rewire anxiety-driven insomnia. Includes nightly guided sessions, sleep diary, progress tracking, and sleep efficiency score.",
-      "brand": { "@type": "Brand", "name": "Sleep Rewire" },
+      "name": "The Cognitive Shutdown Method",
+      "description": "A 7-night CBT-I protocol that rewires anxiety-driven insomnia. Self-guided. Includes nightly audio sessions, sleep window calculator, brain dump workbook, morning recovery protocol. 60-day money-back guarantee.",
+      "brand": { "@type": "Brand", "name": "Sleep Wired" },
+      "image": "https://sleepwired.com/opengraph.jpg",
+      "url": "https://sleepwired.com/",
       "offers": {
         "@type": "Offer",
         "price": "27.00",
         "priceCurrency": "EUR",
         "availability": "https://schema.org/InStock",
-        "priceValidUntil": "2026-12-31"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "2400"
+        "priceValidUntil": "2026-05-24",
+        "url": "https://sleepwired.com/"
       }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Sleep Wired",
+      "url": "https://sleepwired.com/",
+      "logo": "https://sleepwired.com/favicon.svg",
+      "email": "support@sleepwired.com"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does this work for anxiety-driven insomnia?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Anxiety-driven insomnia is exactly what CBT-I was designed for. The Cognitive Restructuring sessions and the Brain Dump Workbook directly dismantle the racing-thoughts loop. Peer-reviewed meta-analyses show 19+ minutes faster sleep onset and 30+ extra minutes per night — sustained at 12-month follow-up." }
+        },
+        {
+          "@type": "Question",
+          "name": "How is this different from CBT-I with a therapist?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Same clinical framework. Differences: you start tonight (no waitlist), it costs €27 instead of €300 per session, and you complete it from your bed at your own pace." }
+        },
+        {
+          "@type": "Question",
+          "name": "What if it doesn't work for me?",
+          "acceptedAnswer": { "@type": "Answer", "text": "60-day keep-everything guarantee. Email support within 60 days, get a full refund, and keep every bonus. No questions, no forms." }
+        }
+      ]
     }
     </script>
   </head>
@@ -75,7 +142,26 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NXBDB792"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <div id="root"></div>
+    <div id="root">
+      <!-- Crawler fallback (Bing/LinkedIn/Slack/ChatGPT/Perplexity see this; React replaces on mount) -->
+      <noscript>
+        <h1>Sleep Wired — Fall asleep in 15 minutes. Stay asleep until your alarm.</h1>
+        <p>JavaScript is required to view this site. Please enable JavaScript in your browser.</p>
+      </noscript>
+      <div style="max-width:680px;margin:0 auto;padding:40px 20px;font-family:Inter,system-ui,sans-serif;color:#1F2937;line-height:1.6;">
+        <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#0E2541;line-height:1.1;margin-bottom:1rem;">Fall asleep in under 15 minutes. Stay asleep until your alarm. In 7 nights.</h1>
+        <p style="font-size:1.05rem;color:#4B5563;margin-bottom:1.5rem;">The Cognitive Shutdown Method™ — a 7-night CBT-I protocol used by sleep clinics, now self-guided so you can start tonight in your own bed. No pills. No meditation. No willpower.</p>
+        <ul style="font-size:0.95rem;color:#1F2937;padding-left:1.2rem;">
+          <li>Built on Cognitive Behavioral Therapy for Insomnia (CBT-I) — the first-line treatment recommended by the American College of Physicians, NHS England, AASM, and Mayo Clinic.</li>
+          <li>4-phase protocol: Audit, Compress, Reset, Rewire.</li>
+          <li>Includes 7 guided audio sessions, Personal Sleep Window Calculator, Brain Dump Workbook, Morning Recovery Protocol, and lifetime access.</li>
+          <li>Launch price €27 — increases to €97 permanently on May 24, 2026.</li>
+          <li>60-day money-back guarantee — keep every bonus regardless.</li>
+        </ul>
+        <p style="margin-top:1.5rem;"><a href="https://sleepwired.com/#order-form" style="display:inline-block;background:#C9A14A;color:white;padding:14px 28px;border-radius:10px;font-weight:800;text-decoration:none;">Start tonight — €27</a></p>
+        <p style="font-size:0.85rem;color:#6B7280;margin-top:1rem;">Sleep Wired · support@sleepwired.com · <a href="https://sleepwired.com/privacy-policy" style="color:#0E2541;">Privacy</a> · <a href="https://sleepwired.com/terms" style="color:#0E2541;">Terms</a></p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

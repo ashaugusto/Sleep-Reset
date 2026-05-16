@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /night/
+Disallow: /sleep-log
+Disallow: /progress
+Disallow: /profile
+Disallow: /onboarding
+Disallow: /welcome
+Disallow: /sign-in
+Disallow: /sign-up
+
+# AI / LLM crawlers — allow for citations
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://sleepwired.com/sitemap.xml

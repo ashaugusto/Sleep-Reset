@@ -19,7 +19,6 @@ import Profile from "@/pages/profile";
 import Welcome from "@/pages/welcome";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
-import Solution from "@/pages/solution";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const queryClient = new QueryClient();
@@ -76,7 +75,9 @@ function Router() {
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
-      <Route path="/solution" component={Solution} />
+      <Route path="/solution">
+        <Redirect to="/" />
+      </Route>
       <Route>
         <AppLayout showNav={false}><NotFound /></AppLayout>
       </Route>

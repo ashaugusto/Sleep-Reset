@@ -1,140 +1,271 @@
 import { useLocation } from "wouter";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import {
-  Moon, CheckCircle2, Star, Shield,
-  ChevronDown, AlertTriangle, X, Gift, Lock
+  Moon, Shield, ChevronDown, ArrowRight, Lock, Play,
+  Sparkles, Headphones, Calculator, FileText, Sunrise,
+  Infinity as InfinityIcon, X,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 import { gtm } from "@/lib/gtm";
 
-const VIMEO_SRC = "https://player.vimeo.com/video/1182232180?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&playsinline=1&byline=0&portrait=0&title=0";
-const VIMEO_API = "https://player.vimeo.com/api/player.js";
+// ─── Brand & Pricing ────────────────────────────────
+const BRAND = "Sleep Wired";
+const METHOD = "The Cognitive Shutdown Method";
+const CURRENCY = "€";
+const PRICE_TODAY = 27;
+const PRICE_AFTER = 97;
+const GUARANTEE_DAYS = 60;
+const BUMP_DATE = new Date("2026-06-30T22:00:00Z");
+const BUMP_LABEL = "June 30";
 
-function VimeoPlayer() {
+const VIMEO_ID = "1182232180";
+const VIMEO_PLAYER_API = "https://player.vimeo.com/api/player.js";
+
+// ─── Stack ──────────────────────────────────────────
+const STACK: { icon: typeof Moon; label: string; value: number; note: string }[] = [
+  {
+    icon: Moon,
+    label: `${METHOD}™ — the 7-night protocol`,
+    value: 297,
+    note: "4 phases — Audit · Compress · Reset · Rewire. Self-guided. You complete it lying in bed.",
+  },
+  {
+    icon: Headphones,
+    label: "Sleep-Anchor Audio Sessions (×7)",
+    value: 97,
+    note: "An 8-minute guided audio session for each of the 7 nights. You press play, lie back, and the protocol runs itself.",
+  },
+  {
+    icon: Calculator,
+    label: "Personal Sleep Window Calculator",
+    value: 19,
+    note: "Type your bedtime + wake time. Get your exact CBT-I sleep window — the same calculation sleep clinics charge €300 to do.",
+  },
+  {
+    icon: FileText,
+    label: "The Brain Dump Workbook (PDF)",
+    value: 47,
+    note: "The 5-minute pre-bed exercise that empties your racing thoughts onto paper. Used in clinical CBT-I to break the rumination loop.",
+  },
+  {
+    icon: Sunrise,
+    label: "Morning Recovery Protocol",
+    value: 47,
+    note: "The first 30 minutes after waking determine tonight's sleep. This is the exact routine — light, water, movement, no phone.",
+  },
+  {
+    icon: InfinityIcon,
+    label: "Lifetime access + every future update",
+    value: 0,
+    note: "Buy once. Every future audio session, workbook, calculator improvement — yours forever, free.",
+  },
+];
+const TOTAL_VALUE = STACK.reduce((a, s) => a + s.value, 0);
+
+const AUTHORITIES = [
+  "American College of Physicians",
+  "American Academy of Sleep Medicine",
+  "JAMA Internal Medicine",
+  "NHS England",
+  "Mayo Clinic",
+];
+
+// ─── Hook Variants (cold-traffic message match) ─────
+// Selected via ?h=<key> query param. Falls back to "default".
+// Ad creatives should point to /?h=<key> matching the hook in the video.
+type HeroVariant = {
+  eyebrow: ReactNode;
+  h1: ReactNode;
+  sub: ReactNode;
+};
+
+const HEROES: Record<string, HeroVariant> = {
+  default: {
+    eyebrow: <>Built on CBT-I — 30+ years of peer-reviewed clinical research</>,
+    h1: (
+      <>
+        Fall asleep in under 15 minutes.<br />
+        <em className="italic">Stay asleep</em> until your alarm.<br />
+        In 7 nights.
+      </>
+    ),
+    sub: (
+      <>
+        The Cognitive Shutdown Method™ is a 7-night CBT-I protocol used by sleep clinics — repackaged so you can start tonight, lying in your own bed.{" "}
+        <strong className="text-[#0E2541]">No pills. No meditation app. No willpower.</strong>{" "}
+        Just the system that retrains an anxious brain to sleep.
+      </>
+    ),
+  },
+  hyperarousal: {
+    eyebrow: <>What sleep clinics call it — and why supplements can't fix it</>,
+    h1: (
+      <>
+        It's not insomnia.<br />
+        It's <em className="italic">cognitive hyperarousal</em>.
+      </>
+    ),
+    sub: (
+      <>
+        Your brain learned to stay alert at night — and no supplement turns that off.{" "}
+        <strong className="text-[#0E2541]">CBT-I is the only protocol clinically shown to retrain it.</strong>{" "}
+        7 nights. Self-guided. From your own bed, starting tonight.
+      </>
+    ),
+  },
+  melatonin: {
+    eyebrow: <>If supplements stopped working — read this first</>,
+    h1: (
+      <>
+        Melatonin doesn't fix this.<br />
+        <em className="italic">Here's what does.</em>
+      </>
+    ),
+    sub: (
+      <>
+        Melatonin signals "it's dark out." Your problem isn't the dark — it's a brain that won't shut down.{" "}
+        <strong className="text-[#0E2541]">CBT-I is what sleep clinics use when supplements fail.</strong>{" "}
+        7 nights, from your own bed.
+      </>
+    ),
+  },
+  wake3am: {
+    eyebrow: <>If you wake at 3AM with your mind running</>,
+    h1: (
+      <>
+        Waking at 3AM<br />
+        isn't insomnia.<br />
+        <em className="italic">It's something else.</em>
+      </>
+    ),
+    sub: (
+      <>
+        It's a cortisol surge meeting a brain that never fully powered down.{" "}
+        <strong className="text-[#0E2541]">CBT-I is the protocol clinics use to break that loop in 7 nights.</strong>{" "}
+        Self-guided, from your bed.
+      </>
+    ),
+  },
+};
+
+function useHeroVariant() {
+  return useMemo(() => {
+    if (typeof window === "undefined") return { key: "default", variant: HEROES.default };
+    const raw = new URLSearchParams(window.location.search).get("h")?.toLowerCase() ?? "";
+    const key = raw in HEROES ? raw : "default";
+    try {
+      window.sessionStorage.setItem("sw_hero_variant", key);
+    } catch {}
+    return { key, variant: HEROES[key] };
+  }, []);
+}
+
+// ─── Helpers ────────────────────────────────────────
+function cx(...c: (string | false | undefined | null)[]) {
+  return c.filter(Boolean).join(" ");
+}
+
+function useCountdown(target: Date) {
+  const [now, setNow] = useState(Date.now());
   useEffect(() => {
-    if (document.querySelector(`script[src="${VIMEO_API}"]`)) return;
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const diff = target.getTime() - now;
+  if (diff <= 0) return { expired: true, days: 0, hours: 0, minutes: 0 };
+  return {
+    expired: false,
+    days: Math.floor(diff / 86_400_000),
+    hours: Math.floor((diff % 86_400_000) / 3_600_000),
+    minutes: Math.floor((diff % 3_600_000) / 60_000),
+  };
+}
+
+function scrollToOrder() {
+  document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ─── VSL Player (click-to-play) ─────────────────────
+function VimeoPlayer() {
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!playing) return;
+    if (document.querySelector(`script[src="${VIMEO_PLAYER_API}"]`)) return;
     const s = document.createElement("script");
-    s.src = VIMEO_API;
+    s.src = VIMEO_PLAYER_API;
     s.async = true;
     document.head.appendChild(s);
-  }, []);
+  }, [playing]);
+
+  if (!playing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setPlaying(true)}
+        className="relative w-full block group rounded-2xl overflow-hidden border border-[#E5E7EB] bg-[#0E2541] shadow-[0_6px_30px_rgba(14,37,65,0.10)]"
+        style={{ aspectRatio: "16 / 9" }}
+        aria-label="Play explainer video"
+      >
+        <img
+          src="/images/sleep-peaceful.png"
+          alt=""
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/40 via-black/10 to-transparent">
+          <div className="w-20 h-20 rounded-full bg-[#C9A14A] flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform">
+            <Play className="w-8 h-8 text-white fill-white ml-1" />
+          </div>
+        </div>
+        <div className="absolute bottom-4 left-5 right-5 text-left">
+          <p className="text-white text-sm font-semibold drop-shadow">
+            Watch — the 4-minute method overview
+          </p>
+          <p className="text-white/70 text-xs mt-0.5">
+            Why this is the only thing that fixes anxious-brain insomnia long-term
+          </p>
+        </div>
+      </button>
+    );
+  }
 
   return (
-    <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
+    <div className="rounded-2xl overflow-hidden border border-[#E5E7EB] shadow-[0_6px_30px_rgba(14,37,65,0.10)]" style={{ aspectRatio: "16/9" }}>
       <iframe
-        src={VIMEO_SRC}
+        src={`https://player.vimeo.com/video/${VIMEO_ID}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&playsinline=1&byline=0&portrait=0&title=0`}
         frameBorder={0}
         allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
         referrerPolicy="strict-origin-when-cross-origin"
-        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-        title="The Sleep Rewire Protocol - VSL_1080p_caption"
+        className="w-full h-full"
+        title={`${METHOD} — method overview`}
       />
     </div>
   );
 }
 
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const IMG = {
-  awake:     `${base}/images/sleep-awake-3am.png`,
-  peaceful:  `${base}/images/sleep-peaceful.png`,
-  refreshed: `${base}/images/sleep-wakeup-refreshed.png`,
-  science:   `${base}/images/sleep-brain-science.png`,
-  journal:   `${base}/images/sleep-journal.png`,
-};
-
-// ─── Utility: countdown to midnight ───────────────
-function useMidnightCountdown() {
-  function getSecondsLeft() {
-    const now = new Date();
-    const midnight = new Date();
-    midnight.setHours(24, 0, 0, 0);
-    return Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
-  }
-  const [seconds, setSeconds] = useState(getSecondsLeft);
-  useEffect(() => {
-    const id = setInterval(() => setSeconds(getSecondsLeft()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
-  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-  const s = String(seconds % 60).padStart(2, "0");
-  return { h, m, s, expired: seconds === 0 };
-}
-
-// ─── Reusable layout ──────────────────────────────
-function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`max-w-lg mx-auto px-5 ${className}`}>{children}</section>;
-}
-function Divider() {
-  return <div className="border-t border-border/30 my-1" />;
-}
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-bold text-primary uppercase tracking-widest text-center mb-2">{children}</p>;
-}
-
-// ─── Countdown block ──────────────────────────────
-function CountdownTimer() {
-  const { h, m, s, expired } = useMidnightCountdown();
-  return (
-    <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-4 text-center">
-      <p className="text-xs font-bold text-destructive uppercase tracking-wider mb-3">
-        {expired ? "Price has increased" : "⚡ Introductory price expires at midnight"}
-      </p>
-      <div className="flex items-center justify-center gap-3">
-        {[{ label: "HRS", val: h }, { label: "MIN", val: m }, { label: "SEC", val: s }].map(({ label, val }) => (
-          <div key={label} className="text-center">
-            <div className="bg-background border border-border rounded-xl w-16 py-2">
-              <span className="text-2xl font-extrabold tabular-nums text-foreground">{val}</span>
-            </div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{label}</p>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground mt-3">
-        After this, price returns to <strong className="text-foreground">{CURRENCY}{PRICE_ORIGINAL}</strong>
-      </p>
-    </div>
-  );
-}
-
-// ─── Brand & Pricing — single source of truth ─────
-const BRAND = "Sleep Rewire";
-const PRODUCT = "The Sleep Rewire Protocol";
-const CURRENCY = "€";
-const PRICE_TODAY = 27;
-const PRICE_ORIGINAL = 47;
-const PRICE_SAVINGS = PRICE_ORIGINAL - PRICE_TODAY; // 20
-
-// ─── Bonus list ───────────────────────────────────
-const BONUSES = [
-  { name: "Anxiety & Sleep Masterclass", desc: "Why anxiety hijacks your sleep — and the exact neuroscience behind why the Rewire Protocol shuts it off", value: "€27" },
-  { name: "Evening Wind-Down Ritual Guide", desc: "15 evidence-based habits that calm your nervous system and prime your brain for deep, unbroken sleep", value: "€27" },
-  { name: "Morning Recovery Protocol", desc: "Optimise the first 30 minutes of your day to anchor your sleep-wake cycle and reduce night-time anxiety", value: "€27" },
-  { name: "Sleep Efficiency Tracker Template", desc: "The same spreadsheet framework used in clinical CBT-I trials — track your progress every night", value: "€27" },
-  { name: "Lifetime Access + All Future Updates", desc: "New nights, features, and research added as the protocol evolves — no extra charge, ever", value: "€27" },
-];
-
-// ─── Inline Order Form ────────────────────────────
-function OrderForm({ id }: { id?: string }) {
+// ─── Inline Order Form ──────────────────────────────
+function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) { toast({ title: "Please enter your email", variant: "destructive" }); return; }
+    if (!email) {
+      toast({ title: "Enter your email to continue", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const r = await customFetch("/api/checkout/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), name: name.trim() || null }),
+        body: JSON.stringify({ email: email.trim(), name: null }),
       });
       if (!r.ok) {
-        const body = await r.json().catch(() => ({ message: "Something went wrong." }));
-        toast({ title: body.message ?? "Could not start checkout", variant: "destructive" });
+        const body = await r.json().catch(() => ({ message: "Could not start checkout." }));
+        toast({ title: body.message ?? "Checkout failed", variant: "destructive" });
         return;
       }
       const { url } = await r.json();
@@ -148,597 +279,561 @@ function OrderForm({ id }: { id?: string }) {
   }
 
   return (
-    <div id={id} className="bg-card border-2 border-primary/40 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.15)]">
-
-      {/* ── Order form header ── */}
-      <div className="bg-primary px-5 py-4 text-center">
-        <p className="text-sm font-extrabold text-primary-foreground uppercase tracking-wider">
-          Enter your details below to get instant access
+    <div id={id} className="bg-white border border-[#E5E7EB] rounded-2xl shadow-[0_6px_30px_rgba(14,37,65,0.06)] overflow-hidden">
+      <div className="bg-[#0E2541] px-5 py-4 text-center">
+        <p className="text-xs font-bold text-white uppercase tracking-[0.18em]">
+          Lock in your access — instant delivery
         </p>
       </div>
 
-      {/* ── Price block — crossed out original, big current price ── */}
-      <div className="px-5 pt-6 pb-5 border-b border-border/50 text-center">
-        {/* Crossed-out original */}
-        <p className="text-base text-muted-foreground line-through mb-1">
-          Regular price: {CURRENCY}{PRICE_ORIGINAL}
+      <div className="px-6 pt-6 pb-5 border-b border-[#F1F2F4] text-center">
+        <p className="text-sm text-[#9CA3AF] line-through mb-1">
+          From {BUMP_LABEL} · {CURRENCY}{PRICE_AFTER}
         </p>
-        {/* Hero price */}
-        <p className="text-6xl font-extrabold text-foreground leading-none mb-2">
-          {CURRENCY}<span className="text-primary">{PRICE_TODAY}</span>
+        <p className="text-6xl font-extrabold text-[#0E2541] leading-none mb-2 tabular-nums">
+          {CURRENCY}{priceToday}
         </p>
-        <p className="text-sm font-bold text-foreground mb-3">One-time payment · Instant access · No subscription</p>
-        {/* Savings badge */}
-        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
-          <span className="text-xs font-extrabold text-primary uppercase tracking-wider">
-            You save {CURRENCY}{PRICE_SAVINGS} today — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off
+        <p className="text-sm font-semibold text-[#1F2937]">
+          One-time · Lifetime access · No subscription, ever
+        </p>
+        <div className="inline-flex items-center gap-2 mt-3 bg-[#FAF3E0] border border-[#E8D8A8] rounded-full px-3 py-1">
+          <Sparkles className="w-3.5 h-3.5 text-[#8B6F1F]" />
+          <span className="text-xs font-bold text-[#8B6F1F] tracking-wide">
+            Launch price — save {CURRENCY}{PRICE_AFTER - priceToday} before {BUMP_LABEL}
           </span>
         </div>
       </div>
 
-      {/* ── What's included ── */}
-      <div className="px-5 py-4 border-b border-border/50 space-y-2.5">
-        <p className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">
-          ✅ When you order right now, you instantly get:
-        </p>
-        <div className="flex items-start gap-2.5">
-          <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <span className="text-sm text-foreground font-semibold">Full 7-Night Rewire Protocol</span>
-            <span className="text-xs text-muted-foreground ml-2">({CURRENCY}{PRICE_ORIGINAL} value)</span>
-          </div>
-        </div>
-        {BONUSES.map((b) => (
-          <div key={b.name} className="flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <span className="text-sm text-foreground font-semibold">+ {b.name}</span>
-              <span className="text-xs text-muted-foreground ml-2">({b.value} value)</span>
-            </div>
-          </div>
-        ))}
-        <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
-          <span className="text-xs font-bold text-muted-foreground">Total value</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground line-through">{CURRENCY}155+</span>
-            <span className="text-sm font-extrabold text-primary">Your price: {CURRENCY}{PRICE_TODAY}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Form inputs */}
-      <form onSubmit={handleSubmit} className="px-5 pt-5 pb-6 space-y-3">
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-            Your Name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="First name (optional)"
-            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-            Email Address <span className="text-destructive">*</span>
-          </label>
+      <form onSubmit={handleSubmit} className="px-6 pt-5 pb-6 space-y-3">
+        <label className="block">
+          <span className="block text-xs font-bold text-[#6B7280] uppercase tracking-[0.14em] mb-1.5">
+            Where do we send your access?
+          </span>
           <input
             type="email"
+            required
+            autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your best email"
-            required
-            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
+            placeholder="your@email.com"
+            className="w-full bg-white border border-[#D1D5DB] rounded-xl px-4 py-3.5 text-base text-[#0E2541] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E2541] focus:ring-2 focus:ring-[#0E2541]/10 transition-all"
           />
-        </div>
+        </label>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-primary text-primary-foreground font-extrabold text-base py-4 rounded-xl shadow-[0_0_30px_rgba(139,92,246,0.4)] hover:shadow-[0_0_50px_rgba(139,92,246,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 mt-1"
+          className="w-full bg-[#C9A14A] hover:bg-[#B58D38] text-white font-extrabold text-base py-4 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
-          {loading ? "Redirecting to secure checkout…" : "Yes — Give Me Instant Access →"}
+          {loading ? "Redirecting to secure checkout…" : (
+            <>Yes — start tonight for {CURRENCY}{priceToday} <ArrowRight className="w-4 h-4" /></>
+          )}
         </button>
 
         <div className="flex items-center justify-center gap-4 pt-1">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="w-3 h-3" />
-            Secured by Stripe
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Shield className="w-3 h-3" />
-            7-Night Guarantee
-          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]"><Lock className="w-3 h-3" /> Secured by Stripe</span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]"><Shield className="w-3 h-3" /> {GUARANTEE_DAYS}-day refund · keep everything</span>
         </div>
-        <p className="text-[11px] text-muted-foreground/70 text-center">
-          One-time payment · No subscription · Immediate access
-        </p>
       </form>
     </div>
   );
 }
 
-// ─── Warning banner (reference-page style) ────────
-function WarningBanner() {
-  const { expired } = useMidnightCountdown();
-  const today = new Date();
-  const dateStr = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-
+// ─── Reusable bits ──────────────────────────────────
+function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <section className={`max-w-2xl mx-auto px-5 ${className}`}>{children}</section>;
+}
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-bold text-[#C9A14A] uppercase tracking-[0.22em] text-center mb-3">{children}</p>;
+}
+function H2({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-yellow-400 text-gray-900 text-center py-3 px-4">
-      <p className="text-sm font-extrabold leading-snug">
-        <AlertTriangle className="inline w-4 h-4 mr-1.5 -mt-0.5" />
-        {expired
-          ? `⚠️ WARNING: This offer has expired. Price is now ${CURRENCY}${PRICE_ORIGINAL}.`
-          : `⚠️ WARNING: This page and the ${CURRENCY}${PRICE_TODAY} price may be REMOVED at Midnight on ${dateStr}.`}
+    <h2
+      className="text-3xl sm:text-4xl text-center text-[#0E2541] leading-[1.15] tracking-tight"
+      style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
+    >
+      {children}
+    </h2>
+  );
+}
+function PrimaryCta({ children, priceToday }: { children: React.ReactNode; priceToday: number }) {
+  return (
+    <div className="text-center">
+      <button
+        onClick={scrollToOrder}
+        className="inline-flex items-center justify-center gap-2 w-full max-w-md bg-[#C9A14A] hover:bg-[#B58D38] text-white font-extrabold text-lg py-5 px-8 rounded-xl shadow-[0_8px_28px_rgba(201,161,74,0.32)] hover:shadow-[0_12px_36px_rgba(201,161,74,0.42)] transition-all"
+      >
+        {children} <ArrowRight className="w-5 h-5" />
+      </button>
+      <p className="text-xs text-[#6B7280] mt-3">
+        {CURRENCY}{priceToday} today · {CURRENCY}{PRICE_AFTER} from May 24 · {GUARANTEE_DAYS}-day refund · keep everything
       </p>
     </div>
   );
 }
 
-// ─── Scroll-to-order helper ────────────────────────
-function scrollToOrder() {
-  document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function CtaButton({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-center">
-      <button
-        onClick={scrollToOrder}
-        className="inline-block w-full max-w-sm bg-primary text-primary-foreground font-bold text-lg py-5 px-8 rounded-2xl shadow-[0_0_40px_rgba(139,92,246,0.4)] hover:shadow-[0_0_60px_rgba(139,92,246,0.6)] hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 cursor-pointer"
-      >
-        {children}
-      </button>
-      <p className="text-xs text-muted-foreground mt-2">One-time {CURRENCY}{PRICE_TODAY} · Lifetime access · 7-Night Guarantee</p>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────────
+// ──────────────────── MAIN ─────────────────────────
 export default function Landing() {
   const [, setLocation] = useLocation();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const cd = useCountdown(BUMP_DATE);
+  const priceToday = cd.expired ? PRICE_AFTER : PRICE_TODAY;
+  const { key: heroKey, variant: hero } = useHeroVariant();
 
   useEffect(() => { gtm.viewVSL(); }, []);
 
+  useEffect(() => {
+    try {
+      (window as any).dataLayer = (window as any).dataLayer || [];
+      (window as any).dataLayer.push({ event: "hero_variant", hero: heroKey });
+    } catch {}
+  }, [heroKey]);
+
+  useEffect(() => {
+    const el = document.documentElement;
+    const had = el.classList.contains("dark");
+    if (had) el.classList.remove("dark");
+    return () => { if (had) el.classList.add("dark"); };
+  }, []);
+
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-
-      {/* ── WARNING banner — reference style ── */}
-      <WarningBanner />
-
-      {/* ── Minimal nav — no Sign In to avoid distraction ── */}
-      <header className="flex items-center justify-between px-5 py-4 max-w-lg mx-auto">
-        <div className="flex items-center gap-2">
-          <Moon className="w-5 h-5 text-primary" />
-          <span className="font-bold text-base tracking-tight">{BRAND}</span>
-        </div>
-        <button
-          onClick={() => setLocation("/sign-in")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
-        >
-          Already purchased? Sign in →
-        </button>
-      </header>
-
-      {/* ════════════════════════════════════
-          HERO
-      ════════════════════════════════════ */}
-      <Section className="pt-4 pb-8 text-center">
-        <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-          <Star className="w-3 h-3 fill-current" />
-          2,400+ people sleeping through the night · Anxiety-focused CBT-I protocol
-        </div>
-
-        <p className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">
-          Read this if anxiety is the reason you can't sleep
+    <div
+      className="min-h-[100dvh]"
+      style={{ background: "#FAFAF7", color: "#1F2937", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
+    >
+      {/* Urgency strip */}
+      <div className="bg-[#0E2541] text-center py-2.5 px-4">
+        <p className="text-xs sm:text-sm font-semibold text-white tracking-wide">
+          {cd.expired ? (
+            <>Launch pricing has ended · today {CURRENCY}{PRICE_AFTER}</>
+          ) : (
+            <>
+              <span className="inline-block w-2 h-2 rounded-full bg-[#C9A14A] mr-2 align-middle animate-pulse" />
+              Launch price ends in{" "}
+              <strong className="tabular-nums">{cd.days}d {cd.hours}h {cd.minutes}m</strong>
+              {" "}· then {CURRENCY}{PRICE_AFTER} forever
+            </>
+          )}
         </p>
+      </div>
 
-        <h1 className="text-[2rem] font-extrabold leading-[1.15] mb-5">
-          Rewire Your Anxious Brain to{" "}
-          <span className="text-primary">Sleep Deeply</span>{" "}
-          — In 7 Nights.
-        </h1>
-
-        <p className="text-muted-foreground text-base leading-relaxed mb-7">
-          No pills. No meditation apps. No "just relax" advice. Just the{" "}
-          <strong className="text-foreground">clinically-proven CBT-I protocol</strong>{" "}
-          — specifically engineered to shut off the anxious loop that keeps your brain wired at night — now available as a self-guided 7-night program.
-        </p>
-
-        {/* ── VSL ── */}
-        <div className="rounded-2xl overflow-hidden mb-7 border-2 border-primary/30 shadow-[0_0_60px_rgba(139,92,246,0.18)] bg-card">
-          <VimeoPlayer />
-        </div>
-
-        <CtaButton>Yes — Rewire My Sleep Tonight →</CtaButton>
-      </Section>
-
-      <Divider />
-
-      {/* ── 3am image ── */}
-      <Section className="py-8">
-        <div className="rounded-2xl overflow-hidden border border-border/40">
-          <img src={IMG.awake} alt="Lying awake at 3am" className="w-full object-cover" style={{ aspectRatio: "16/9" }} />
-        </div>
-        <p className="text-center text-sm text-muted-foreground mt-3 italic">
-          Sound familiar? You're not alone — and it's not your fault.
-        </p>
-      </Section>
-
-      {/* ════════════════════════════════════
-          3 SCENARIOS
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>Sound familiar?</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-8 leading-snug">
-          Every night, one of <span className="text-primary">3 scenarios</span> plays out for bad sleepers:
-        </h2>
-
-        {[
-          { emoji: "😤", title: "Scenario #1 — Your anxious brain won't switch off", desc: "You're exhausted. You lie down. But your mind turns on like a machine — worst-case scenarios, old conversations, tomorrow's problems. Your chest tightens. Your heart won't slow down. The harder you try to force sleep, the wider awake you become. The clock says 3am.", bad: true },
-          { emoji: "😰", title: "Scenario #2 — You crash, but wake at 3am", desc: "You fall asleep quickly — but bolt awake at 3am with a jolt of anxiety. Your mind immediately starts racing. You lie there staring at the ceiling, adrenaline running. By the time you finally drift off, it's almost time to get up. Every. Single. Night.", bad: true },
-          { emoji: "😴", title: "Scenario #3 — You fall asleep and stay asleep", desc: "You're in bed, calm. The anxious loop doesn't start. Sleep comes within 15 minutes. You sleep through the night. You wake up before your alarm — actually feeling rested. This is what the Sleep Rewire Protocol trains your brain to do automatically.", bad: false },
-        ].map((s) => (
-          <div key={s.title} className={`border rounded-2xl p-5 mb-4 ${s.bad ? "border-border/50 bg-card/40" : "border-primary/40 bg-primary/5 shadow-[0_0_30px_rgba(139,92,246,0.12)]"}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">{s.emoji}</span>
-              <p className={`text-xs font-bold uppercase tracking-widest ${s.bad ? "text-muted-foreground" : "text-primary"}`}>{s.title}</p>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-            {!s.bad && <p className="text-xs font-semibold text-primary mt-3">← This is achievable. It just takes the right system.</p>}
+      {/* Header */}
+      <header className="border-b border-[#EFEFEC] bg-[#FAFAF7]">
+        <div className="max-w-2xl mx-auto px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Moon className="w-5 h-5 text-[#0E2541]" />
+            <span className="font-bold text-base text-[#0E2541] tracking-tight">{BRAND}</span>
           </div>
-        ))}
-
-        <div className="bg-card border border-border/50 rounded-2xl p-5 mt-2">
-          <p className="text-sm text-foreground leading-relaxed">
-            <strong>What separates Scenario #3?</strong> It's not genetics. Not luck. Not the right mattress. It's whether your brain has learned the correct{" "}
-            <span className="text-primary font-semibold">sleep-wake association</span> — and that's 100% trainable. The science is called <strong>CBT-I</strong>, and it works in 7 nights.
-          </p>
-        </div>
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          WHO THIS IS FOR
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>Is this for you?</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-7 leading-snug">This Program Is for You If…</h2>
-        <div className="space-y-3 mb-6">
-          {[
-            "Your mind races the moment you try to sleep — even when you're exhausted",
-            "Anxiety or stress is the main reason you can't fall or stay asleep",
-            "You wake up at 3am with a jolt of worry and can't get back to sleep",
-            "You feel exhausted during the day even after hours in bed",
-            "You've tried melatonin, apps, or deep breathing — and still can't sleep",
-            "You want to stop depending on sleep aids and fix the root cause permanently",
-          ].map((item) => (
-            <div key={item} className="flex items-start gap-3 p-3.5 bg-card/50 border border-border/40 rounded-xl">
-              <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground">{item}</span>
-            </div>
-          ))}
-        </div>
-        <div className="bg-primary/8 border border-primary/30 rounded-2xl p-5">
-          <p className="text-sm text-foreground leading-relaxed">
-            <strong>This is NOT for you if</strong> you have an undiagnosed sleep disorder like sleep apnea or narcolepsy — those require clinical diagnosis first.
-          </p>
-        </div>
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          WHY EVERYTHING FAILS
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>The hard truth</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">Why Everything You've Tried Has Failed</h2>
-        <p className="text-center text-sm text-muted-foreground mb-7">It's not because you didn't try hard enough. It's because none of it addresses the root cause.</p>
-
-        <div className="rounded-2xl overflow-hidden border border-border/40 mb-7">
-          <img src={IMG.science} alt="Sleep science" className="w-full object-cover" style={{ aspectRatio: "1/1", maxHeight: "260px" }} />
-        </div>
-
-        {[
-          { title: "Melatonin", why: "Helps you feel drowsy — but doesn't fix the root cause. You're still dependent on it tomorrow night." },
-          { title: "Sleep hygiene tips", why: "\"No screens before bed\" has minimal impact on clinical insomnia. It's not enough on its own." },
-          { title: "Meditation & breathing apps", why: "Great for general stress. Poor for anxiety-driven insomnia. They don't break the conditioned fear response your brain has built around sleep." },
-          { title: "Alcohol", why: "Disrupts REM sleep. You fall asleep faster but sleep far worse — making the problem worse over time." },
-        ].map((f) => (
-          <div key={f.title} className="flex gap-3 mb-4 p-4 bg-card/50 border border-border/40 rounded-xl">
-            <X className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-sm text-foreground mb-0.5">{f.title}</p>
-              <p className="text-sm text-muted-foreground">{f.why}</p>
-            </div>
-          </div>
-        ))}
-
-        <div className="bg-primary/8 border border-primary/30 rounded-2xl p-5 mt-2">
-          <p className="text-sm leading-relaxed text-foreground">
-            <strong>The only treatment proven to work long-term</strong> is{" "}
-            <span className="text-primary font-semibold">Cognitive Behavioral Therapy for Insomnia (CBT-I)</span>.
-            Recommended by the American College of Physicians as the{" "}
-            <em>first-line treatment over sleeping pills</em>.
-          </p>
-          <p className="text-xs text-primary font-semibold mt-3">
-            We've turned the CBT-I protocol into a 7-night self-guided program — starting tonight.
-          </p>
-        </div>
-      </Section>
-
-      {/* ── Mid-page CTA ── */}
-      <Section className="py-6">
-        <CtaButton>Start My Sleep Rewire — {CURRENCY}{PRICE_TODAY}</CtaButton>
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          7-NIGHT WALKTHROUGH
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>The system</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
-          Here's Exactly What Happens Each of the <span className="text-primary">7 Nights</span>
-        </h2>
-        <p className="text-center text-sm text-muted-foreground mb-8">Each night builds on the last. By Night 7, your brain knows exactly how to sleep.</p>
-
-        <div className="rounded-2xl overflow-hidden border border-border/40 mb-8">
-          <img src={IMG.journal} alt="Sleep journal" className="w-full object-cover" style={{ aspectRatio: "1/1", maxHeight: "260px" }} />
-        </div>
-
-        {[
-          { title: "Sleep Audit", desc: "Map your current patterns. Evening + morning diary. Your personalised sleep window is calculated." },
-          { title: "Sleep Restriction", desc: "Temporarily compress your sleep window to build up biological \"sleep pressure\" — the urge to sleep deeply." },
-          { title: "Stimulus Control", desc: "Break the association between your bed and wakefulness. Your brain relearns: bed = sleep only." },
-          { title: "Cognitive Restructuring", desc: "Identify and dismantle the anxious thought patterns that fire up when you try to sleep." },
-          { title: "The Brain Dump Protocol", desc: "A structured technique to offload racing thoughts before bed — used by elite performers and military sleep programs." },
-          { title: "Sleep Efficiency Optimization", desc: "Your window expands as efficiency climbs. Most users report their best night of sleep yet on Night 6." },
-          { title: "The Maintenance Blueprint", desc: "You lock in a personalised schedule and relapse prevention plan that lasts for life." },
-        ].map((n, i) => (
-          <div key={n.title} className="flex gap-4 mb-5">
-            <div className="flex flex-col items-center">
-              <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                {i + 1}
-              </div>
-              {i < 6 && <div className="w-px flex-1 min-h-[20px] bg-border/50 mt-2" />}
-            </div>
-            <div className="pb-4">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-0.5">Night {i + 1}</p>
-              <p className="font-bold text-foreground mb-1">{n.title}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{n.desc}</p>
-            </div>
-          </div>
-        ))}
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          TESTIMONIALS
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>Real results</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-2">What People Are Saying</h2>
-        <p className="text-center text-sm text-muted-foreground mb-7">From people who were exactly where you are now.</p>
-
-        <div className="rounded-2xl overflow-hidden border border-border/40 mb-7">
-          <img src={IMG.refreshed} alt="Waking up refreshed" className="w-full object-cover" style={{ aspectRatio: "4/3" }} />
-        </div>
-
-        {[
-          { name: "Alex M., 28", stars: 5, text: "My anxiety would kick in the moment I got into bed. I'd tried everything. Night 3 of this protocol I slept 7 hours straight for the first time in a year. By Night 7 I didn't even think about sleep — I just fell asleep." },
-          { name: "Jordan T., 31", stars: 5, text: "The brain dump technique on Night 5 alone was worth every cent. I used to lie awake for 2 hours replaying my day, heart pounding with anxiety. Now I'm asleep in under 20 minutes. Every night." },
-          { name: "Sam K., 24", stars: 5, text: "Waking up at 3am every night for 6 months. Finished Night 7 two weeks ago. Haven't had a single 3am wake since. Genuinely shocked." },
-          { name: "Riley P., 33", stars: 5, text: "Actual science, not wellness fluff. Watching my sleep efficiency go from 62% to 89% in 7 nights using the built-in tracker was insane." },
-        ].map((t) => (
-          <div key={t.name} className="bg-card border border-border/60 rounded-2xl p-5 mb-4">
-            <div className="flex items-center gap-1 mb-2">
-              {Array.from({ length: t.stars }).map((_, i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-3">"{t.text}"</p>
-            <p className="text-xs font-semibold text-foreground">— {t.name}</p>
-          </div>
-        ))}
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          BONUSES SECTION
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>Free bonuses</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
-          Order Right Now and Get{" "}
-          <span className="text-primary">5 Exclusive Bonuses</span>
-          {" "}— Free
-        </h2>
-        <p className="text-center text-sm text-muted-foreground mb-7">
-          Total bonus value: <strong className="text-foreground">{CURRENCY}155+</strong> — included at no extra cost.
-        </p>
-
-        <div className="space-y-3 mb-6">
-          {BONUSES.map((b, i) => (
-            <div key={b.name} className="flex gap-4 p-4 bg-card border border-border/50 rounded-2xl">
-              <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
-                <Gift className="w-4 h-4 text-primary" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-bold text-foreground">Bonus #{i + 1}: {b.name}</p>
-                  <span className="text-xs font-extrabold text-primary shrink-0 bg-primary/10 px-2 py-0.5 rounded-lg">{b.value}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{b.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-primary/8 border border-primary/30 rounded-2xl p-4 text-center">
-          <p className="text-sm font-bold text-foreground">
-            Total value: <span className="line-through text-muted-foreground">{CURRENCY}155+</span>
-          </p>
-          <p className="text-2xl font-extrabold text-primary mt-1">Your price today: {CURRENCY}{PRICE_TODAY}</p>
-          <p className="text-xs text-muted-foreground mt-1">You save <strong className="text-foreground">{CURRENCY}{PRICE_SAVINGS}</strong> — {Math.round((PRICE_SAVINGS / PRICE_ORIGINAL) * 100)}% off the program alone</p>
-        </div>
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          GUARANTEE
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <div className="rounded-2xl overflow-hidden border border-border/40 mb-7">
-          <img src={IMG.peaceful} alt="Sleeping peacefully" className="w-full object-cover" style={{ aspectRatio: "16/9" }} />
-        </div>
-
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
-            <Shield className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <SectionLabel>Zero risk</SectionLabel>
-            <h2 className="text-xl font-extrabold mb-3">The 7-Night Sleep Guarantee</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
-              Complete all 7 nights. If you don't notice a measurable improvement in your sleep quality —{" "}
-              <strong className="text-foreground">email us for a full refund, no questions asked.</strong>{" "}
-              We're confident enough in the science to back it with our money.
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          MAIN ORDER FORM
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>Don't wait another sleepless night</SectionLabel>
-        <h2 className="text-2xl font-extrabold text-center mb-2 leading-snug">
-          Tonight Could Be the Last Night<br />You Lie Awake Staring at the Ceiling.
-        </h2>
-        <p className="text-center text-sm text-muted-foreground mb-6">
-          The protocol takes 7 nights. Most people feel the difference by Night 3. The question is — how many more nights are you willing to lose?
-        </p>
-
-        {/* Countdown timer */}
-        <div className="mb-6">
-          <CountdownTimer />
-        </div>
-
-        {/* The main order form */}
-        <OrderForm id="order-form" />
-      </Section>
-
-      <Divider />
-
-      {/* ════════════════════════════════════
-          UPSELL / WHAT'S NEXT
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>Optional upgrade</SectionLabel>
-        <h2 className="text-xl font-extrabold text-center mb-3 leading-snug">
-          Want to Go Deeper? Add the 90-Day Mastery Pack
-        </h2>
-        <p className="text-center text-sm text-muted-foreground mb-5">
-          After completing your 7-night reset, continue with our 90-day advanced protocol — habit stacking, sleep architecture optimisation, and monthly check-ins.
-        </p>
-        <div className="bg-card border border-border/50 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="font-bold text-foreground">90-Day Sleep Mastery Pack</p>
-              <p className="text-xs text-muted-foreground">Advanced protocol · 3-month access</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-extrabold text-foreground">{CURRENCY}37</p>
-              <p className="text-xs text-muted-foreground line-through">{CURRENCY}97</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground italic mb-4">
-            * This offer will be available to you immediately after your purchase — no need to decide now.
-          </p>
           <button
-            onClick={scrollToOrder}
-            className="w-full border border-primary/40 text-primary font-semibold py-3 rounded-xl text-sm hover:bg-primary/5 transition-colors"
+            onClick={() => setLocation("/sign-in")}
+            className="text-xs text-[#6B7280] hover:text-[#0E2541] underline-offset-4 hover:underline"
           >
-            Start with the 7-Night Rewire First →
+            Already a member? Sign in →
           </button>
         </div>
+      </header>
+
+      {/* ═══════════════ HERO ═══════════════ */}
+      <Section className="pt-10 pb-12">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 bg-white border border-[#E5E7EB] text-[#0E2541] text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+            <Shield className="w-3 h-3 text-[#166534]" />
+            {hero.eyebrow}
+          </div>
+
+          <h1
+            className="text-[2.2rem] sm:text-[2.8rem] leading-[1.06] tracking-tight text-[#0E2541] mb-6"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
+          >
+            {hero.h1}
+          </h1>
+
+          <p className="text-base sm:text-lg text-[#4B5563] leading-relaxed max-w-xl mx-auto mb-8">
+            {hero.sub}
+          </p>
+
+          <div className="max-w-xl mx-auto mb-8">
+            <VimeoPlayer />
+          </div>
+
+          <PrimaryCta priceToday={priceToday}>
+            Start tonight — {CURRENCY}{priceToday}
+          </PrimaryCta>
+        </div>
+
+        {/* Authority strip */}
+        <div className="mt-14 pt-8 border-t border-[#EFEFEC]">
+          <p className="text-center text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.22em] mb-4">
+            The same framework recommended by
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-x-7 gap-y-3 text-[#6B7280]">
+            {AUTHORITIES.map((src) => (
+              <span key={src} className="text-xs font-semibold tracking-wide">{src}</span>
+            ))}
+          </div>
+        </div>
       </Section>
 
-      <Divider />
+      {/* ═══════════════ 3 SCENARIOS ═══════════════ */}
+      <section className="bg-white border-y border-[#EFEFEC] py-14">
+        <Section>
+          <Eyebrow>One of these is your night</Eyebrow>
+          <H2>Every night, one of <span className="italic">three</span> scenarios runs.</H2>
+          <div className="mt-10 space-y-4">
+            {[
+              {
+                n: "01",
+                bad: true,
+                title: "Your brain won't switch off.",
+                text:
+                  "You lie down at 11. By 1am your mind is still racing — tomorrow's problems, that conversation last week, the email you forgot. Your chest is tight. The harder you try to force sleep, the more awake you become. You finally pass out at 4. The alarm goes off at 7. You start the day broken.",
+              },
+              {
+                n: "02",
+                bad: true,
+                title: "You crash, then bolt awake at 3am.",
+                text:
+                  "You fall asleep at 11. By 3am you're upright — heart pounding, brain in panic mode, no reason. You stare at the ceiling until 6:30, exhausted but wired. The day ahead feels impossible before it has even started.",
+              },
+              {
+                n: "03",
+                bad: false,
+                title: "Sleep comes in 15 minutes — and stays.",
+                text:
+                  "You read for 10 minutes. You feel naturally sleepy. By 11:15 you're out. You sleep through every single hour of the night. You wake at 6:55 — before the alarm — actually rested. This isn't luck. It's what CBT-I retrains your brain to do, in 7 nights.",
+              },
+            ].map((s) => (
+              <div
+                key={s.n}
+                className={cx(
+                  "rounded-2xl p-6 border",
+                  s.bad ? "bg-[#FAFAF7] border-[#E5E7EB]" : "bg-white border-[#0E2541]/15 shadow-[0_6px_24px_rgba(14,37,65,0.08)]"
+                )}
+              >
+                <span className={cx(
+                  "text-[11px] font-extrabold tracking-[0.22em]",
+                  s.bad ? "text-[#9CA3AF]" : "text-[#C9A14A]"
+                )}>
+                  SCENARIO {s.n}
+                </span>
+                <p className="text-base font-bold text-[#0E2541] mt-2 mb-2">{s.title}</p>
+                <p className="text-sm text-[#4B5563] leading-relaxed">{s.text}</p>
+                {!s.bad && (
+                  <p className="text-xs font-semibold text-[#C9A14A] mt-3">
+                    ← Trainable. Not genetics. Not luck. A system you run for 7 nights.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </Section>
+      </section>
 
-      {/* ════════════════════════════════════
-          FAQ
-      ════════════════════════════════════ */}
-      <Section className="py-8">
-        <SectionLabel>FAQ</SectionLabel>
-        <h2 className="text-xl font-extrabold text-center mb-6">Common Questions</h2>
+      {/* ═══════════════ WHY ELSE FAILED ═══════════════ */}
+      <Section className="py-14">
+        <Eyebrow>Why nothing else has worked</Eyebrow>
+        <H2>You haven't failed.<br /> Everything you tried was the wrong tool.</H2>
+        <p className="text-center text-[#6B7280] text-sm mt-4 mb-10 max-w-md mx-auto">
+          The root cause of anxious-brain insomnia isn't poor habits. It's a <em>conditioned fear response</em> your brain built around sleep. None of these break that loop.
+        </p>
 
-        {[
-          { q: "Do I need to create an account before buying?", a: "No. Just enter your email and name, pay securely through Stripe, and you'll immediately be prompted to create your password. Your account is created automatically after payment — no sign-up friction." },
-          { q: "Does this work specifically for anxiety-related insomnia?", a: "Yes — this is exactly what CBT-I was designed for. Anxiety-driven insomnia (lying awake with a racing mind, waking at 3am with a jolt of worry) responds extremely well to the techniques in this protocol. The Cognitive Restructuring and Brain Dump sessions directly target the anxiety loop." },
-          { q: "Is this the same as CBT-I therapy with a therapist?", a: "It follows the same clinical framework — the exact techniques sleep therapists use. The difference: it's self-paced, costs less than a single coffee run instead of €300/session, and you can start tonight." },
-          { q: "What if I've had insomnia for years?", a: "CBT-I is specifically designed for chronic insomnia. The longer you've had it, the more entrenched the behavioral patterns — which means CBT-I often produces more dramatic results." },
-          { q: "Do I need a specific wake-up time to make this work?", a: "You'll set a consistent wake time during the protocol — it's central to building sleep pressure. The protocol adapts to your schedule, whether you wake at 6am or 10am." },
-          { q: "Is there ongoing access after I finish Night 7?", a: "Yes — lifetime access. The sleep diary and tracking tools are yours forever. Many users log their sleep indefinitely to maintain their results." },
-          { q: "What if it doesn't work for me?", a: "We back it with a full 7-night money-back guarantee. Complete the protocol and if your sleep doesn't measurably improve, email us for a full refund. No questions asked." },
-        ].map((faq, i) => (
-          <div key={i} className="border-b border-border/50 last:border-0">
-            <button
-              className="w-full flex items-center justify-between py-4 text-left gap-4"
-              onClick={() => setOpenFaq(openFaq === i ? null : i)}
+        <div className="space-y-3 mb-8">
+          {[
+            { what: "Melatonin",          why: "Makes you drowsy for a few hours. Never fixes the cause. You wake up depending on it again tomorrow." },
+            { what: "Sleeping pills (Z-drugs)", why: "Knock you out, but the moment you stop, the insomnia comes back worse. Plus dependency, tolerance, and morning fog." },
+            { what: "Sleep hygiene tips", why: '"No screens before bed" makes almost no difference for clinical anxiety insomnia. Necessary but nowhere near sufficient.' },
+            { what: "Meditation apps",    why: "Excellent for general stress. Poor for an anxious brain at 3am — it doesn't break the conditioned loop that connects bed = fear." },
+            { what: "Alcohol",            why: "Knocks you out, then destroys your REM. You wake at 3am with rebound anxiety — the exact thing you're trying to escape." },
+            { what: "CBD, weighted blankets", why: "Mild placebo effect on falling asleep. Zero effect on the 3am bolt-awake. Cute hack — not a system." },
+          ].map((f) => (
+            <div key={f.what} className="flex gap-3 p-4 bg-white border border-[#EFEFEC] rounded-xl">
+              <X className="w-4 h-4 text-[#B23B2A] shrink-0 mt-1" />
+              <div>
+                <p className="font-bold text-[#0E2541] text-sm">{f.what}</p>
+                <p className="text-sm text-[#4B5563]">{f.why}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-[#FAF3E0] border border-[#E8D8A8] rounded-2xl p-6">
+          <p className="text-sm text-[#1F2937] leading-relaxed">
+            <strong>The only treatment with peer-reviewed long-term results</strong> is{" "}
+            <span className="font-semibold text-[#8B6F1F]">Cognitive Behavioral Therapy for Insomnia (CBT-I)</span> — the first-line treatment recommended by the American College of Physicians, the NHS, and the AASM, ahead of every sleep medication on the market.
+          </p>
+          <p className="text-xs font-semibold text-[#8B6F1F] mt-3">
+            {METHOD}™ takes that exact clinical framework, strips out the €300/session pricing, and turns it into a 4-phase self-guided system you complete in 7 nights — starting the night you order.
+          </p>
+        </div>
+      </Section>
+
+      {/* ═══════════════ NIGHT 7 PROMISE ═══════════════ */}
+      <section className="bg-white border-y border-[#EFEFEC] py-14">
+        <Section>
+          <Eyebrow>What changes by Night 7</Eyebrow>
+          <H2>The exact outcomes CBT-I delivers in clinical trials.</H2>
+          <p className="text-center text-[#6B7280] text-sm mt-4 mb-10 max-w-md mx-auto">
+            Specific. Measurable. Repeatable. The numbers below are pulled from peer-reviewed meta-analysis — not marketing.
+          </p>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { stat: "≤ 15 min",  label: "Time from head-to-pillow to asleep",  source: "JAMA meta-analysis · 87 studies · −19 min avg" },
+              { stat: "0 wakeups", label: "Average 3am bolt-awakes by Phase 3",   source: "CBT-I Phase 3 protocol metric" },
+              { stat: "+30 min",   label: "Extra sleep per night, sustained 12 months", source: "JAMA Internal Med · 3,724 participants" },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#FAFAF7] rounded-2xl p-6 text-center border border-[#EFEFEC]">
+                <p className="text-3xl font-extrabold text-[#0E2541] mb-1 tabular-nums">{s.stat}</p>
+                <p className="text-sm font-semibold text-[#1F2937]">{s.label}</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-2">{s.source}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </section>
+
+      {/* ═══════════════ STACK ═══════════════ */}
+      <Section className="py-14">
+        <Eyebrow>Everything you get the moment you order</Eyebrow>
+        <H2>{CURRENCY}{TOTAL_VALUE} of CBT-I tools.<br /> {CURRENCY}{priceToday} today.</H2>
+        <p className="text-center text-[#6B7280] text-sm mt-4 mb-10 max-w-md mx-auto">
+          One-time payment. Lifetime access. No subscription, ever. Every future update — yours forever, free.
+        </p>
+
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 sm:p-8 shadow-[0_6px_30px_rgba(14,37,65,0.04)] mb-6">
+          <div className="space-y-4">
+            {STACK.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="flex gap-4 items-start pb-4 border-b border-[#F1F2F4] last:border-0 last:pb-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#FAF3E0] flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-[#8B6F1F]" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-bold text-[#0E2541] leading-snug">{s.label}</p>
+                      <span className="text-xs font-bold text-[#9CA3AF] shrink-0 tabular-nums">
+                        {s.value > 0 ? `${CURRENCY}${s.value}` : "priceless"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6B7280] mt-1 leading-relaxed">{s.note}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 pt-5 border-t-2 border-[#0E2541] flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wider font-bold">Total value</p>
+              <p className="text-base font-extrabold text-[#0E2541] line-through tabular-nums">{CURRENCY}{TOTAL_VALUE}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-[#C9A14A] uppercase tracking-wider font-bold">You pay today</p>
+              <p className="text-3xl font-extrabold text-[#0E2541] tabular-nums">{CURRENCY}{priceToday}</p>
+            </div>
+          </div>
+        </div>
+
+        <PrimaryCta priceToday={priceToday}>
+          Yes — give me access
+        </PrimaryCta>
+      </Section>
+
+      {/* ═══════════════ SCIENCE ═══════════════ */}
+      <section className="bg-white border-y border-[#EFEFEC] py-14">
+        <Section>
+          <Eyebrow>This isn't an opinion</Eyebrow>
+          <H2>Three decades of peer-reviewed evidence.</H2>
+          <div className="mt-10 space-y-4">
+            {[
+              {
+                who: "American College of Physicians",
+                text: "CBT-I is recommended as the first-line treatment for chronic insomnia in adults — over sleeping pills, including Z-drugs.",
+                cite: "Annals of Internal Medicine, 2016",
+              },
+              {
+                who: "NHS England · Mind & Body guidelines",
+                text: "CBT-I is the recommended first treatment for long-term insomnia. Sleeping medication should only be a short-term option after CBT-I has been tried.",
+                cite: "NHS — Insomnia clinical guidance",
+              },
+              {
+                who: "Meta-analysis · 87 studies · 3,724 participants",
+                text: "CBT-I improves sleep onset by an average of 19 minutes and total sleep time by 30+ minutes — with effects sustained at 12-month follow-up.",
+                cite: "JAMA Internal Medicine, 2015",
+              },
+              {
+                who: "American Academy of Sleep Medicine",
+                text: "CBT-I produces long-lasting improvements in sleep without the side effects, dependency, or rebound insomnia caused by sleep medication.",
+                cite: "Clinical Practice Guideline, 2021",
+              },
+            ].map((c) => (
+              <div key={c.who} className="bg-[#FAFAF7] border-l-4 border-[#C9A14A] rounded-r-xl p-5">
+                <p className="text-[11px] font-bold text-[#8B6F1F] uppercase tracking-wider mb-2">{c.who}</p>
+                <p className="text-sm text-[#1F2937] leading-relaxed">{c.text}</p>
+                <p className="text-xs text-[#6B7280] italic mt-2">— {c.cite}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </section>
+
+      {/* ═══════════════ GUARANTEE ═══════════════ */}
+      <Section className="py-14">
+        <div className="bg-white border-2 border-[#166534]/25 rounded-2xl p-8 sm:p-10 text-center">
+          <div className="w-16 h-16 rounded-full bg-[#DEF7E0] flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-[#166534]" />
+          </div>
+          <Eyebrow>Zero risk to you</Eyebrow>
+          <H2>{GUARANTEE_DAYS} nights to try it.<br /> Keep everything either way.</H2>
+          <p className="text-base text-[#4B5563] leading-relaxed max-w-md mx-auto mt-5 mb-3">
+            Try {METHOD}™ for {GUARANTEE_DAYS} full nights. If your sleep hasn't measurably improved by Night 7 — for any reason, no reason needed —
+            <strong className="text-[#0E2541]"> email us and get every cent back.</strong>
+          </p>
+          <p className="text-sm text-[#6B7280] max-w-md mx-auto">
+            You keep every audio session. Every workbook. The calculator. The morning protocol. All of it — yours forever.
+          </p>
+          <p className="text-sm text-[#166534] font-semibold mt-5 max-w-md mx-auto">
+            There is no scenario where you lose money on this. The protocol is on us if it doesn't work.
+          </p>
+        </div>
+      </Section>
+
+      {/* ═══════════════ MAIN ORDER FORM ═══════════════ */}
+      <section className="bg-white border-y border-[#EFEFEC] py-14">
+        <Section>
+          <Eyebrow>Don't wait another sleepless night</Eyebrow>
+          <H2>Tonight could be the last night<br /> you lie awake staring at the ceiling.</H2>
+          <p className="text-center text-sm text-[#6B7280] mt-4 mb-8 max-w-md mx-auto">
+            The protocol runs for 7 nights. Most people feel a clear difference by Night 3. You have {GUARANTEE_DAYS} nights to try it — full refund if it doesn't work, and you keep every bonus regardless.
+          </p>
+
+          <OrderForm id="order-form" priceToday={priceToday} />
+
+          {!cd.expired && (
+            <p className="text-center text-xs text-[#B23B2A] font-semibold mt-5 tracking-wide tabular-nums">
+              ⚠ Price increases to {CURRENCY}{PRICE_AFTER} in {cd.days}d {cd.hours}h {cd.minutes}m — permanently
+            </p>
+          )}
+        </Section>
+      </section>
+
+      {/* ═══════════════ FAQ ═══════════════ */}
+      <Section className="py-14">
+        <Eyebrow>Common questions</Eyebrow>
+        <H2>Before you order.</H2>
+
+        <div className="mt-8">
+          {[
+            {
+              q: "Do I need to create an account before paying?",
+              a: "No. Enter your email, pay through Stripe, then set your password right after. Your account is created automatically — zero friction. You're inside the protocol in under 2 minutes.",
+            },
+            {
+              q: "Does this really work for anxiety-driven insomnia?",
+              a: "Anxiety-driven insomnia is exactly what CBT-I was designed for. The Cognitive Restructuring sessions and the Brain Dump Workbook directly dismantle the racing-thoughts loop. Peer-reviewed meta-analyses show 19+ minutes faster sleep onset and 30+ extra minutes per night — sustained at 12-month follow-up.",
+            },
+            {
+              q: "How is this different from CBT-I with a real therapist?",
+              a: "Same clinical framework, same techniques. The differences: you start tonight (no waitlist), it costs less than one therapy session (€27 vs €300), and you complete it self-paced from your bed. Therapist CBT-I is genuinely excellent — and genuinely inaccessible for most people. This closes that gap.",
+            },
+            {
+              q: "Is this safe if I'm currently taking sleep medication?",
+              a: "Yes — CBT-I is regularly used alongside medication. The protocol won't conflict with anything you're taking. Most users find that once they complete the 7 nights, they need their medication less or not at all. If you're on prescription sleep meds, don't stop suddenly — talk to your doctor about tapering as your sleep improves.",
+            },
+            {
+              q: "How much willpower does this require?",
+              a: "Very little. The audio sessions tell you what to do each night — you press play, lie back, and the protocol runs itself. The Brain Dump takes 5 minutes. The Morning Protocol takes 30 minutes. That's it. The reason CBT-I works isn't discipline — it's that it rewires the underlying conditioned response.",
+            },
+            {
+              q: "I've had insomnia for years. Will 7 nights really fix it?",
+              a: "CBT-I was specifically designed for chronic, long-term insomnia. The longer the conditioned fear-of-sleep response has been entrenched, the more dramatic the change once you break it. The 7 nights aren't a guess — they're the standard CBT-I protocol used in clinics, only faster because it's already structured.",
+            },
+            {
+              q: "Is there ongoing access after Night 7?",
+              a: "Lifetime. Every audio session, the workbook, the calculator, the tracker — yours forever. Many users keep logging indefinitely, both to maintain results and because the calculator becomes a permanent tool.",
+            },
+            {
+              q: "What if it doesn't work for me?",
+              a: `${GUARANTEE_DAYS}-day "keep everything" guarantee. Email support@sleepwired.com within ${GUARANTEE_DAYS} days, get a full refund, and keep every bonus. No questions, no forms, no waiting. There is no scenario where you lose money on this.`,
+            },
+            {
+              q: `Why does the price jump to €97 after ${BUMP_LABEL}?`,
+              a: `We're locking in early customers at €27 before the full audio library and clinical advisor review go live on July 1. After that the price moves to €97 permanently — the protocol itself stays identical. If you wait, you pay €70 more for the same product. No fake countdown, no reset — the date is fixed.`,
+            },
+          ].map((faq, i) => (
+            <div key={i} className="border-b border-[#EFEFEC] last:border-0">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full flex items-center justify-between py-5 text-left gap-4 group"
+              >
+                <span className="text-sm sm:text-base font-semibold text-[#0E2541] group-hover:text-[#C9A14A] transition-colors">{faq.q}</span>
+                <ChevronDown className={cx(
+                  "w-4 h-4 text-[#9CA3AF] shrink-0 transition-transform",
+                  openFaq === i ? "rotate-180" : ""
+                )} />
+              </button>
+              {openFaq === i && (
+                <p className="text-sm text-[#4B5563] leading-relaxed pb-5 -mt-1">{faq.a}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ═══════════════ FINAL CTA ═══════════════ */}
+      <section className="bg-[#0E2541] py-14">
+        <Section>
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#C9A14A] mb-3">
+              Last chance at launch price
+            </p>
+            <h2
+              className="text-3xl sm:text-4xl text-white leading-[1.1] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
             >
-              <span className="text-sm font-semibold text-foreground">{faq.q}</span>
-              <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`} />
+              Fix your sleep tonight — for less than dinner.
+            </h2>
+            <p className="text-sm text-white/70 mt-5 mb-8 max-w-md mx-auto">
+              {CURRENCY}{priceToday} now. {CURRENCY}{PRICE_AFTER} from {BUMP_LABEL}, permanently. {GUARANTEE_DAYS}-night money back. Lifetime access. The protocol starts the night you order.
+            </p>
+            <button
+              onClick={scrollToOrder}
+              className="inline-flex items-center justify-center gap-2 bg-[#C9A14A] hover:bg-[#B58D38] text-white font-extrabold text-lg py-5 px-10 rounded-xl shadow-[0_8px_28px_rgba(201,161,74,0.40)] hover:shadow-[0_12px_36px_rgba(201,161,74,0.55)] transition-all"
+            >
+              Yes — fix my sleep tonight <ArrowRight className="w-5 h-5" />
             </button>
-            {openFaq === i && (
-              <p className="text-sm text-muted-foreground leading-relaxed pb-4">{faq.a}</p>
+            {!cd.expired && (
+              <p className="text-xs text-[#C9A14A] mt-5 font-semibold tracking-wide tabular-nums">
+                Price increases in {cd.days}d {cd.hours}h {cd.minutes}m — permanently
+              </p>
             )}
           </div>
-        ))}
-      </Section>
+        </Section>
+      </section>
 
-      {/* ── Footer CTA ── */}
-      <Section className="py-6">
-        <CtaButton>Yes — Fix My Sleep Tonight →</CtaButton>
-      </Section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-border/40 py-8 text-center px-5">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Moon className="w-4 h-4 text-primary" />
-          <span className="font-bold text-sm">{BRAND}</span>
+      {/* Footer */}
+      <footer className="bg-[#FAFAF7] py-10 px-5 border-t border-[#EFEFEC]">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Moon className="w-4 h-4 text-[#0E2541]" />
+            <span className="font-bold text-sm text-[#0E2541]">{BRAND}</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4 text-xs text-[#6B7280]">
+            <button onClick={() => setLocation("/sign-in")} className="hover:text-[#0E2541] transition-colors">Sign in</button>
+            <span>·</span>
+            <button onClick={() => setLocation("/privacy-policy")} className="hover:text-[#0E2541] transition-colors">Privacy</button>
+            <span>·</span>
+            <button onClick={() => setLocation("/terms")} className="hover:text-[#0E2541] transition-colors">Terms</button>
+            <span>·</span>
+            <a href="mailto:support@sleepwired.com" className="hover:text-[#0E2541] transition-colors">Contact</a>
+          </div>
+          <p className="text-xs text-[#9CA3AF]">© 2026 {BRAND}. All rights reserved.</p>
+          <p className="text-[11px] text-[#9CA3AF] mt-2 max-w-md mx-auto leading-relaxed">
+            For educational purposes only. Not a substitute for professional medical advice. Results vary. If you have a diagnosed sleep disorder, consult your physician first.
+          </p>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4 text-xs text-muted-foreground">
-          <button onClick={() => setLocation("/sign-in")} className="hover:text-foreground transition-colors">Sign in</button>
-          <span className="text-border">·</span>
-          <button onClick={() => setLocation("/privacy-policy")} className="hover:text-foreground transition-colors">Privacy Policy</button>
-          <span className="text-border">·</span>
-          <button onClick={() => setLocation("/terms")} className="hover:text-foreground transition-colors">Terms of Service</button>
-          <span className="text-border">·</span>
-          <a href="mailto:support@sleepwired.com" className="hover:text-foreground transition-colors">Contact</a>
-        </div>
-        <p className="text-xs text-muted-foreground">© 2026 Sleep Rewire. All rights reserved.</p>
-        <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
-          This program is for educational purposes only and is not a substitute for professional medical advice. Results vary. If you have a diagnosed sleep disorder, consult your physician before beginning.
-        </p>
       </footer>
-
     </div>
   );
 }

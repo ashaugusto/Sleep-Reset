@@ -1,18 +1,30 @@
 {
-  "name": "7-Night Sleep Reset",
-  "short_name": "Sleep Reset",
-  "description": "A 7-night guided program to reset your sleep",
+  "name": "Sleep Wired",
+  "short_name": "Sleep Wired",
+  "description": "7-night CBT-I protocol that retrains anxious brains to sleep. The Cognitive Shutdown Method.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#0d1117",
+  "background_color": "#FAFAF7",
+  "theme_color": "#FAFAF7",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
-      "purpose": "any maskable"
+      "src": "/favicon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "any"
     }
   ]
 }
