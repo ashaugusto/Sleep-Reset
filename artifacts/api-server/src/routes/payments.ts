@@ -13,7 +13,13 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     return;
   }
 
-  const { email, name } = req.body as { email?: string; name?: string };
+  const { email, name, hero_variant, fbp, fbc } = req.body as {
+    email?: string;
+    name?: string;
+    hero_variant?: string;
+    fbp?: string;
+    fbc?: string;
+  };
   if (!email) {
     res.status(400).json({ message: "Email is required" });
     return;
@@ -21,6 +27,7 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
 
   const emailTrimmed = email.toLowerCase().trim();
   const nameTrimmed = name?.trim() || null;
+  const heroVariantClean = (hero_variant ?? "default").toString().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32) || "default";
 
   const stripe = getStripeClient();
   const priceId = process.env.STRIPE_PRICE_ID || process.env.VITE_STRIPE_PRICE_ID;
@@ -47,7 +54,13 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     mode: "payment",
     success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/`,
-    metadata: { email: emailTrimmed, name: nameTrimmed ?? "" },
+    metadata: {
+      email: emailTrimmed,
+      name: nameTrimmed ?? "",
+      hero_variant: heroVariantClean,
+      fbp: fbp ?? "",
+      fbc: fbc ?? "",
+    },
   });
 
   res.json({ url: session.url });

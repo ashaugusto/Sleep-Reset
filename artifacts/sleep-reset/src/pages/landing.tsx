@@ -258,10 +258,25 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
     }
     setLoading(true);
     try {
+      const cookies = typeof document !== "undefined" ? document.cookie : "";
+      const cookieValue = (k: string) => {
+        const m = cookies.match(new RegExp("(?:^|;\\s*)" + k + "=([^;]+)"));
+        return m ? m[1] : "";
+      };
+      const heroVariant =
+        typeof window !== "undefined"
+          ? window.sessionStorage.getItem("sw_hero_variant") || "default"
+          : "default";
       const r = await customFetch("/api/checkout/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), name: null }),
+        body: JSON.stringify({
+          email: email.trim(),
+          name: null,
+          hero_variant: heroVariant,
+          fbp: cookieValue("_fbp"),
+          fbc: cookieValue("_fbc"),
+        }),
       });
       if (!r.ok) {
         const body = await r.json().catch(() => ({ message: "Could not start checkout." }));
