@@ -21,6 +21,10 @@ function trackPageView(pageType: PageType, extra?: Record<string, unknown>) {
   });
 }
 
+// ─── Product identifiers (DPA / Meta catalog hygiene) ────
+const PRODUCT_ID = "sleep-wired-7night";
+const PRODUCT_NAME = "The Cognitive Shutdown Method";
+
 // ─── VSL Landing Page events ──────────────────────
 export const gtm = {
   // Called when VSL landing page loads
@@ -28,7 +32,8 @@ export const gtm = {
     trackPageView("vsl");
     push({
       event: "ViewContent",
-      content_name: "The Sleep Rewire Protocol",
+      content_ids: [PRODUCT_ID],
+      content_name: PRODUCT_NAME,
       content_category: "Digital Product",
       content_type: "product",
       page_type: "vsl",
@@ -54,7 +59,9 @@ export const gtm = {
   lead(email: string) {
     push({
       event: "Lead",
-      content_name: "The Cognitive Shutdown Method",
+      content_ids: [PRODUCT_ID],
+      content_name: PRODUCT_NAME,
+      content_type: "product",
       page_type: "vsl",
       value: 27,
       currency: "EUR",
@@ -66,7 +73,9 @@ export const gtm = {
   vslPlay() {
     push({
       event: "ViewVSL",
-      content_name: "The Cognitive Shutdown Method — VSL",
+      content_ids: [PRODUCT_ID],
+      content_name: `${PRODUCT_NAME} — VSL`,
+      content_type: "product",
       page_type: "vsl",
       value: 27,
       currency: "EUR",
@@ -76,7 +85,9 @@ export const gtm = {
   initiateCheckout(email: string) {
     push({
       event: "InitiateCheckout",
-      content_name: "The Sleep Rewire Protocol",
+      content_ids: [PRODUCT_ID],
+      content_name: PRODUCT_NAME,
+      content_type: "product",
       page_type: "vsl",
       value: 27,
       currency: "EUR",
@@ -96,7 +107,9 @@ export const gtm = {
   purchase(sessionId: string, email?: string | null) {
     push({
       event: "Purchase",
-      content_name: "The Sleep Rewire Protocol",
+      content_ids: [PRODUCT_ID],
+      content_name: PRODUCT_NAME,
+      content_type: "product",
       page_type: "vsl",
       value: 27,
       currency: "EUR",

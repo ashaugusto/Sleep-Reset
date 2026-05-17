@@ -16,24 +16,24 @@ export default function Terms() {
         </button>
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
           <Moon className="w-4 h-4 text-primary" />
-          <span className="font-bold text-sm">Sleep Rewire</span>
+          <span className="font-bold text-sm">Sleep Wired</span>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-5 py-10 space-y-8">
         <div>
           <h1 className="text-2xl font-extrabold mb-1">Terms of Service</h1>
-          <p className="text-xs text-muted-foreground">Last updated: April 9, 2026</p>
+          <p className="text-xs text-muted-foreground">Last updated: May 17, 2026</p>
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed">
-          These Terms of Service ("Terms") govern your access to and use of the Sleep Rewire platform, website, and digital program (collectively, the "Service") operated by Sleep Rewire ("we", "us", or "our"). By creating an account or purchasing the program, you agree to be bound by these Terms.
+          These Terms of Service ("Terms") govern your access to and use of the Sleep Wired platform, website, and digital program (collectively, the "Service") operated by Sleep Wired ("we", "us", or "our"). By creating an account or purchasing the program, you agree to be bound by these Terms.
         </p>
 
         {[
           {
             title: "1. The Service",
-            content: `Sleep Rewire provides a self-guided, 7-night digital program based on Cognitive Behavioral Therapy for Insomnia (CBT-I). The program includes:
+            content: `Sleep Wired provides a self-guided, 7-night digital program based on Cognitive Behavioral Therapy for Insomnia (CBT-I). The program includes:
 
 - Nightly guided content and protocols
 - Evening and morning sleep diary tools
@@ -46,7 +46,7 @@ The program is a digital educational product. It is not a medical treatment, the
             title: "2. Medical Disclaimer",
             content: `**This program is not a substitute for professional medical advice, diagnosis, or treatment.**
 
-CBT-I is a well-researched, evidence-based behavioral approach to improving sleep. However, Sleep Rewire does not diagnose, treat, or cure any medical condition. If you have or suspect a sleep disorder (such as sleep apnea, narcolepsy, or restless leg syndrome), a mental health condition, or any other medical concern, consult a qualified healthcare professional before beginning this program.
+CBT-I is a well-researched, evidence-based behavioral approach to improving sleep. However, Sleep Wired does not diagnose, treat, or cure any medical condition. If you have or suspect a sleep disorder (such as sleep apnea, narcolepsy, or restless leg syndrome), a mental health condition, or any other medical concern, consult a qualified healthcare professional before beginning this program.
 
 Individual results vary. We make no guarantee that the program will resolve your specific sleep issues.`,
           },
@@ -66,16 +66,18 @@ Your account is personal and non-transferable. You are responsible for maintaini
 The purchase grants you **lifetime access** to the program for your personal, non-commercial use only.`,
           },
           {
-            title: "5. Refund Policy",
-            content: `We offer a full 7-night money-back guarantee. If you complete all 7 nights of the protocol and do not notice a measurable improvement in your sleep quality, you may request a full refund within 30 days of purchase by emailing us at support@sleepwired.com.
+            title: "5. Refund Policy — 60 nights, keep everything",
+            content: `We offer a full 60-night money-back guarantee from the date of purchase. If you don't notice a measurable improvement in your sleep within those 60 nights, you may request a full refund by emailing us at support@sleepwired.com.
 
-We reserve the right to refuse refund requests that show no evidence of program completion, or where the refund policy is being abused.
+You keep everything: all audio sessions, the workbook, the sleep window calculator, and any bonuses already delivered remain yours regardless of refund. There is no clawback.
 
-Refunds are processed within 5–10 business days through the original payment method.`,
+We reserve the right to refuse refund requests where the refund policy is clearly being abused (multiple purchases under different identities, etc.).
+
+Refunds are processed within 5–10 business days to the original payment method.`,
           },
           {
             title: "6. Intellectual Property",
-            content: `All content within the Sleep Rewire platform — including but not limited to program materials, copy, audio, design, and software — is the exclusive intellectual property of Sleep Rewire.
+            content: `All content within the Sleep Wired platform — including but not limited to program materials, copy, audio, design, and software — is the exclusive intellectual property of Sleep Wired.
 
 Your purchase grants you a personal, non-exclusive, non-transferable licence to access and use the content for your own sleep improvement. You may not:
 
@@ -85,7 +87,7 @@ Your purchase grants you a personal, non-exclusive, non-transferable licence to 
           },
           {
             title: "7. Limitation of Liability",
-            content: `To the maximum extent permitted by applicable law, Sleep Rewire shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
+            content: `To the maximum extent permitted by applicable law, Sleep Wired shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
 
 Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program (€27).`,
           },
@@ -101,7 +103,7 @@ You may delete your account at any time by contacting us at support@sleepwired.c
           },
           {
             title: "10. Governing Law",
-            content: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Sleep Rewire operates, without regard to conflict of law provisions. Any disputes arising from these Terms shall be resolved through good-faith negotiation, and if necessary, binding arbitration.`,
+            content: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Sleep Wired operates, without regard to conflict of law provisions. Any disputes arising from these Terms shall be resolved through good-faith negotiation, and if necessary, binding arbitration.`,
           },
           {
             title: "11. Contact",
@@ -129,7 +131,7 @@ You may delete your account at any time by contacting us at support@sleepwired.c
             onClick={() => setLocation("/")}
             className="text-sm text-primary hover:underline"
           >
-            ← Back to Sleep Rewire
+            ← Back to Sleep Wired
           </button>
         </div>
       </main>

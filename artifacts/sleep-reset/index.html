@@ -26,11 +26,25 @@
           var ev = arguments[i] && arguments[i].event;
           var v = arguments[i] && arguments[i].value;
           var c = arguments[i] && arguments[i].currency;
+          var d = arguments[i] || {};
           if (ev === 'ViewContent' || ev === 'InitiateCheckout' || ev === 'Purchase' || ev === 'Lead' || ev === 'CompleteRegistration') {
-            try { fbq('trackSingle','1277058757910786', ev, v ? {value:v, currency:c||'EUR'} : {}); } catch(e){}
+            var payload = {};
+            if (v) { payload.value = v; payload.currency = c || 'EUR'; }
+            if (d.content_ids) payload.content_ids = d.content_ids;
+            if (d.content_name) payload.content_name = d.content_name;
+            if (d.content_type) payload.content_type = d.content_type;
+            if (d.content_category) payload.content_category = d.content_category;
+            if (d.num_items) payload.num_items = d.num_items;
+            if (d.transaction_id) payload.order_id = d.transaction_id;
+            try { fbq('trackSingle','1277058757910786', ev, payload); } catch(e){}
           }
           if (ev === 'ViewVSL') {
-            try { fbq('trackSingleCustom','1277058757910786', 'ViewVSL', v ? {value:v, currency:c||'EUR'} : {}); } catch(e){}
+            var p2 = {};
+            if (v) { p2.value = v; p2.currency = c || 'EUR'; }
+            if (d.content_ids) p2.content_ids = d.content_ids;
+            if (d.content_name) p2.content_name = d.content_name;
+            if (d.content_type) p2.content_type = d.content_type;
+            try { fbq('trackSingleCustom','1277058757910786', 'ViewVSL', p2); } catch(e){}
           }
         }
         return orig.apply(this, arguments);
