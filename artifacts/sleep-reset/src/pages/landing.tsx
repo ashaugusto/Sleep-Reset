@@ -71,6 +71,43 @@ const AUTHORITIES = [
   "Mayo Clinic",
 ];
 
+// ─── Beta testers — early access, no payment, honest feedback ─────
+// Disclosure required (FTC US, UK ASA, EU 2019/2161): "Beta tester — received free access for honest feedback"
+const TESTIMONIALS = [
+  {
+    initial: "B",
+    name: "Bruno",
+    location: "Dublin, Ireland",
+    age: 34,
+    role: "Software engineer",
+    quote: "Used to take me 90 minutes to fall asleep most nights. After the protocol, I'm out in 15. Didn't expect it to work that fast.",
+  },
+  {
+    initial: "C",
+    name: "Caio",
+    location: "Curitiba, Brazil",
+    age: 38,
+    role: "Marketing",
+    quote: "My mind wouldn't stop. The Cognitive Shutdown thing finally gave me a way to actually disconnect at night. Sleep got deeper too.",
+  },
+  {
+    initial: "G",
+    name: "Gustavo",
+    location: "Genève, Switzerland",
+    age: 41,
+    role: "Finance consultant",
+    quote: "Tried melatonin, meditation apps, nothing held. This is the first thing that actually stopped the racing thoughts before bed.",
+  },
+  {
+    initial: "M",
+    name: "Markus",
+    location: "Berlin, Germany",
+    age: 36,
+    role: "Designer",
+    quote: "Felt lighter by night 4. Less tension when I lay down. Hadn't slept like this in years.",
+  },
+];
+
 // ─── Hook Variants (cold-traffic message match) ─────
 // Selected via ?h=<key> query param. Falls back to "default".
 // Ad creatives should point to /?h=<key> matching the hook in the video.
@@ -489,6 +526,44 @@ export default function Landing() {
           </div>
         </div>
       </Section>
+
+      {/* ═══════════════ BETA TESTERS — early access feedback ═══════════════ */}
+      <section className="bg-[#FAFAF7] border-y border-[#EFEFEC] py-14">
+        <Section>
+          <Eyebrow>What our beta testers said</Eyebrow>
+          <H2>Real people. Real nights. <span className="italic">Honest feedback.</span></H2>
+          <p className="text-center text-[#6B7280] text-sm mt-3 mb-10 max-w-xl mx-auto">
+            We gave early access to a handful of friends in 4 countries — no payment, just honest feedback after the 7-night protocol.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.initial}
+                className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-[0_2px_12px_rgba(14,37,65,0.04)] flex flex-col"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-full bg-[#0E2541] text-white font-bold text-base flex items-center justify-center tracking-wider">
+                    {t.initial}
+                  </div>
+                  <div>
+                    <p className="text-[#0E2541] font-bold text-sm leading-tight">{t.name} · {t.location}</p>
+                    <p className="text-[#6B7280] text-xs leading-tight mt-0.5">{t.age} · {t.role}</p>
+                  </div>
+                </div>
+                <p
+                  className="text-[#1F2937] text-[15px] leading-[1.55] italic mb-4 flex-1"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A14A] pt-3 border-t border-[#F1F2F4]">
+                  Beta tester · early access for honest feedback
+                </p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </section>
 
       {/* ═══════════════ 3 SCENARIOS ═══════════════ */}
       <section className="bg-white border-y border-[#EFEFEC] py-14">
