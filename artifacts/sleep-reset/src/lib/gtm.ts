@@ -50,6 +50,29 @@ export const gtm = {
     this.viewVSL();
   },
 
+  // Email submitted on order form — intent signal before Stripe redirect
+  lead(email: string) {
+    push({
+      event: "Lead",
+      content_name: "The Cognitive Shutdown Method",
+      page_type: "vsl",
+      value: 27,
+      currency: "EUR",
+      email,
+    });
+  },
+
+  // VSL play button clicked — engagement signal
+  vslPlay() {
+    push({
+      event: "ViewVSL",
+      content_name: "The Cognitive Shutdown Method — VSL",
+      page_type: "vsl",
+      value: 27,
+      currency: "EUR",
+    });
+  },
+
   initiateCheckout(email: string) {
     push({
       event: "InitiateCheckout",

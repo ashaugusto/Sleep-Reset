@@ -29,6 +29,9 @@
           if (ev === 'ViewContent' || ev === 'InitiateCheckout' || ev === 'Purchase' || ev === 'Lead' || ev === 'CompleteRegistration') {
             try { fbq('trackSingle','1277058757910786', ev, v ? {value:v, currency:c||'EUR'} : {}); } catch(e){}
           }
+          if (ev === 'ViewVSL') {
+            try { fbq('trackSingleCustom','1277058757910786', 'ViewVSL', v ? {value:v, currency:c||'EUR'} : {}); } catch(e){}
+          }
         }
         return orig.apply(this, arguments);
       };

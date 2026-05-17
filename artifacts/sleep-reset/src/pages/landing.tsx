@@ -203,7 +203,7 @@ function VimeoPlayer() {
     return (
       <button
         type="button"
-        onClick={() => setPlaying(true)}
+        onClick={() => { gtm.vslPlay(); setPlaying(true); }}
         className="relative w-full block group rounded-2xl overflow-hidden border border-[#E5E7EB] bg-[#0E2541] shadow-[0_6px_30px_rgba(14,37,65,0.10)]"
         style={{ aspectRatio: "16 / 9" }}
         aria-label="Play explainer video"
@@ -267,6 +267,7 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
         typeof window !== "undefined"
           ? window.sessionStorage.getItem("sw_hero_variant") || "default"
           : "default";
+      gtm.lead(email.trim());
       const r = await customFetch("/api/checkout/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
