@@ -10,7 +10,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// DO managed PG uses self-signed CA chain; pg-connection-string v3 now treats
+// sslmode=require as verify-full by default, breaking the connection. Accept
+// self-signed here (we trust DO's managed cluster).
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";

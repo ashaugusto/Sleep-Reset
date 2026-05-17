@@ -45,6 +45,33 @@ app.post(
     try {
       const sig = Array.isArray(signature) ? signature[0] : signature;
       await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      // Mark lead as purchased on checkout.session.completed
+      try {
+        const evt = JSON.parse((req.body as Buffer).toString("utf8")) as {
+          type?: string;
+          data?: { object?: { id?: string; customer_details?: { email?: string }; metadata?: { email?: string } } };
+        };
+        if (evt.type === "checkout.session.completed") {
+          const obj = evt.data?.object ?? {};
+          const sessionId = obj.id;
+          const email = (obj.customer_details?.email || obj.metadata?.email || "").toLowerCase().trim();
+          const { db, leadsTable } = await import("@workspace/db");
+          const { eq, or } = await import("drizzle-orm");
+          if (email || sessionId) {
+            const conds = [];
+            if (email) conds.push(eq(leadsTable.email, email));
+            if (sessionId) conds.push(eq(leadsTable.stripeSessionId, sessionId));
+            await db.update(leadsTable)
+              .set({ purchased: true, purchasedAt: new Date(), stripeSessionId: sessionId ?? null, updatedAt: new Date() })
+              .where(conds.length > 1 ? or(...conds) : conds[0]);
+            logger.info({ email, sessionId }, "Lead marked as purchased");
+          }
+        }
+      } catch (leadErr) {
+        logger.error(leadErr, "Lead update on webhook failed (non-fatal)");
+      }
+
       res.status(200).json({ received: true });
     } catch (error) {
       logger.error(error, "Webhook error");

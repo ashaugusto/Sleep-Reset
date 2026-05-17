@@ -7,6 +7,7 @@ import nightCompletionsRouter from "./night-completions";
 import progressRouter from "./progress";
 import paymentsRouter from "./payments";
 import videoRouter from "./video";
+import recoveryRouter from "./recovery";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(nightCompletionsRouter);
 router.use(progressRouter);
 router.use(paymentsRouter);
 router.use(videoRouter);
+router.use(recoveryRouter);
 
 export default router;

@@ -284,6 +284,8 @@ function VimeoPlayer() {
 // ─── Inline Order Form ──────────────────────────────
 function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -304,16 +306,26 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
         typeof window !== "undefined"
           ? window.sessionStorage.getItem("sw_hero_variant") || "default"
           : "default";
+      const urlParams =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+      const utm = {
+        utm_source: urlParams.get("utm_source") || "",
+        utm_medium: urlParams.get("utm_medium") || "",
+        utm_campaign: urlParams.get("utm_campaign") || "",
+        utm_content: urlParams.get("utm_content") || "",
+      };
       gtm.lead(email.trim());
       const r = await customFetch("/api/checkout/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
-          name: null,
+          name: name.trim() || null,
+          whatsapp: whatsapp.trim() || null,
           hero_variant: heroVariant,
           fbp: cookieValue("_fbp"),
           fbc: cookieValue("_fbc"),
+          ...utm,
         }),
       });
       if (!r.ok) {
@@ -372,6 +384,33 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
             className="w-full bg-white border border-[#D1D5DB] rounded-xl px-4 py-3.5 text-base text-[#0E2541] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E2541] focus:ring-2 focus:ring-[#0E2541]/10 transition-all"
           />
         </label>
+
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="First name (optional)"
+              autoComplete="given-name"
+              className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm text-[#0E2541] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E2541] focus:ring-2 focus:ring-[#0E2541]/10 transition-all"
+            />
+          </label>
+          <label className="block">
+            <input
+              type="tel"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              placeholder="WhatsApp (optional)"
+              autoComplete="tel"
+              inputMode="tel"
+              className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm text-[#0E2541] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E2541] focus:ring-2 focus:ring-[#0E2541]/10 transition-all"
+            />
+          </label>
+        </div>
+        <p className="text-[10px] text-[#9CA3AF] -mt-1">
+          Optional — we'll send your sleep window setup and recovery tips. Skip if you prefer email-only.
+        </p>
 
         <button
           type="submit"

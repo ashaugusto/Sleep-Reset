@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getRecoveryEmail, type RecoveryStep } from "./recoveryEmails";
 
 let resendClient: Resend | null = null;
 
@@ -10,6 +11,39 @@ function getResend(): Resend | null {
 }
 
 const FROM = process.env.RESEND_FROM || "Sleep Rewire <onboarding@resend.dev>";
+
+// ─── Recovery email (abandoned checkout sequence) ────────────────────────────
+export async function sendRecoveryEmail({
+  email,
+  name,
+  heroVariant,
+  step,
+}: {
+  email: string;
+  name?: string | null;
+  heroVariant?: string | null;
+  step: RecoveryStep;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set — skipping recovery email");
+    return false;
+  }
+  const firstName = (name?.split(" ")[0] || "").trim();
+  const { subject, html } = getRecoveryEmail(step, { firstName, heroVariant: heroVariant ?? null });
+  try {
+    const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    if (error) {
+      console.error(`[email] Recovery step ${step} send error for ${email}:`, error);
+      return false;
+    }
+    console.log(`[email] Recovery step ${step} sent to ${email}`);
+    return true;
+  } catch (err) {
+    console.error(`[email] Recovery step ${step} send failed for ${email}:`, err);
+    return false;
+  }
+}
 const APP_URL = () => process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
 // In dev the app is mounted at /sleep-reset; in production it lives at the root
 const BASE_PATH = () => (process.env.APP_URL ? "" : "/sleep-reset");
