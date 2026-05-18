@@ -56,12 +56,25 @@ app.post(
           const obj = evt.data?.object as {
             id?: string;
             customer_details?: { email?: string; phone?: string };
-            metadata?: { email?: string; fbp?: string; fbc?: string };
+            metadata?: { email?: string; fbp?: string; fbc?: string; product?: string; user_id?: string };
             amount_total?: number;
             currency?: string;
           } ?? {};
           const sessionId = obj.id;
           const email = (obj.customer_details?.email || obj.metadata?.email || "").toLowerCase().trim();
+          const isUpgrade = obj.metadata?.product === "recovery_pack";
+
+          // Recovery Pack upgrade — flag the user, skip the rest of the regular post-purchase path
+          if (isUpgrade && obj.metadata?.user_id) {
+            const { db, usersTable } = await import("@workspace/db");
+            const { eq } = await import("drizzle-orm");
+            await db.update(usersTable)
+              .set({ premiumPurchasedAt: new Date() })
+              .where(eq(usersTable.id, obj.metadata.user_id));
+            logger.info({ userId: obj.metadata.user_id, sessionId }, "Recovery Pack upgrade marked");
+            res.status(200).json({ received: true });
+            return;
+          }
           const { db, leadsTable } = await import("@workspace/db");
           const { eq, or } = await import("drizzle-orm");
           if (email || sessionId) {

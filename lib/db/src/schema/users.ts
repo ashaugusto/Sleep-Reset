@@ -19,6 +19,7 @@ export const usersTable = pgTable("users", {
   currentNight: integer("current_night").notNull().default(1),
   stripeCustomerId: text("stripe_customer_id"),
   purchasedAt: timestamp("purchased_at"),
+  premiumPurchasedAt: timestamp("premium_purchased_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

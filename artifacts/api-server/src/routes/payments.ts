@@ -210,6 +210,54 @@ router.get("/auth/claim", async (req: Request, res: Response) => {
   }
 });
 
+// ─── Upgrade checkout (Recovery Pack €19) ────────────────────────────────────
+router.post("/checkout/upgrade", requireAuth, async (req: Request, res: Response) => {
+  if (!isStripeConfigured()) {
+    res.status(503).json({ message: "Payment is not configured yet." });
+    return;
+  }
+  const priceId = process.env.STRIPE_PRICE_PREMIUM;
+  if (!priceId) {
+    res.status(503).json({ message: "Premium product not configured." });
+    return;
+  }
+
+  const userId = req.userId!;
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!user || !user.email) {
+    res.status(400).json({ message: "User not found." });
+    return;
+  }
+  if (user.premiumPurchasedAt) {
+    res.status(409).json({ message: "Already upgraded." });
+    return;
+  }
+
+  const stripe = getStripeClient();
+  const existing = await stripe.customers.list({ email: user.email, limit: 1 });
+  let customer = existing.data[0];
+  if (!customer) {
+    customer = await stripe.customers.create({ email: user.email, name: user.name ?? undefined });
+  }
+
+  const appUrl = process.env.APP_URL || "https://sleepwired.com";
+  const session = await stripe.checkout.sessions.create({
+    customer: customer.id,
+    payment_method_types: ["card"],
+    line_items: [{ price: priceId, quantity: 1 }],
+    mode: "payment",
+    success_url: `${appUrl}/dashboard?upgraded=1`,
+    cancel_url: `${appUrl}/upgrade?canceled=1`,
+    metadata: {
+      product: "recovery_pack",
+      user_id: userId,
+      email: user.email,
+    },
+  });
+
+  res.json({ url: session.url });
+});
+
 // ─── Purchase status ──────────────────────────────────────────────────────────
 router.get("/purchase-status", requireAuth, async (req: Request, res: Response) => {
   const userId = req.userId!;

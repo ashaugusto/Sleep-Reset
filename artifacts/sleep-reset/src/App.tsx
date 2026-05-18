@@ -17,6 +17,7 @@ import SleepLog from "@/pages/sleep-log";
 import Progress from "@/pages/progress";
 import Profile from "@/pages/profile";
 import Welcome from "@/pages/welcome";
+import Upgrade from "@/pages/upgrade";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
 
@@ -71,6 +72,9 @@ function Router() {
       </Route>
       <Route path="/profile">
         <AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>
+      </Route>
+      <Route path="/upgrade">
+        <AuthGuard><AppLayout><Upgrade /></AppLayout></AuthGuard>
       </Route>
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />

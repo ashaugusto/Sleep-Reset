@@ -213,7 +213,10 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         If your sleep slips in a few weeks or months, that's normal — life happens. Open the app and re-run the Bed Reset (Night 2) and the Sleep Window (Night 3). Two or three nights is usually enough.
       </p>
       ${cta(loginLink("pp_done", ctx.leadId, "/dashboard"), "Open my dashboard")}
-      <p style="margin:24px 0 0;font-size:12px;color:#8b949e;">If something worked for you in the protocol — or didn't — I want to hear about it. Just reply to this email.</p>
+      <p style="margin:28px 0 8px;font-size:12px;color:#8b949e;line-height:1.6;border-top:1px solid #30363d;padding-top:20px;">
+        <strong style="color:#c9d1d9;">P.S.</strong> — Some people asked for a separate toolkit for the situations where sleep slips: travel, illness, 3 AM anxiety, shift work, Sunday-night insomnia. I put together a Recovery Pack — 7 short CBT-I sessions for those exact moments. €19 one-time, same 60-night guarantee. <a href="${loginLink("pp_done_upgrade", ctx.leadId, "/upgrade")}" style="color:#58a6ff;">See what's in it →</a>
+      </p>
+      <p style="margin:16px 0 0;font-size:12px;color:#8b949e;">If something worked for you in the protocol — or didn't — I want to hear about it. Just reply to this email.</p>
     `),
   };
 }
