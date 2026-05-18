@@ -101,14 +101,20 @@ export default function Dashboard() {
           <span className="text-sm font-medium">My Progress</span>
         </div>
 
-        <div className="col-span-2 bg-secondary/30 rounded-2xl p-4 flex items-center justify-between opacity-70">
+        <div
+          className="col-span-2 bg-secondary/50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-secondary/80 transition-colors"
+          onClick={() => setLocation(`/night/${currentNight}`)}
+        >
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center">
-              <Headphones className="w-6 h-6 text-muted-foreground" />
+              <Headphones className="w-6 h-6 text-primary" />
             </div>
-            <span className="text-sm font-medium text-muted-foreground">Audio Library</span>
+            <div>
+              <p className="text-sm font-medium">Tonight's Guided Audio</p>
+              <p className="text-xs text-muted-foreground">Night {currentNight} · ~2 min CBT-I</p>
+            </div>
           </div>
-          <span className="text-xs bg-background px-2 py-1 rounded text-muted-foreground">Locked</span>
+          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-medium">Play</span>
         </div>
       </div>
     </div>

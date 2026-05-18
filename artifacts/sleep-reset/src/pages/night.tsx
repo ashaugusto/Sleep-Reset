@@ -379,6 +379,23 @@ export default function Night() {
           </span>
         </div>
         <p className="text-muted-foreground leading-relaxed">{content.concept}</p>
+
+        {/* Guided audio (~2 min, CBT-I) */}
+        <div className="bg-secondary/30 border border-border/40 rounded-2xl p-4 flex items-center gap-3">
+          <Headphones className="w-5 h-5 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">Guided session for Night {nightId}</p>
+            <p className="text-xs text-muted-foreground">~2 min · listen before bed</p>
+            <audio
+              controls
+              preload="metadata"
+              src={`/audio/night-${nightId}.mp3`}
+              className="w-full mt-2 h-9"
+            >
+              Your browser does not support audio playback.
+            </audio>
+          </div>
+        </div>
       </div>
 
       <div className={cn(
