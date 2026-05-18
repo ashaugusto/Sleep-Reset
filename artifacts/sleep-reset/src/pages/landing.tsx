@@ -333,8 +333,8 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
         toast({ title: body.message ?? "Checkout failed", variant: "destructive" });
         return;
       }
-      const { url } = await r.json();
-      gtm.initiateCheckout(email.trim());
+      const { url, session_id } = await r.json();
+      gtm.initiateCheckout(email.trim(), session_id ?? null);
       window.location.href = url;
     } catch {
       toast({ title: "Network error. Please try again.", variant: "destructive" });
@@ -472,7 +472,35 @@ export default function Landing() {
   const priceToday = cd.expired ? PRICE_AFTER : PRICE_TODAY;
   const { key: heroKey, variant: hero } = useHeroVariant();
 
-  useEffect(() => { gtm.viewVSL(); }, []);
+  useEffect(() => {
+    // Shared event_id so browser pixel and server-side CAPI dedupe
+    const eventId = `vc_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    gtm.viewVSL(eventId);
+    // Server-side ViewContent (CAPI) — deterministic attribution, immune to ITP/adblocker
+    try {
+      const cookies = document.cookie;
+      const cookieValue = (k: string) => {
+        const m = cookies.match(new RegExp("(?:^|;\\s*)" + k + "=([^;]+)"));
+        return m ? m[1] : "";
+      };
+      const urlParams = new URLSearchParams(window.location.search);
+      void fetch("/api/track/view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fbp: cookieValue("_fbp"),
+          fbc: cookieValue("_fbc"),
+          hero_variant: window.sessionStorage.getItem("sw_hero_variant") || "default",
+          utm_source: urlParams.get("utm_source") || "",
+          utm_medium: urlParams.get("utm_medium") || "",
+          utm_campaign: urlParams.get("utm_campaign") || "",
+          utm_content: urlParams.get("utm_content") || "",
+          event_id: eventId,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {}
+  }, []);
 
   useEffect(() => {
     try {

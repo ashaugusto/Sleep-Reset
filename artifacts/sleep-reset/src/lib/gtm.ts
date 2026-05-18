@@ -28,7 +28,7 @@ const PRODUCT_NAME = "The Cognitive Shutdown Method";
 // ─── VSL Landing Page events ──────────────────────
 export const gtm = {
   // Called when VSL landing page loads
-  viewVSL() {
+  viewVSL(eventId?: string) {
     trackPageView("vsl");
     push({
       event: "ViewContent",
@@ -39,6 +39,7 @@ export const gtm = {
       page_type: "vsl",
       value: 27,
       currency: "EUR",
+      ...(eventId ? { event_id: eventId } : {}),
     });
     push({
       event: "view_item",
@@ -82,7 +83,7 @@ export const gtm = {
     });
   },
 
-  initiateCheckout(email: string) {
+  initiateCheckout(email: string, sessionId?: string | null) {
     push({
       event: "InitiateCheckout",
       content_ids: [PRODUCT_ID],
@@ -93,6 +94,7 @@ export const gtm = {
       currency: "EUR",
       num_items: 1,
       email,
+      ...(sessionId ? { transaction_id: sessionId } : {}),
     });
     push({
       event: "begin_checkout",

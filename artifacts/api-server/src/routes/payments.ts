@@ -127,37 +127,47 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     console.error("[checkout/public] session_id update failed:", e);
   }
 
-  // CAPI Lead — deterministic attribution (server-side, immune to ITP/adblocker)
-  // event_id = leadId, matches browser fbq Lead which fires before redirect via same dedupe key
+  // CAPI Lead + InitiateCheckout — deterministic attribution (immune to ITP/adblocker)
+  const userData = {
+    email: emailTrimmed,
+    phone: whatsappClean,
+    externalId: leadId,
+    clientIp: clientIp(req),
+    clientUserAgent: (req.headers["user-agent"] as string | undefined) ?? null,
+    fbp: fbp ?? null,
+    fbc: fbc ?? null,
+  };
+  const customData = {
+    value: 27,
+    currency: "EUR",
+    contentIds: ["sleep-wired-7night"],
+    contentName: "The Cognitive Shutdown Method",
+    contentType: "product",
+  };
+  const eventSourceUrl = `${process.env.APP_URL || "https://sleepwired.com"}/`;
   try {
     if (leadId) {
       void sendCapiEvent({
         eventName: "Lead",
         eventId: leadId,
-        eventSourceUrl: `${process.env.APP_URL || "https://sleepwired.com"}/`,
-        userData: {
-          email: emailTrimmed,
-          phone: whatsappClean,
-          externalId: leadId,
-          clientIp: clientIp(req),
-          clientUserAgent: (req.headers["user-agent"] as string | undefined) ?? null,
-          fbp: fbp ?? null,
-          fbc: fbc ?? null,
-        },
-        customData: {
-          value: 27,
-          currency: "EUR",
-          contentIds: ["sleep-wired-7night"],
-          contentName: "The Cognitive Shutdown Method",
-          contentType: "product",
-        },
+        eventSourceUrl,
+        userData,
+        customData,
       });
     }
+    // IC event_id = session.id; browser fbq IC fires with eventID=transaction_id (also session.id) → dedupe
+    void sendCapiEvent({
+      eventName: "InitiateCheckout",
+      eventId: session.id,
+      eventSourceUrl,
+      userData,
+      customData: { ...customData, numItems: 1 },
+    });
   } catch (e) {
-    console.error("[checkout/public] CAPI Lead dispatch failed (non-fatal):", e);
+    console.error("[checkout/public] CAPI Lead/IC dispatch failed (non-fatal):", e);
   }
 
-  res.json({ url: session.url });
+  res.json({ url: session.url, session_id: session.id });
 });
 
 // ─── Verify payment session (GET — returns email/name from Stripe) ────────────

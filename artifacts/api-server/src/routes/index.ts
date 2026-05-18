@@ -9,6 +9,7 @@ import paymentsRouter from "./payments";
 import videoRouter from "./video";
 import recoveryRouter from "./recovery";
 import dashboardRouter from "./dashboard";
+import trackingRouter from "./tracking";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(paymentsRouter);
 router.use(videoRouter);
 router.use(recoveryRouter);
 router.use(dashboardRouter);
+router.use(trackingRouter);
 
 export default router;
