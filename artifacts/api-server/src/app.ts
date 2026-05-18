@@ -110,7 +110,7 @@ app.post(
                 // Post-purchase welcome email (step 1) — fire immediately, mark sent
                 if (lead.postPurchaseStep === 0) {
                   const { sendPostPurchaseEmail } = await import("./emailService");
-                  const sent = await sendPostPurchaseEmail({ email: lead.email, name: lead.name, step: 1 });
+                  const sent = await sendPostPurchaseEmail({ email: lead.email, name: lead.name, step: 1, leadId: lead.id });
                   if (sent) {
                     await db.update(leadsTable)
                       .set({ postPurchaseStep: 1, postPurchaseLastAt: new Date(), updatedAt: new Date() })

@@ -189,6 +189,56 @@ router.post("/auth/login", async (req, res) => {
   });
 });
 
+// ─── GET /api/auth/magic ─────────────────────────────────────────────────────
+// Passwordless login from email. Buyer clicks link → if user exists, sign in;
+// if not, create passwordless account from lead data, sign in, redirect.
+// Security: lead.id is a v4 UUID (122 bits entropy), only present in our emails.
+router.get("/auth/magic", async (req, res) => {
+  const lead = (req.query.lead as string | undefined)?.trim();
+  const dest = (req.query.dest as string | undefined) || "/dashboard";
+  // Allowlist destinations to prevent open redirect
+  const SAFE_PREFIXES = ["/dashboard", "/sleep-log", "/night", "/progress", "/onboarding", "/profile"];
+  const safeDest = SAFE_PREFIXES.some((p) => dest.startsWith(p)) ? dest : "/dashboard";
+
+  if (!lead || !/^[0-9a-f-]{36}$/i.test(lead)) {
+    res.status(400).send("Invalid magic link.");
+    return;
+  }
+
+  const { db, leadsTable } = await import("@workspace/db");
+  const { eq } = await import("drizzle-orm");
+  const [leadRow] = await db.select().from(leadsTable).where(eq(leadsTable.id, lead)).limit(1);
+  if (!leadRow || !leadRow.purchased) {
+    res.status(403).send("Magic link expired or invalid.");
+    return;
+  }
+
+  const emailLower = leadRow.email.toLowerCase().trim();
+  let [user] = await db.select().from(usersTable).where(eq(usersTable.email, emailLower)).limit(1);
+
+  if (!user) {
+    // Passwordless account creation from lead
+    const id = crypto.randomUUID();
+    const inserted = await db.insert(usersTable).values({
+      id,
+      email: emailLower,
+      name: leadRow.name,
+      passwordHash: null,                 // passwordless — user can set later via /profile
+      purchasedAt: leadRow.purchasedAt ?? new Date(),
+    }).returning();
+    user = inserted[0];
+  }
+
+  req.session.userId = user.id;
+  req.session.save((err) => {
+    if (err) {
+      res.status(500).send("Session error. Please try again.");
+      return;
+    }
+    res.redirect(safeDest);
+  });
+});
+
 // ─── POST /api/auth/logout ────────────────────────────────────────────────────
 router.post("/auth/logout", (req, res) => {
   req.session.destroy(() => {

@@ -246,6 +246,48 @@ export default function SleepLog() {
     }
   };
 
+  // Quick log: typical decent night, 1-tap.
+  // Defaults: wake 07:00, out 07:15, SOL 15min, woke once 10min WASO, quality 3, restfulness 3
+  const handleQuickLog = async () => {
+    if (!userId) return;
+    setSubmitting(true);
+    try {
+      // If no evening log for today, create one with reasonable defaults first
+      let logToUpdate = pendingMorningLog;
+      if (!logToUpdate) {
+        const created = await createLog.mutateAsync({
+          userId,
+          data: {
+            logDate: todayStr,
+            bedtimeMinutes: timeToMinutes("22:30"),
+            sleepAttemptMinutes: timeToMinutes("23:00"),
+            eveningMood: 3,
+            eveningNotes: null,
+          },
+        });
+        logToUpdate = created as SleepLog;
+      }
+      if (logToUpdate) {
+        await updateMorning.mutateAsync({
+          userId,
+          logId: logToUpdate.id,
+          data: {
+            finalWakeTimeMinutes: timeToMinutes("07:00"),
+            outOfBedMinutes: timeToMinutes("07:15"),
+            sleepLatencyMinutes: 15,
+            wakeCount: 1,
+            wakeDurationMinutes: 10,
+            sleepQuality: 3,
+            restfulness: 3,
+          },
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: getListSleepLogsQueryKey(userId) });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-8 pb-32">
       <div className="flex items-center justify-between">
@@ -314,6 +356,26 @@ export default function SleepLog() {
             </div>
             <Button className="w-full" onClick={handleEveningSubmit} disabled={submitting}>
               Good night
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {(needsMorningCheckin || !todayLog) && (
+        <Card className="p-4 bg-secondary/40 border-border/50">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Typical decent night?</p>
+              <p className="text-xs text-muted-foreground">One tap. Fill the details later if you want.</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleQuickLog}
+              disabled={submitting}
+              className="shrink-0"
+            >
+              Quick log
             </Button>
           </div>
         </Card>

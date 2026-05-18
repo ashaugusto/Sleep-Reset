@@ -94,7 +94,7 @@ router.post("/internal/leads/post-purchase-tick", async (req: Request, res: Resp
       )
       .limit(50);
     for (const lead of dueLeads) {
-      const sent = await sendPostPurchaseEmail({ email: lead.email, name: lead.name, step });
+      const sent = await sendPostPurchaseEmail({ email: lead.email, name: lead.name, step, leadId: lead.id });
       if (sent) {
         await db.update(leadsTable)
           .set({ postPurchaseStep: step, postPurchaseLastAt: new Date(), updatedAt: new Date() })
@@ -135,7 +135,7 @@ router.post("/internal/leads/morning-reminder-tick", async (req: Request, res: R
     .limit(50);
   for (const lead of due) {
     const dayNumber = lead.morningReminderCount + 1;
-    const sent = await sendMorningReminderEmail({ email: lead.email, name: lead.name, dayNumber });
+    const sent = await sendMorningReminderEmail({ email: lead.email, name: lead.name, dayNumber, leadId: lead.id });
     if (sent) {
       await db.update(leadsTable)
         .set({

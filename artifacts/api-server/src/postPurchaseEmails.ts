@@ -12,15 +12,25 @@
 
 const APP_URL = () => process.env.APP_URL || "https://sleepwired.com";
 
-function loginLink(utmCampaign: string): string {
+function loginLink(utmCampaign: string, leadId?: string | null, dest: string = "/dashboard"): string {
   const params = new URLSearchParams();
+  if (leadId) {
+    // Magic link — passwordless auto-login via lead.id (122-bit UUID, only in our emails)
+    params.set("lead", leadId);
+    params.set("dest", dest);
+    params.set("utm_source", "email");
+    params.set("utm_medium", "post_purchase");
+    params.set("utm_campaign", utmCampaign);
+    return `${APP_URL()}/api/auth/magic?${params.toString()}`;
+  }
+  // Fallback for older leads without id available
   params.set("utm_source", "email");
   params.set("utm_medium", "post_purchase");
   params.set("utm_campaign", utmCampaign);
   return `${APP_URL()}/sign-in?${params.toString()}`;
 }
 
-type Ctx = { firstName: string };
+type Ctx = { firstName: string; leadId?: string | null };
 
 export type PostPurchaseStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -41,7 +51,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           Sign in below to set up Night 1. Each evening for the next 7 days I'll send a short email with what's coming and why it works.
         </p>
-        ${cta(loginLink("pp_welcome"), "Open Night 1")}
+        ${cta(loginLink("pp_welcome", ctx.leadId, "/night/1"), "Open Night 1")}
         <p style="margin:28px 0 0;font-size:12px;color:#8b949e;line-height:1.5;">
           60-night money-back. If it doesn't work, keep everything and we refund.
         </p>
@@ -63,7 +73,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           The wake time is not negotiable. Bedtime gets flexible later — wake time stays fixed.
         </p>
-        ${cta(loginLink("pp_night1"), "Start Night 1")}
+        ${cta(loginLink("pp_night1", ctx.leadId, "/night/1"), "Start Night 1")}
         <p style="margin:24px 0 0;font-size:12px;color:#8b949e;">If you already started, log how you slept this morning — that's how the protocol calibrates for Night 2.</p>
       `),
     };
@@ -83,7 +93,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           The rule for tonight: if you're not asleep in 15-20 minutes, you get up. No phone, no clock-checking. You return to bed only when sleepy. This feels counterintuitive. It's the most effective intervention in the protocol.
         </p>
-        ${cta(loginLink("pp_night2"), "Open Night 2")}
+        ${cta(loginLink("pp_night2", ctx.leadId, "/night/2"), "Open Night 2")}
       `),
     };
   }
@@ -102,7 +112,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           You'll feel tired during the day for the next 2–3 nights. That's the engine of the protocol — sleep pressure builds up and forces deeper, faster sleep onset.
         </p>
-        ${cta(loginLink("pp_night3"), "Open Night 3")}
+        ${cta(loginLink("pp_night3", ctx.leadId, "/night/3"), "Open Night 3")}
       `),
     };
   }
@@ -121,7 +131,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           Tonight you'll learn the constructive worry technique. 15 minutes earlier in the evening, on paper. The science is unambiguous: written worry empties the buffer that fires at 3 AM.
         </p>
-        ${cta(loginLink("pp_night4"), "Open Night 4")}
+        ${cta(loginLink("pp_night4", ctx.leadId, "/night/4"), "Open Night 4")}
       `),
     };
   }
@@ -140,7 +150,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           The wake time you set is now permanent. It's also the thing that keeps the protocol working after Night 7.
         </p>
-        ${cta(loginLink("pp_night5"), "Open Night 5")}
+        ${cta(loginLink("pp_night5", ctx.leadId, "/night/5"), "Open Night 5")}
       `),
     };
   }
@@ -159,7 +169,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           Tonight you review what worked and what didn't. The protocol will adjust the sleep window for the final night based on what you log.
         </p>
-        ${cta(loginLink("pp_night6"), "Open Night 6")}
+        ${cta(loginLink("pp_night6", ctx.leadId, "/night/6"), "Open Night 6")}
       `),
     };
   }
@@ -178,7 +188,7 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
         <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
           Your access doesn't expire. Come back any time you need to recalibrate.
         </p>
-        ${cta(loginLink("pp_night7"), "Open Night 7")}
+        ${cta(loginLink("pp_night7", ctx.leadId, "/night/7"), "Open Night 7")}
       `),
     };
   }
@@ -202,15 +212,15 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
       <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
         If your sleep slips in a few weeks or months, that's normal — life happens. Open the app and re-run the Bed Reset (Night 2) and the Sleep Window (Night 3). Two or three nights is usually enough.
       </p>
-      ${cta(loginLink("pp_done"), "Open my dashboard")}
+      ${cta(loginLink("pp_done", ctx.leadId, "/dashboard"), "Open my dashboard")}
       <p style="margin:24px 0 0;font-size:12px;color:#8b949e;">If something worked for you in the protocol — or didn't — I want to hear about it. Just reply to this email.</p>
     `),
   };
 }
 
-export function getMorningReminderEmail(ctx: { firstName: string; dayNumber: number }): { subject: string; html: string } {
+export function getMorningReminderEmail(ctx: { firstName: string; dayNumber: number; leadId?: string | null }): { subject: string; html: string } {
   const g = ctx.firstName ? `${ctx.firstName},` : "Hey,";
-  const url = `${APP_URL()}/sign-in?utm_source=email&utm_medium=post_purchase&utm_campaign=morning_log_day${ctx.dayNumber}`;
+  const url = loginLink(`morning_log_day${ctx.dayNumber}`, ctx.leadId, "/sleep-log");
   // Cycle through subject lines so it doesn't feel repetitive
   const subjects = [
     "How did you sleep last night?",

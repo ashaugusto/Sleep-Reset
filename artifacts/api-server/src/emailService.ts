@@ -50,10 +50,12 @@ export async function sendPostPurchaseEmail({
   email,
   name,
   step,
+  leadId,
 }: {
   email: string;
   name?: string | null;
   step: PostPurchaseStep;
+  leadId?: string | null;
 }): Promise<boolean> {
   const resend = getResend();
   if (!resend) {
@@ -61,7 +63,7 @@ export async function sendPostPurchaseEmail({
     return false;
   }
   const firstName = (name?.split(" ")[0] || "").trim();
-  const { subject, html } = getPostPurchaseEmail(step, { firstName });
+  const { subject, html } = getPostPurchaseEmail(step, { firstName, leadId });
   try {
     const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
     if (error) {
@@ -81,10 +83,12 @@ export async function sendMorningReminderEmail({
   email,
   name,
   dayNumber,
+  leadId,
 }: {
   email: string;
   name?: string | null;
   dayNumber: number;
+  leadId?: string | null;
 }): Promise<boolean> {
   const resend = getResend();
   if (!resend) {
@@ -92,7 +96,7 @@ export async function sendMorningReminderEmail({
     return false;
   }
   const firstName = (name?.split(" ")[0] || "").trim();
-  const { subject, html } = getMorningReminderEmail({ firstName, dayNumber });
+  const { subject, html } = getMorningReminderEmail({ firstName, dayNumber, leadId });
   try {
     const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
     if (error) {
