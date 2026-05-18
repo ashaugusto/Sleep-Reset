@@ -73,7 +73,7 @@ app.post(
               .where(conds.length > 1 ? or(...conds) : conds[0]);
             logger.info({ email, sessionId }, "Lead marked as purchased");
 
-            // CAPI Purchase — deterministic attribution (immune to Safari ITP / cookie loss)
+            // CAPI Purchase + Post-purchase welcome email
             try {
               const leadRows = await db.select().from(leadsTable)
                 .where(conds.length > 1 ? or(...conds) : conds[0])
@@ -106,9 +106,20 @@ app.post(
                     orderId: sessionId,
                   },
                 });
+
+                // Post-purchase welcome email (step 1) — fire immediately, mark sent
+                if (lead.postPurchaseStep === 0) {
+                  const { sendPostPurchaseEmail } = await import("./emailService");
+                  const sent = await sendPostPurchaseEmail({ email: lead.email, name: lead.name, step: 1 });
+                  if (sent) {
+                    await db.update(leadsTable)
+                      .set({ postPurchaseStep: 1, postPurchaseLastAt: new Date(), updatedAt: new Date() })
+                      .where(eq(leadsTable.id, lead.id));
+                  }
+                }
               }
             } catch (capiErr) {
-              logger.error(capiErr, "CAPI Purchase dispatch failed (non-fatal)");
+              logger.error(capiErr, "CAPI Purchase / post-purchase welcome dispatch failed (non-fatal)");
             }
           }
         }

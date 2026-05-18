@@ -21,6 +21,8 @@ export const leadsTable = pgTable("leads", {
   stripeSessionId: text("stripe_session_id"),
   recoverySentCount: integer("recovery_sent_count").notNull().default(0),
   recoveryLastAt: timestamp("recovery_last_at"),
+  postPurchaseStep: integer("post_purchase_step").notNull().default(0),
+  postPurchaseLastAt: timestamp("post_purchase_last_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [

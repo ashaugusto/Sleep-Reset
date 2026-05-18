@@ -1,8 +1,9 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, leadsTable } from "@workspace/db";
 import { and, eq, lt, isNull, or, sql } from "drizzle-orm";
-import { sendRecoveryEmail } from "../emailService";
+import { sendRecoveryEmail, sendPostPurchaseEmail } from "../emailService";
 import type { RecoveryStep } from "../recoveryEmails";
+import type { PostPurchaseStep } from "../postPurchaseEmails";
 
 const router: IRouter = Router();
 
@@ -67,6 +68,43 @@ router.post("/internal/leads/recovery-tick", async (req: Request, res: Response)
     }
   }
 
+  res.json(results);
+});
+
+// ─── Post-purchase 9-email engagement tick ──────────────────────────────────
+// Steps 2..9 are sent 24h apart based on post_purchase_last_at.
+// Step 1 (welcome) is dispatched directly from the Stripe webhook in app.ts.
+router.post("/internal/leads/post-purchase-tick", async (req: Request, res: Response) => {
+  if (!isAuthorized(req)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const results: Record<string, number> = { sent: 0, errors: 0, skipped: 0 };
+  // For each step 2..9, find leads currently at step-1 whose last email was >= 24h ago
+  for (const step of [2, 3, 4, 5, 6, 7, 8, 9] as PostPurchaseStep[]) {
+    const dueLeads = await db
+      .select()
+      .from(leadsTable)
+      .where(
+        and(
+          eq(leadsTable.purchased, true),
+          eq(leadsTable.postPurchaseStep, step - 1),
+          lt(leadsTable.postPurchaseLastAt, sql`now() - interval '24 hours'`),
+        ),
+      )
+      .limit(50);
+    for (const lead of dueLeads) {
+      const sent = await sendPostPurchaseEmail({ email: lead.email, name: lead.name, step });
+      if (sent) {
+        await db.update(leadsTable)
+          .set({ postPurchaseStep: step, postPurchaseLastAt: new Date(), updatedAt: new Date() })
+          .where(eq(leadsTable.id, lead.id));
+        results.sent += 1;
+      } else {
+        results.errors += 1;
+      }
+    }
+  }
   res.json(results);
 });
 
