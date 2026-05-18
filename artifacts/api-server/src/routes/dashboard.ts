@@ -95,6 +95,22 @@ function renderDashboard(key: string): string {
 
   <div id="totals" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 mb-5"></div>
 
+  <!-- Ads health summary (live) + Page comparison -->
+  <div id="ads-health-section" class="grid lg:grid-cols-2 gap-4 mb-5">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-800">
+        <h2 class="font-semibold text-sm">Ads Health (live, all accounts)</h2>
+      </div>
+      <div id="ads-health" class="p-4"></div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-800">
+        <h2 class="font-semibold text-sm">By Page — Cognitive Shutdown vs Sleep Wired</h2>
+      </div>
+      <div id="by-page" class="p-4"></div>
+    </div>
+  </div>
+
   <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mb-5">
     <div class="px-4 py-3 border-b border-slate-800 flex justify-between items-center">
       <h2 class="font-semibold text-sm">Ad Accounts <span class="text-xs text-slate-500 font-normal">(click row to drilldown campaigns→adsets→ads)</span></h2>
@@ -104,6 +120,7 @@ function renderDashboard(key: string): string {
         <thead>
           <tr class="bg-slate-800/70 text-[9px] uppercase text-slate-400 tracking-wider border-b border-slate-700">
             <th class="text-left px-2 py-1.5"></th>
+            <th class="text-center px-2 py-1.5 border-x border-slate-700" colspan="3">Ads status</th>
             <th class="text-right px-2 py-1.5" colspan="2">Cost</th>
             <th class="text-right px-2 py-1.5 bg-emerald-900/20 border-x border-slate-700" colspan="6">Outcome (DB-attributed)</th>
             <th class="text-right px-2 py-1.5" colspan="3">Funnel</th>
@@ -113,6 +130,9 @@ function renderDashboard(key: string): string {
           </tr>
           <tr class="bg-slate-800/50 text-[10px] uppercase text-slate-400 tracking-wider">
             <th class="text-left px-2 py-2">Account</th>
+            <th class="text-center px-2 py-2 border-l border-slate-700" title="ACTIVE delivering today / total ACTIVE">Deliv</th>
+            <th class="text-center px-2 py-2" title="ACTIVE but 0 impressions today">Throttled</th>
+            <th class="text-center px-2 py-2 border-r border-slate-700" title="Page distribution: Cognitive Shutdown / Sleep Wired">CSM/SW</th>
             <th class="text-right px-2 py-2">Spend</th>
             <th class="text-right px-2 py-2">€</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300">Lead</th>
@@ -217,7 +237,7 @@ async function load() {
   const r = await fetch("/admin/dashboard/data?preset=" + preset + "&key=" + encodeURIComponent(KEY));
   if (!r.ok) { document.getElementById("meta").textContent = "Error: " + r.status; return; }
   const d = await r.json();
-  renderTotals(d); renderAccounts(d); renderLeads(d); renderStripe(d);
+  renderTotals(d); renderAdsHealth(d); renderByPage(d); renderAccounts(d); renderLeads(d); renderStripe(d);
   const dt = new Date(d.generated_at);
   document.getElementById("meta").textContent = "Updated " + dt.toLocaleTimeString() + " · preset=" + d.preset + " · 15 accounts";
 }
@@ -276,12 +296,108 @@ function renderTotals(d) {
   document.getElementById("totals").innerHTML = html;
 }
 
+function renderAdsHealth(d) {
+  const a = d.accounts;
+  const active = a.reduce((s, x) => s + (x.ads_active || 0), 0);
+  const deliv = a.reduce((s, x) => s + (x.ads_delivering || 0), 0);
+  const throttled = a.reduce((s, x) => s + (x.ads_throttled || 0), 0);
+  const inReview = a.reduce((s, x) => s + (x.ads_in_review || 0), 0);
+  const disapproved = a.reduce((s, x) => s + (x.ads_disapproved || 0), 0);
+  const delivPct = active > 0 ? (deliv / active) * 100 : 0;
+  const barCls = delivPct >= 70 ? 'bg-emerald-500' : delivPct >= 40 ? 'bg-amber-500' : 'bg-red-500';
+  const html = \`
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400">Delivering today</div>
+        <div class="text-2xl font-bold num \${deliv > 0 ? 'text-emerald-300' : 'text-slate-400'}">\${deliv} <span class="text-sm text-slate-500">/ \${active}</span></div>
+      </div>
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400">Throttled</div>
+        <div class="text-2xl font-bold num \${throttled > 0 ? 'text-amber-400' : 'text-slate-500'}">\${throttled}</div>
+      </div>
+    </div>
+    <div class="w-full h-2 bg-slate-800 rounded overflow-hidden mb-3">
+      <div class="\${barCls} h-2" style="width:\${delivPct.toFixed(1)}%"></div>
+    </div>
+    <div class="text-[11px] text-slate-400 leading-relaxed">
+      <span class="text-emerald-300 font-semibold">●</span> \${deliv} delivering ·
+      <span class="text-amber-400 font-semibold">●</span> \${throttled} throttled (ACTIVE 0 impr)
+      \${inReview > 0 ? '· <span class="text-blue-400 font-semibold">⏳</span> ' + inReview + ' in review' : ''}
+      \${disapproved > 0 ? '· <span class="text-red-400 font-semibold">✕</span> ' + disapproved + ' with issues' : ''}
+    </div>
+    <div class="text-[10px] text-slate-500 mt-1">Delivery rate: <b>\${delivPct.toFixed(1)}%</b> · target ≥70%</div>\`;
+  document.getElementById("ads-health").innerHTML = html;
+}
+
+function renderByPage(d) {
+  const a = d.accounts;
+  const csm = a.reduce((s, x) => s + (x.ads_on_csm || 0), 0);
+  const sw = a.reduce((s, x) => s + (x.ads_on_sleep || 0), 0);
+  const other = a.reduce((s, x) => s + (x.ads_on_other || 0), 0);
+  const total = csm + sw + other;
+  const pct = (n) => total > 0 ? (n / total) * 100 : 0;
+  const csmPct = pct(csm), swPct = pct(sw), otherPct = pct(other);
+  const html = \`
+    <div class="space-y-3">
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-cyan-300 font-semibold">Cognitive Shutdown (nova)</span>
+          <span class="text-slate-300 num">\${csm} <span class="text-slate-500">(\${csmPct.toFixed(0)}%)</span></span>
+        </div>
+        <div class="w-full h-2 bg-slate-800 rounded overflow-hidden">
+          <div class="bg-cyan-500 h-2" style="width:\${csmPct.toFixed(1)}%"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-purple-300 font-semibold">Sleep Wired (legacy)</span>
+          <span class="text-slate-300 num">\${sw} <span class="text-slate-500">(\${swPct.toFixed(0)}%)</span></span>
+        </div>
+        <div class="w-full h-2 bg-slate-800 rounded overflow-hidden">
+          <div class="bg-purple-500 h-2" style="width:\${swPct.toFixed(1)}%"></div>
+        </div>
+      </div>
+      \${other > 0 ? \`
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-amber-300 font-semibold">Other pages (legacy)</span>
+          <span class="text-slate-300 num">\${other} <span class="text-slate-500">(\${otherPct.toFixed(0)}%)</span></span>
+        </div>
+        <div class="w-full h-2 bg-slate-800 rounded overflow-hidden">
+          <div class="bg-amber-500 h-2" style="width:\${otherPct.toFixed(1)}%"></div>
+        </div>
+      </div>\` : ''}
+    </div>
+    <div class="text-[10px] text-slate-500 mt-3 leading-relaxed">
+      ACTIVE ads only. Migration target: maximize Cognitive Shutdown share (sai do Page Volume Limit da Sleep Wired).
+    </div>\`;
+  document.getElementById("by-page").innerHTML = html;
+}
+
 function rowCells(a) {
   const dot = a.status_err ? '<span class="text-amber-400">⚠</span>' :
               (a.spend > 0 ? '<span class="text-emerald-400">●</span>' : '<span class="text-slate-600">○</span>');
   const purCls = a.db_purchases > 0 ? 'font-bold text-emerald-300' : 'text-slate-500';
   const leadCls = a.db_leads > 0 ? 'font-semibold text-emerald-300' : 'text-slate-500';
+  // Ads status cells
+  const deliv = a.ads_active > 0
+    ? \`<span class="\${a.ads_delivering > 0 ? 'text-emerald-300 font-semibold' : 'text-slate-500'}">\${a.ads_delivering}/\${a.ads_active}</span>\`
+    : '<span class="text-slate-600">—</span>';
+  const throttled = a.ads_throttled > 0
+    ? \`<span class="text-amber-400">\${a.ads_throttled}</span>\`
+    : '<span class="text-slate-600">0</span>';
+  let extraStatus = '';
+  if (a.ads_in_review > 0) extraStatus += \` <span class="text-blue-400" title="In review">⏳\${a.ads_in_review}</span>\`;
+  if (a.ads_disapproved > 0) extraStatus += \` <span class="text-red-400" title="Disapproved">✕\${a.ads_disapproved}</span>\`;
+  // Page split: CSM / Sleep / other
+  const csmCls = a.ads_on_csm > 0 ? 'text-cyan-300' : 'text-slate-600';
+  const swCls = a.ads_on_sleep > 0 ? 'text-purple-300' : 'text-slate-600';
+  const otherTag = a.ads_on_other > 0 ? \` <span class="text-amber-400" title="On other page">+\${a.ads_on_other}</span>\` : '';
+  const pageSplit = \`<span class="\${csmCls}">\${a.ads_on_csm}</span>/<span class="\${swCls}">\${a.ads_on_sleep}</span>\${otherTag}\`;
   return [
+    \`<td class="px-2 py-1.5 text-center border-l border-slate-700">\${deliv}\${extraStatus}</td>\`,
+    \`<td class="px-2 py-1.5 text-center">\${throttled}</td>\`,
+    \`<td class="px-2 py-1.5 text-center text-[10px] border-r border-slate-700">\${pageSplit}</td>\`,
     // Cost
     \`<td class="px-2 py-1.5 text-right"><span class="text-slate-500 text-[10px]">\${a.ccy || ""}</span> \${fmtM(a.spend)}</td>\`,
     \`<td class="px-2 py-1.5 text-right text-slate-400">€\${fmtM(a.spend_eur)}</td>\`,
@@ -337,8 +453,13 @@ function renderAccounts(d) {
     acc.db_revenue_eur += x.db_revenue_eur || 0;
     acc.v_3s += x.v_3s || 0;
     acc.v_thruplay += x.v_thruplay || 0;
+    acc.ads_active += x.ads_active || 0;
+    acc.ads_delivering += x.ads_delivering || 0;
+    acc.ads_throttled += x.ads_throttled || 0;
+    acc.ads_on_csm += x.ads_on_csm || 0;
+    acc.ads_on_sleep += x.ads_on_sleep || 0;
     return acc;
-  }, { spend_eur: 0, impressions: 0, link_clicks: 0, landing_views: 0, leads: 0, initiated_checkout: 0, purchases: 0, db_leads: 0, db_purchases: 0, db_revenue_eur: 0, v_3s: 0, v_thruplay: 0 });
+  }, { spend_eur: 0, impressions: 0, link_clicks: 0, landing_views: 0, leads: 0, initiated_checkout: 0, purchases: 0, db_leads: 0, db_purchases: 0, db_revenue_eur: 0, v_3s: 0, v_thruplay: 0, ads_active: 0, ads_delivering: 0, ads_throttled: 0, ads_on_csm: 0, ads_on_sleep: 0 });
   const tRoas = totals.spend_eur > 0 ? totals.db_revenue_eur / totals.spend_eur : null;
   const tCpl = totals.db_leads > 0 ? totals.spend_eur / totals.db_leads : null;
   const tProfit = totals.db_revenue_eur - totals.spend_eur;
@@ -347,6 +468,9 @@ function renderAccounts(d) {
   const tHold = totals.v_3s > 0 ? totals.v_thruplay / totals.v_3s : null;
   document.getElementById("totals-row").innerHTML = \`
     <td class="px-2 py-2">TOTAL</td>
+    <td class="px-2 py-2 text-center border-l border-slate-700 font-semibold \${totals.ads_delivering > 0 ? 'text-emerald-300' : 'text-slate-500'}">\${totals.ads_delivering}/\${totals.ads_active}</td>
+    <td class="px-2 py-2 text-center font-semibold \${totals.ads_throttled > 0 ? 'text-amber-400' : 'text-slate-500'}">\${totals.ads_throttled}</td>
+    <td class="px-2 py-2 text-center text-[10px] border-r border-slate-700"><span class="text-cyan-300 font-semibold">\${totals.ads_on_csm}</span>/<span class="text-purple-300 font-semibold">\${totals.ads_on_sleep}</span></td>
     <td class="px-2 py-2 text-right text-slate-500">—</td>
     <td class="px-2 py-2 text-right">€\${fmtM(totals.spend_eur)}</td>
     <td class="px-2 py-2 text-right bg-emerald-900/10 font-bold text-emerald-300">\${totals.db_leads}</td>

@@ -64,9 +64,22 @@ export type Row = {
   v_3s: number; v_p25: number; v_p50: number; v_p75: number; v_p95: number;
   v_thruplay: number; v_avg_time: number;
   hook_rate: number | null; hold_rate: number | null;
+  // ad-level status counts (live)
+  ads_active: number;          // effective_status=ACTIVE
+  ads_delivering: number;      // ACTIVE and impressions>0 today
+  ads_throttled: number;       // ACTIVE and impressions=0 today
+  ads_in_review: number;       // IN_PROCESS or PENDING_REVIEW
+  ads_disapproved: number;     // DISAPPROVED or WITH_ISSUES
+  // page distribution (1116215961574065 = Cognitive Shutdown Method, 1023528354186771 = Sleep Wired)
+  ads_on_csm: number;
+  ads_on_sleep: number;
+  ads_on_other: number;
   // diagnostics
   status_err?: string;
 };
+
+export const PAGE_CSM = "1116215961574065";        // Cognitive Shutdown Method (nova)
+export const PAGE_SLEEP_WIRED = "1023528354186771"; // Sleep Wired (legacy, mantida pros delivering)
 
 // Average order value (default per-purchase price in EUR). Used when we don't have per-lead Stripe amount.
 const UNIT_AOV_EUR = 27;
@@ -117,6 +130,8 @@ function parseRow(row: any, ccy: string): Row {
     v_3s, v_p25, v_p50, v_p75, v_p95, v_thruplay, v_avg_time,
     hook_rate: impressions > 0 ? v_3s / impressions : null,
     hold_rate: v_3s > 0 ? v_thruplay / v_3s : null,
+    ads_active: 0, ads_delivering: 0, ads_throttled: 0, ads_in_review: 0, ads_disapproved: 0,
+    ads_on_csm: 0, ads_on_sleep: 0, ads_on_other: 0,
   };
 }
 
@@ -141,16 +156,22 @@ async function metaGet(path: string, extra: Record<string, string> = {}): Promis
 
 export async function fetchAccountInsights(acct: { name: string; id: string; ccy: string }, preset: string, attribution?: Attribution): Promise<Row & { name: string; account_id: string; ccy: string }> {
   try {
-    const data = await metaGet(`${acct.id}/insights`, {
-      fields: FIELDS,
-      level: "account",
-      ...buildTimeParams(preset),
-    });
+    // Parallel: insights + ads status summary
+    const [data, adsStatus] = await Promise.all([
+      metaGet(`${acct.id}/insights`, {
+        fields: FIELDS,
+        level: "account",
+        ...buildTimeParams(preset),
+      }),
+      fetchAccountAdsStatus(acct.id),
+    ]);
     if (data.error) {
-      return { ...blank(acct.ccy), name: acct.name, account_id: acct.id, ccy: acct.ccy, status_err: `API: ${data.error.message?.slice(0, 80)}` };
+      return { ...blank(acct.ccy), ...adsStatus, name: acct.name, account_id: acct.id, ccy: acct.ccy, status_err: `API: ${data.error.message?.slice(0, 80)}` };
     }
     const row = data.data?.[0];
     const parsed: Row = row ? parseRow(row, acct.ccy) : blank(acct.ccy);
+    // merge ads status counts
+    Object.assign(parsed, adsStatus);
     // Apply DB attribution (account_id without "act_" prefix)
     const accIdNoPrefix = acct.id.replace(/^act_/, "");
     const bucket = attribution?.byAccount.get(accIdNoPrefix);
@@ -176,7 +197,64 @@ function blank(ccy: string): Row {
     cpa: null, roas: null, cpl: null, cost_per_lpv: null,
     v_3s: 0, v_p25: 0, v_p50: 0, v_p75: 0, v_p95: 0, v_thruplay: 0, v_avg_time: 0,
     hook_rate: null, hold_rate: null,
+    ads_active: 0, ads_delivering: 0, ads_throttled: 0, ads_in_review: 0, ads_disapproved: 0,
+    ads_on_csm: 0, ads_on_sleep: 0, ads_on_other: 0,
   };
+}
+
+// ─── Per-account ads status + page distribution (1 Meta call each) ────────────
+type AdStatusSummary = {
+  ads_active: number;
+  ads_delivering: number;   // ACTIVE with impressions>0 today
+  ads_throttled: number;    // ACTIVE with 0 impressions today
+  ads_in_review: number;
+  ads_disapproved: number;
+  ads_on_csm: number;
+  ads_on_sleep: number;
+  ads_on_other: number;
+};
+
+async function fetchAccountAdsStatus(accountId: string): Promise<AdStatusSummary> {
+  const summary: AdStatusSummary = {
+    ads_active: 0, ads_delivering: 0, ads_throttled: 0,
+    ads_in_review: 0, ads_disapproved: 0,
+    ads_on_csm: 0, ads_on_sleep: 0, ads_on_other: 0,
+  };
+  try {
+    const data = await metaGet(`${accountId}/ads`, {
+      fields: "id,effective_status,creative{object_story_spec},insights.date_preset(today){impressions}",
+      limit: "300",
+    });
+    const ads: Array<{
+      id: string;
+      effective_status?: string;
+      creative?: { object_story_spec?: { page_id?: string } };
+      insights?: { data?: Array<{ impressions?: string }> };
+    }> = data.data ?? [];
+
+    for (const a of ads) {
+      const status = a.effective_status ?? "UNKNOWN";
+      const pageId = a.creative?.object_story_spec?.page_id;
+      const todayImpr = Number(a.insights?.data?.[0]?.impressions ?? 0);
+
+      if (status === "ACTIVE") {
+        summary.ads_active++;
+        if (todayImpr > 0) summary.ads_delivering++;
+        else summary.ads_throttled++;
+        // Page distribution only for ACTIVE ads (the ones we care about)
+        if (pageId === PAGE_CSM) summary.ads_on_csm++;
+        else if (pageId === PAGE_SLEEP_WIRED) summary.ads_on_sleep++;
+        else if (pageId) summary.ads_on_other++;
+      } else if (status === "IN_PROCESS" || status === "PENDING_REVIEW") {
+        summary.ads_in_review++;
+      } else if (status === "DISAPPROVED" || status === "WITH_ISSUES") {
+        summary.ads_disapproved++;
+      }
+    }
+  } catch {
+    // silent — keep zeros
+  }
+  return summary;
 }
 
 // Recompute db-derived metrics after attribution sums change
