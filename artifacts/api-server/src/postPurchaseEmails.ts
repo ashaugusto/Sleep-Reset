@@ -208,6 +208,40 @@ export function getPostPurchaseEmail(step: PostPurchaseStep, ctx: Ctx): { subjec
   };
 }
 
+export function getMorningReminderEmail(ctx: { firstName: string; dayNumber: number }): { subject: string; html: string } {
+  const g = ctx.firstName ? `${ctx.firstName},` : "Hey,";
+  const url = `${APP_URL()}/sign-in?utm_source=email&utm_medium=post_purchase&utm_campaign=morning_log_day${ctx.dayNumber}`;
+  // Cycle through subject lines so it doesn't feel repetitive
+  const subjects = [
+    "How did you sleep last night?",
+    "Quick check-in — how was the night?",
+    "Log your night while it's fresh",
+    "30 seconds: what did the night feel like?",
+    "Your morning log keeps the protocol working",
+    "How did Night " + (ctx.dayNumber - 1) + " land for you?",
+    "One question: how rested do you feel today?",
+    "Don't lose Night " + (ctx.dayNumber - 1) + " — log it now",
+  ];
+  const subject = subjects[(ctx.dayNumber - 1) % subjects.length];
+  return {
+    subject,
+    html: wrap(`
+      <p style="margin:0 0 18px;font-size:18px;color:#e6edf3;font-weight:600;">${g}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#c9d1d9;line-height:1.6;">
+        Quick morning check-in. The protocol works by comparing your nights — but only if you log them.
+      </p>
+      <p style="margin:0 0 16px;font-size:15px;color:#c9d1d9;line-height:1.6;">
+        Takes 30 seconds. Wake time, how long it took to fall asleep, how many times you woke up, and how you feel right now. That's it.
+      </p>
+      <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
+        Log it while the night is fresh — memory of sleep degrades fast after you start your day.
+      </p>
+      ${cta(url, "Log last night — 30 sec")}
+      <p style="margin:24px 0 0;font-size:12px;color:#8b949e;">The protocol adapts based on what you log. Skipping mornings means the recommendations stay generic.</p>
+    `),
+  };
+}
+
 function cta(href: string, label: string): string {
   return `
     <table width="100%" cellpadding="0" cellspacing="0">

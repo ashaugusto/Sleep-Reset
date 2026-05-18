@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, leadsTable } from "@workspace/db";
 import { and, eq, lt, isNull, or, sql } from "drizzle-orm";
-import { sendRecoveryEmail, sendPostPurchaseEmail } from "../emailService";
+import { sendRecoveryEmail, sendPostPurchaseEmail, sendMorningReminderEmail } from "../emailService";
 import type { RecoveryStep } from "../recoveryEmails";
 import type { PostPurchaseStep } from "../postPurchaseEmails";
 
@@ -103,6 +103,50 @@ router.post("/internal/leads/post-purchase-tick", async (req: Request, res: Resp
       } else {
         results.errors += 1;
       }
+    }
+  }
+  res.json(results);
+});
+
+// ─── Morning reminder tick ──────────────────────────────────────────────────
+// Daily-ish cron at ~7am UTC. Sends to leads who purchased in last 8 days and
+// haven't received a morning reminder in the last 20 hours.
+router.post("/internal/leads/morning-reminder-tick", async (req: Request, res: Response) => {
+  if (!isAuthorized(req)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const results: Record<string, number> = { sent: 0, errors: 0 };
+  const due = await db
+    .select()
+    .from(leadsTable)
+    .where(
+      and(
+        eq(leadsTable.purchased, true),
+        lt(leadsTable.purchasedAt, sql`now() - interval '12 hours'`),       // wait until the morning AFTER purchase
+        sql`${leadsTable.purchasedAt} > now() - interval '8 days'`,         // stop after 8 days
+        or(
+          isNull(leadsTable.morningReminderLastAt),
+          lt(leadsTable.morningReminderLastAt, sql`now() - interval '20 hours'`),
+        ),
+        lt(leadsTable.morningReminderCount, 8),
+      ),
+    )
+    .limit(50);
+  for (const lead of due) {
+    const dayNumber = lead.morningReminderCount + 1;
+    const sent = await sendMorningReminderEmail({ email: lead.email, name: lead.name, dayNumber });
+    if (sent) {
+      await db.update(leadsTable)
+        .set({
+          morningReminderCount: dayNumber,
+          morningReminderLastAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(leadsTable.id, lead.id));
+      results.sent += 1;
+    } else {
+      results.errors += 1;
     }
   }
   res.json(results);

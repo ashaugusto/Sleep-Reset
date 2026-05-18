@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { getRecoveryEmail, type RecoveryStep } from "./recoveryEmails";
-import { getPostPurchaseEmail, type PostPurchaseStep } from "./postPurchaseEmails";
+import { getPostPurchaseEmail, getMorningReminderEmail, type PostPurchaseStep } from "./postPurchaseEmails";
 
 let resendClient: Resend | null = null;
 
@@ -72,6 +72,37 @@ export async function sendPostPurchaseEmail({
     return true;
   } catch (err) {
     console.error(`[email] PostPurchase step ${step} send failed for ${email}:`, err);
+    return false;
+  }
+}
+
+// ─── Morning reminder email (log last night) ────────────────────────────────
+export async function sendMorningReminderEmail({
+  email,
+  name,
+  dayNumber,
+}: {
+  email: string;
+  name?: string | null;
+  dayNumber: number;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set — skipping morning reminder");
+    return false;
+  }
+  const firstName = (name?.split(" ")[0] || "").trim();
+  const { subject, html } = getMorningReminderEmail({ firstName, dayNumber });
+  try {
+    const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    if (error) {
+      console.error(`[email] Morning reminder send error for ${email}:`, error);
+      return false;
+    }
+    console.log(`[email] Morning reminder (day ${dayNumber}) sent to ${email}`);
+    return true;
+  } catch (err) {
+    console.error(`[email] Morning reminder send failed for ${email}:`, err);
     return false;
   }
 }
