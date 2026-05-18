@@ -53,7 +53,13 @@ app.post(
           data?: { object?: { id?: string; customer_details?: { email?: string }; metadata?: { email?: string } } };
         };
         if (evt.type === "checkout.session.completed") {
-          const obj = evt.data?.object ?? {};
+          const obj = evt.data?.object as {
+            id?: string;
+            customer_details?: { email?: string; phone?: string };
+            metadata?: { email?: string; fbp?: string; fbc?: string };
+            amount_total?: number;
+            currency?: string;
+          } ?? {};
           const sessionId = obj.id;
           const email = (obj.customer_details?.email || obj.metadata?.email || "").toLowerCase().trim();
           const { db, leadsTable } = await import("@workspace/db");
@@ -66,6 +72,44 @@ app.post(
               .set({ purchased: true, purchasedAt: new Date(), stripeSessionId: sessionId ?? null, updatedAt: new Date() })
               .where(conds.length > 1 ? or(...conds) : conds[0]);
             logger.info({ email, sessionId }, "Lead marked as purchased");
+
+            // CAPI Purchase — deterministic attribution (immune to Safari ITP / cookie loss)
+            try {
+              const leadRows = await db.select().from(leadsTable)
+                .where(conds.length > 1 ? or(...conds) : conds[0])
+                .limit(1);
+              const lead = leadRows[0];
+              if (lead && sessionId) {
+                const { sendCapiEvent } = await import("./lib/meta-capi");
+                const valueEur = obj.amount_total ? obj.amount_total / 100 : 27;
+                const currency = (obj.currency || "eur").toUpperCase();
+                void sendCapiEvent({
+                  eventName: "Purchase",
+                  eventId: sessionId,
+                  eventSourceUrl: `${process.env.APP_URL || "https://sleepwired.com"}/welcome?session_id=${sessionId}`,
+                  userData: {
+                    email: lead.email,
+                    phone: lead.whatsapp,
+                    externalId: lead.id,
+                    clientIp: lead.ipAddress,
+                    clientUserAgent: lead.userAgent,
+                    fbp: lead.fbp,
+                    fbc: lead.fbc,
+                  },
+                  customData: {
+                    value: valueEur,
+                    currency,
+                    contentIds: ["sleep-wired-7night"],
+                    contentName: "The Cognitive Shutdown Method",
+                    contentType: "product",
+                    numItems: 1,
+                    orderId: sessionId,
+                  },
+                });
+              }
+            } catch (capiErr) {
+              logger.error(capiErr, "CAPI Purchase dispatch failed (non-fatal)");
+            }
           }
         }
       } catch (leadErr) {

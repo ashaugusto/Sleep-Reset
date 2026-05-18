@@ -3,6 +3,7 @@ import { getStripeClient, isStripeConfigured } from "../stripeClient";
 import { requireAuth } from "../middlewares/requireAuth";
 import { db, usersTable, leadsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
+import { sendCapiEvent } from "../lib/meta-capi";
 
 const router: IRouter = Router();
 
@@ -115,12 +116,45 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   });
 
   // Stash session_id on lead for later webhook reconciliation
+  let leadId: string | null = null;
   try {
-    await db.update(leadsTable)
+    const updated = await db.update(leadsTable)
       .set({ stripeSessionId: session.id, updatedAt: new Date() })
-      .where(eq(leadsTable.email, emailTrimmed));
+      .where(eq(leadsTable.email, emailTrimmed))
+      .returning({ id: leadsTable.id });
+    leadId = updated[0]?.id ?? null;
   } catch (e) {
     console.error("[checkout/public] session_id update failed:", e);
+  }
+
+  // CAPI Lead — deterministic attribution (server-side, immune to ITP/adblocker)
+  // event_id = leadId, matches browser fbq Lead which fires before redirect via same dedupe key
+  try {
+    if (leadId) {
+      void sendCapiEvent({
+        eventName: "Lead",
+        eventId: leadId,
+        eventSourceUrl: `${process.env.APP_URL || "https://sleepwired.com"}/`,
+        userData: {
+          email: emailTrimmed,
+          phone: whatsappClean,
+          externalId: leadId,
+          clientIp: clientIp(req),
+          clientUserAgent: (req.headers["user-agent"] as string | undefined) ?? null,
+          fbp: fbp ?? null,
+          fbc: fbc ?? null,
+        },
+        customData: {
+          value: 27,
+          currency: "EUR",
+          contentIds: ["sleep-wired-7night"],
+          contentName: "The Cognitive Shutdown Method",
+          contentType: "product",
+        },
+      });
+    }
+  } catch (e) {
+    console.error("[checkout/public] CAPI Lead dispatch failed (non-fatal):", e);
   }
 
   res.json({ url: session.url });

@@ -18,6 +18,18 @@
     document,'script','https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', '1277058757910786');
     fbq('track', 'PageView');
+    // sha256 helper (sync via SubtleCrypto async, cached) for EMQ email hashing
+    window.__sha256 = function(str){
+      return new Promise(function(resolve){
+        try {
+          var enc = new TextEncoder().encode(String(str).trim().toLowerCase());
+          crypto.subtle.digest('SHA-256', enc).then(function(buf){
+            var arr = Array.from(new Uint8Array(buf));
+            resolve(arr.map(function(b){ return b.toString(16).padStart(2,'0'); }).join(''));
+          }).catch(function(){ resolve(null); });
+        } catch(e){ resolve(null); }
+      });
+    };
     (function(){
       var dl = window.dataLayer = window.dataLayer || [];
       var orig = dl.push;
@@ -36,7 +48,21 @@
             if (d.content_category) payload.content_category = d.content_category;
             if (d.num_items) payload.num_items = d.num_items;
             if (d.transaction_id) payload.order_id = d.transaction_id;
-            try { fbq('trackSingle','1277058757910786', ev, payload); } catch(e){}
+            // eventID for dedupe with server-side CAPI (transaction_id for Purchase, generated for others)
+            var eventId = d.event_id || d.transaction_id ||
+              (ev + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
+            var trackOpts = { eventID: eventId };
+            // EMQ boost: re-init pixel with hashed email (advanced matching) before tracking
+            if (d.email && window.__sha256) {
+              window.__sha256(d.email).then(function(h){
+                if (h) {
+                  try { fbq('init', '1277058757910786', { em: h }); } catch(e){}
+                }
+                try { fbq('trackSingle','1277058757910786', ev, payload, trackOpts); } catch(e){}
+              });
+            } else {
+              try { fbq('trackSingle','1277058757910786', ev, payload, trackOpts); } catch(e){}
+            }
           }
           if (ev === 'ViewVSL') {
             var p2 = {};
