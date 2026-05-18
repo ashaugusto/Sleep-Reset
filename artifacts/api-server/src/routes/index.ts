@@ -8,6 +8,7 @@ import progressRouter from "./progress";
 import paymentsRouter from "./payments";
 import videoRouter from "./video";
 import recoveryRouter from "./recovery";
+import dashboardRouter from "./dashboard";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(progressRouter);
 router.use(paymentsRouter);
 router.use(videoRouter);
 router.use(recoveryRouter);
+router.use(dashboardRouter);
 
 export default router;
