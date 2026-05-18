@@ -49,10 +49,15 @@ export type Row = {
   impressions: number; reach: number; frequency: number;
   clicks: number; link_clicks: number; landing_views: number;
   ctr: number; cpm: number; cpc: number;
-  // funnel actions
+  // funnel actions (Meta Pixel/CAPI source)
   leads: number; initiated_checkout: number; purchases: number; purchase_value: number;
   view_content: number;
-  // derived
+  // DB-attributed outcome (source of truth: Stripe + leads.utm_content=ad.id)
+  db_leads: number;                            // all leads (purchased or not) attributed to this ad
+  db_purchases: number; db_revenue_eur: number;
+  db_roas: number | null; db_cpa: number | null; db_cpl: number | null;
+  profit_eur: number; // db_revenue_eur - spend_eur
+  // derived (Meta-based)
   cpa: number | null; roas: number | null;
   cpl: number | null; cost_per_lpv: number | null;
   // video
@@ -62,6 +67,9 @@ export type Row = {
   // diagnostics
   status_err?: string;
 };
+
+// Average order value (default per-purchase price in EUR). Used when we don't have per-lead Stripe amount.
+const UNIT_AOV_EUR = 27;
 
 function parseRow(row: any, ccy: string): Row {
   const actions: { action_type: string; value: string }[] = row.actions || [];
@@ -101,6 +109,7 @@ function parseRow(row: any, ccy: string): Row {
     cpm: Number(row.cpm ?? 0),
     cpc: Number(row.cpc ?? 0),
     leads, initiated_checkout, purchases, purchase_value, view_content,
+    db_leads: 0, db_purchases: 0, db_revenue_eur: 0, db_roas: null, db_cpa: null, db_cpl: null, profit_eur: 0,
     cpa: purchases > 0 ? spend / purchases : null,
     roas: spend > 0 ? purchase_value / spend : null,
     cpl: leads > 0 ? spend / leads : null,
@@ -130,7 +139,7 @@ async function metaGet(path: string, extra: Record<string, string> = {}): Promis
   return resp.json();
 }
 
-export async function fetchAccountInsights(acct: { name: string; id: string; ccy: string }, preset: string): Promise<Row & { name: string; account_id: string; ccy: string }> {
+export async function fetchAccountInsights(acct: { name: string; id: string; ccy: string }, preset: string, attribution?: Attribution): Promise<Row & { name: string; account_id: string; ccy: string }> {
   try {
     const data = await metaGet(`${acct.id}/insights`, {
       fields: FIELDS,
@@ -141,8 +150,18 @@ export async function fetchAccountInsights(acct: { name: string; id: string; ccy
       return { ...blank(acct.ccy), name: acct.name, account_id: acct.id, ccy: acct.ccy, status_err: `API: ${data.error.message?.slice(0, 80)}` };
     }
     const row = data.data?.[0];
-    if (!row) return { ...blank(acct.ccy), name: acct.name, account_id: acct.id, ccy: acct.ccy, status_err: "no data" };
-    return { ...parseRow(row, acct.ccy), name: acct.name, account_id: acct.id, ccy: acct.ccy };
+    const parsed: Row = row ? parseRow(row, acct.ccy) : blank(acct.ccy);
+    // Apply DB attribution (account_id without "act_" prefix)
+    const accIdNoPrefix = acct.id.replace(/^act_/, "");
+    const bucket = attribution?.byAccount.get(accIdNoPrefix);
+    if (bucket) {
+      parsed.db_leads = bucket.leads;
+      parsed.db_purchases = bucket.purchases;
+      parsed.db_revenue_eur = bucket.revenue_eur;
+    }
+    recomputeDb(parsed);
+    const status_err = !row ? "no data" : undefined;
+    return { ...parsed, name: acct.name, account_id: acct.id, ccy: acct.ccy, ...(status_err ? { status_err } : {}) };
   } catch (e) {
     return { ...blank(acct.ccy), name: acct.name, account_id: acct.id, ccy: acct.ccy, status_err: `fetch: ${(e as Error).message?.slice(0, 80)}` };
   }
@@ -153,18 +172,136 @@ function blank(ccy: string): Row {
     spend: 0, spend_eur: 0, impressions: 0, reach: 0, frequency: 0,
     clicks: 0, link_clicks: 0, landing_views: 0, ctr: 0, cpm: 0, cpc: 0,
     leads: 0, initiated_checkout: 0, purchases: 0, purchase_value: 0, view_content: 0,
+    db_leads: 0, db_purchases: 0, db_revenue_eur: 0, db_roas: null, db_cpa: null, db_cpl: null, profit_eur: 0,
     cpa: null, roas: null, cpl: null, cost_per_lpv: null,
     v_3s: 0, v_p25: 0, v_p50: 0, v_p75: 0, v_p95: 0, v_thruplay: 0, v_avg_time: 0,
     hook_rate: null, hold_rate: null,
   };
 }
 
-export async function fetchAllAccounts(preset: string) {
-  return Promise.all(SLEEP_ACCOUNTS.map((a) => fetchAccountInsights(a, preset)));
+// Recompute db-derived metrics after attribution sums change
+function recomputeDb(r: Row): void {
+  r.db_roas = r.spend_eur > 0 ? r.db_revenue_eur / r.spend_eur : null;
+  r.db_cpa = r.db_purchases > 0 ? r.spend_eur / r.db_purchases : null;
+  r.db_cpl = r.db_leads > 0 ? r.spend_eur / r.db_leads : null;
+  r.profit_eur = r.db_revenue_eur - r.spend_eur;
+}
+
+// ─── DB attribution ────────────────────────────────────────────────────────────
+function presetToRange(preset: string): { since: Date; until: Date } {
+  const now = new Date();
+  const today0 = new Date(now); today0.setUTCHours(0, 0, 0, 0);
+  switch (preset) {
+    case "today": return { since: today0, until: now };
+    case "yesterday": { const y = new Date(today0); y.setUTCDate(y.getUTCDate() - 1); return { since: y, until: today0 }; }
+    case "last_72h": return { since: new Date(now.getTime() - 72 * 3600_000), until: now };
+    case "last_3d": return { since: new Date(now.getTime() - 3 * 86400_000), until: now };
+    case "last_7d": return { since: new Date(now.getTime() - 7 * 86400_000), until: now };
+    case "last_14d": return { since: new Date(now.getTime() - 14 * 86400_000), until: now };
+    case "last_30d": return { since: new Date(now.getTime() - 30 * 86400_000), until: now };
+    case "this_month": { const d = new Date(now); d.setUTCDate(1); d.setUTCHours(0, 0, 0, 0); return { since: d, until: now }; }
+    case "lifetime": return { since: new Date(0), until: now };
+    default: return { since: new Date(now.getTime() - 72 * 3600_000), until: now };
+  }
+}
+
+export type AttributionBucket = { leads: number; purchases: number; revenue_eur: number };
+export type Attribution = {
+  byAd: Map<string, AttributionBucket>;        // ad_id (utm_content) → bucket
+  byAccount: Map<string, AttributionBucket>;   // account_id (no act_ prefix) → bucket
+  byCampaign: Map<string, AttributionBucket>;  // campaign_id → bucket
+  byAdset: Map<string, AttributionBucket>;     // adset_id → bucket
+  unattributed: AttributionBucket;             // leads/purchases w/o ad_id (organic/test)
+};
+
+function emptyBucket(): AttributionBucket { return { leads: 0, purchases: 0, revenue_eur: 0 }; }
+
+// Resolve ad_ids to their account/campaign/adset via Meta bulk endpoint.
+// Returns map: ad_id → { account_id, campaign_id, adset_id, ad_name } (only for valid ids).
+async function resolveAdIds(adIds: string[]): Promise<Map<string, { account_id: string; campaign_id: string; adset_id: string; ad_name?: string }>> {
+  const out = new Map<string, { account_id: string; campaign_id: string; adset_id: string; ad_name?: string }>();
+  if (adIds.length === 0) return out;
+  // Chunk in groups of 50 (Meta batch limit)
+  const chunks: string[][] = [];
+  for (let i = 0; i < adIds.length; i += 50) chunks.push(adIds.slice(i, i + 50));
+  for (const chunk of chunks) {
+    try {
+      const data = await metaGet("", {
+        ids: chunk.join(","),
+        fields: "id,name,account_id,campaign_id,adset_id",
+      });
+      for (const [adId, info] of Object.entries(data || {})) {
+        const i = info as any;
+        if (i?.error || !i?.account_id) continue;
+        out.set(adId, {
+          account_id: i.account_id,
+          campaign_id: i.campaign_id,
+          adset_id: i.adset_id,
+          ad_name: i.name,
+        });
+      }
+    } catch {
+      // skip chunk on error
+    }
+  }
+  return out;
+}
+
+export async function fetchAttribution(preset: string): Promise<Attribution> {
+  const { since, until } = presetToRange(preset);
+  // Single query: count both leads (created_at in window) and purchases (purchased_at in window) per utm_content
+  const rows = await db.execute<{ utm_content: string | null; leads_n: number; purchases_n: number }>(sql`
+    SELECT utm_content,
+           count(*) FILTER (WHERE created_at >= ${since.toISOString()} AND created_at < ${until.toISOString()})::int AS leads_n,
+           count(*) FILTER (WHERE purchased = true AND purchased_at >= ${since.toISOString()} AND purchased_at < ${until.toISOString()})::int AS purchases_n
+    FROM leads
+    WHERE created_at >= ${since.toISOString()}
+       OR (purchased = true AND purchased_at >= ${since.toISOString()} AND purchased_at < ${until.toISOString()})
+    GROUP BY utm_content
+  `);
+  const dataRows: any[] = Array.isArray(rows) ? rows : ((rows as any).rows ?? []);
+  const byAd = new Map<string, AttributionBucket>();
+  const unattrib = emptyBucket();
+  const adIdsToResolve: string[] = [];
+  for (const r of dataRows) {
+    const leadsN = Number(r.leads_n ?? 0);
+    const purN = Number(r.purchases_n ?? 0);
+    if (leadsN === 0 && purN === 0) continue;
+    const adId = r.utm_content && /^\d{10,}$/.test(r.utm_content.trim()) ? r.utm_content.trim() : null;
+    if (!adId) {
+      unattrib.leads += leadsN;
+      unattrib.purchases += purN;
+      unattrib.revenue_eur += purN * UNIT_AOV_EUR;
+      continue;
+    }
+    byAd.set(adId, { leads: leadsN, purchases: purN, revenue_eur: purN * UNIT_AOV_EUR });
+    adIdsToResolve.push(adId);
+  }
+  const meta = await resolveAdIds(adIdsToResolve);
+  const byAccount = new Map<string, AttributionBucket>();
+  const byCampaign = new Map<string, AttributionBucket>();
+  const byAdset = new Map<string, AttributionBucket>();
+  const addInto = (m: Map<string, AttributionBucket>, key: string, b: AttributionBucket) => {
+    const cur = m.get(key) ?? emptyBucket();
+    cur.leads += b.leads; cur.purchases += b.purchases; cur.revenue_eur += b.revenue_eur;
+    m.set(key, cur);
+  };
+  for (const [adId, bucket] of byAd.entries()) {
+    const m = meta.get(adId);
+    if (!m) continue;
+    addInto(byAccount, m.account_id, bucket);
+    addInto(byCampaign, m.campaign_id, bucket);
+    addInto(byAdset, m.adset_id, bucket);
+  }
+  return { byAd, byAccount, byCampaign, byAdset, unattributed: unattrib };
+}
+
+export async function fetchAllAccounts(preset: string, attribution?: Attribution) {
+  return Promise.all(SLEEP_ACCOUNTS.map((a) => fetchAccountInsights(a, preset, attribution)));
 }
 
 // ─── Drilldown: campaigns → adsets → ads inside one account ───────────────────
-export async function fetchAccountBreakdown(accountId: string, preset: string) {
+export async function fetchAccountBreakdown(accountId: string, preset: string, attribution?: Attribution) {
   const acct = SLEEP_ACCOUNTS.find((a) => a.id === accountId);
   if (!acct) return { error: "unknown account" };
 
@@ -176,6 +313,8 @@ export async function fetchAccountBreakdown(accountId: string, preset: string) {
     ...buildTimeParams(preset),
   });
   if (data.error) return { error: data.error.message };
+
+  const attrib = attribution ?? await fetchAttribution(preset);
 
   type AdNode = Row & { ad_id: string; ad_name: string };
   type AdsetNode = Row & { adset_id: string; adset_name: string; ads: AdNode[] };
@@ -193,6 +332,14 @@ export async function fetchAccountBreakdown(accountId: string, preset: string) {
     if (!camps[cid].adsets[asid]) {
       camps[cid].adsets[asid] = { ...blank(acct.ccy), adset_id: asid, adset_name: row.adset_name, ads: [] };
     }
+    // Apply ad-level DB attribution
+    const adBucket = attrib.byAd.get(aid);
+    if (adBucket) {
+      parsed.db_leads = adBucket.leads;
+      parsed.db_purchases = adBucket.purchases;
+      parsed.db_revenue_eur = adBucket.revenue_eur;
+    }
+    recomputeDb(parsed);
     camps[cid].adsets[asid].ads.push({ ...parsed, ad_id: aid, ad_name: row.ad_name });
   }
 
@@ -210,9 +357,13 @@ export async function fetchAccountBreakdown(accountId: string, preset: string) {
       a.initiated_checkout = a.ads.reduce((s, x) => s + x.initiated_checkout, 0);
       a.v_3s = a.ads.reduce((s, x) => s + x.v_3s, 0);
       a.v_thruplay = a.ads.reduce((s, x) => s + x.v_thruplay, 0);
+      a.db_leads = a.ads.reduce((s, x) => s + x.db_leads, 0);
+      a.db_purchases = a.ads.reduce((s, x) => s + x.db_purchases, 0);
+      a.db_revenue_eur = a.ads.reduce((s, x) => s + x.db_revenue_eur, 0);
       a.cpa = a.purchases > 0 ? a.spend / a.purchases : null;
       a.roas = a.spend > 0 ? a.purchase_value / a.spend : null;
       a.hook_rate = a.impressions > 0 ? a.v_3s / a.impressions : null;
+      recomputeDb(a);
     }
     const adsets = Object.values(c.adsets);
     c.spend = adsets.reduce((s, x) => s + x.spend, 0);
@@ -223,8 +374,12 @@ export async function fetchAccountBreakdown(accountId: string, preset: string) {
     c.purchases = adsets.reduce((s, x) => s + x.purchases, 0);
     c.purchase_value = adsets.reduce((s, x) => s + x.purchase_value, 0);
     c.leads = adsets.reduce((s, x) => s + x.leads, 0);
+    c.db_leads = adsets.reduce((s, x) => s + x.db_leads, 0);
+    c.db_purchases = adsets.reduce((s, x) => s + x.db_purchases, 0);
+    c.db_revenue_eur = adsets.reduce((s, x) => s + x.db_revenue_eur, 0);
     c.cpa = c.purchases > 0 ? c.spend / c.purchases : null;
     c.roas = c.spend > 0 ? c.purchase_value / c.spend : null;
+    recomputeDb(c);
   }
 
   return {
@@ -238,13 +393,36 @@ export async function fetchAccountBreakdown(accountId: string, preset: string) {
 }
 
 // ─── Lead stats ────────────────────────────────────────────────────────────────
+export type RecentLead = {
+  email: string;
+  created_at: string;
+  purchased: boolean;
+  hero_variant: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  fb_ad_id: string | null;
+};
+
 export type LeadStats = {
   total: number; purchased: number;
   recovery_0: number; recovery_1: number; recovery_2: number; recovery_3: number;
   with_whatsapp: number; with_name: number;
   by_hook: Record<string, number>;
   recent_24h: number;
+  recent_leads: RecentLead[];
 };
+
+// Extract Meta ad_id from fbc cookie value.
+// fbc format: fb.<subdomainIndex>.<creationTimestamp>.<fbclid>
+// Meta does not embed ad_id in fbc directly. We instead use utm_content (we set it to {{ad.id}} in URL params).
+function extractAdId(utm_content: string | null): string | null {
+  if (!utm_content) return null;
+  // utm_content set to {{ad.id}} → resolves to numeric ad id
+  if (/^\d{10,}$/.test(utm_content.trim())) return utm_content.trim();
+  return null;
+}
 
 export async function fetchLeadStats(): Promise<LeadStats> {
   const overall = await db.select({
@@ -264,9 +442,32 @@ export async function fetchLeadStats(): Promise<LeadStats> {
     n: sql<number>`count(*)::int`,
   }).from(leadsTable).groupBy(leadsTable.heroVariant);
 
+  const recentRows = await db.select({
+    email: leadsTable.email,
+    created_at: leadsTable.createdAt,
+    purchased: leadsTable.purchased,
+    hero_variant: leadsTable.heroVariant,
+    utm_source: leadsTable.utmSource,
+    utm_medium: leadsTable.utmMedium,
+    utm_campaign: leadsTable.utmCampaign,
+    utm_content: leadsTable.utmContent,
+  }).from(leadsTable).orderBy(sql`created_at desc`).limit(25);
+
+  const recent_leads: RecentLead[] = recentRows.map((r: any) => ({
+    email: r.email,
+    created_at: (r.created_at as unknown as Date).toISOString(),
+    purchased: r.purchased,
+    hero_variant: r.hero_variant ?? null,
+    utm_source: r.utm_source ?? null,
+    utm_medium: r.utm_medium ?? null,
+    utm_campaign: r.utm_campaign ?? null,
+    utm_content: r.utm_content ?? null,
+    fb_ad_id: extractAdId(r.utm_content ?? null),
+  }));
+
   const by_hook: Record<string, number> = {};
   for (const h of hooks) by_hook[h.hero_variant ?? "default"] = h.n;
-  return { ...overall[0], by_hook };
+  return { ...overall[0], by_hook, recent_leads };
 }
 
 // ─── Stripe revenue ────────────────────────────────────────────────────────────
