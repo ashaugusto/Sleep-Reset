@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { fetchAllAccounts, fetchLeadStats, fetchStripeRevenue, fetchAccountBreakdown, fetchAttribution } from "../dashboardData";
+import { fetchAllAccounts, fetchLeadStats, fetchStripeRevenue, fetchAccountBreakdown, fetchAttribution, fetchAllAdsFlat, fetchAllCampaignsFlat, fetchAllAdsetsFlat } from "../dashboardData";
 
 const router: IRouter = Router();
 
@@ -46,6 +46,54 @@ router.get("/admin/dashboard", (req, res) => {
   res.send(renderDashboard(req.query.key as string));
 });
 
+router.get("/admin/dashboard/ads-data", async (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).json({ error: "Forbidden" });
+  const preset = (req.query.preset as string) || "last_72h";
+  try {
+    const attribution = await fetchAttribution(preset);
+    const ads = await fetchAllAdsFlat(preset, attribution);
+    res.json({ generated_at: new Date().toISOString(), preset, ads });
+  } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+});
+
+router.get("/admin/dashboard/ads", (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).send("Forbidden — pass ?key=<DASHBOARD_SECRET>");
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(renderFlatDashboard(req.query.key as string, "ad"));
+});
+
+router.get("/admin/dashboard/campaigns-data", async (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).json({ error: "Forbidden" });
+  const preset = (req.query.preset as string) || "last_72h";
+  try {
+    const attribution = await fetchAttribution(preset);
+    const rows = await fetchAllCampaignsFlat(preset, attribution);
+    res.json({ generated_at: new Date().toISOString(), preset, rows });
+  } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+});
+
+router.get("/admin/dashboard/campaigns", (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).send("Forbidden — pass ?key=<DASHBOARD_SECRET>");
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(renderFlatDashboard(req.query.key as string, "campaign"));
+});
+
+router.get("/admin/dashboard/adsets-data", async (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).json({ error: "Forbidden" });
+  const preset = (req.query.preset as string) || "last_72h";
+  try {
+    const attribution = await fetchAttribution(preset);
+    const rows = await fetchAllAdsetsFlat(preset, attribution);
+    res.json({ generated_at: new Date().toISOString(), preset, rows });
+  } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+});
+
+router.get("/admin/dashboard/adsets", (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).send("Forbidden — pass ?key=<DASHBOARD_SECRET>");
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(renderFlatDashboard(req.query.key as string, "adset"));
+});
+
 function renderDashboard(key: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -75,6 +123,12 @@ function renderDashboard(key: string): string {
       <p id="meta" class="text-xs text-slate-400 mt-1">Loading…</p>
     </div>
     <div class="flex items-center gap-2">
+      <div class="inline-flex rounded border border-slate-700 overflow-hidden text-xs">
+        <span class="px-3 py-1.5 bg-indigo-600 text-white font-semibold">By Account</span>
+        <a id="link-camp" href="#" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300">By Campaign</a>
+        <a id="link-adset" href="#" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300">By Ad Set</a>
+        <a id="link-ads" href="#" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300">By Ad</a>
+      </div>
       <select id="preset" class="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm">
         <option value="last_72h" selected>Last 72h (rolling)</option>
         <option value="today">Today (acct TZ)</option>
@@ -121,9 +175,9 @@ function renderDashboard(key: string): string {
           <tr class="bg-slate-800/70 text-[9px] uppercase text-slate-400 tracking-wider border-b border-slate-700">
             <th class="text-left px-2 py-1.5"></th>
             <th class="text-center px-2 py-1.5 border-x border-slate-700" colspan="3">Ads status</th>
-            <th class="text-right px-2 py-1.5" colspan="2">Cost</th>
-            <th class="text-right px-2 py-1.5 bg-emerald-900/20 border-x border-slate-700" colspan="6">Outcome (DB-attributed)</th>
-            <th class="text-right px-2 py-1.5" colspan="3">Funnel</th>
+            <th class="text-right px-2 py-1.5" colspan="4">Cost</th>
+            <th class="text-right px-2 py-1.5 bg-emerald-900/20 border-x border-slate-700" colspan="7">Outcome (DB-attributed)</th>
+            <th class="text-right px-2 py-1.5" colspan="6">Funnel</th>
             <th class="text-right px-2 py-1.5" colspan="3">Video</th>
             <th class="text-right px-2 py-1.5" colspan="3">Meta Pixel</th>
             <th></th>
@@ -135,15 +189,21 @@ function renderDashboard(key: string): string {
             <th class="text-center px-2 py-2 border-r border-slate-700" title="Page distribution: Cognitive Shutdown / Sleep Wired">CSM/SW</th>
             <th class="text-right px-2 py-2">Spend</th>
             <th class="text-right px-2 py-2">€</th>
+            <th class="text-right px-2 py-2" title="Cost per 1000 impressions">CPM</th>
+            <th class="text-right px-2 py-2" title="Cost per link click">CPC</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300">Lead</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300">CPL</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300" title="Pur / Lead">L→P%</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300">Pur</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300">Rev €</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300">ROAS</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 font-bold text-emerald-300 border-r border-slate-700">Profit</th>
             <th class="text-right px-2 py-2">Impr</th>
+            <th class="text-right px-2 py-2">Reach</th>
+            <th class="text-right px-2 py-2" title="Avg times same user saw the ad">Freq</th>
             <th class="text-right px-2 py-2">CTR</th>
             <th class="text-right px-2 py-2">LPV</th>
+            <th class="text-right px-2 py-2" title="Cost per landing page view">CPLPV</th>
             <th class="text-right px-2 py-2">3s</th>
             <th class="text-right px-2 py-2">Hook%</th>
             <th class="text-right px-2 py-2">Hold%</th>
@@ -227,6 +287,25 @@ function profitText(profitEur) {
   const cls = profitEur > 0 ? 'text-emerald-400' : profitEur < 0 ? 'text-red-400' : 'text-slate-400';
   const sign = profitEur > 0 ? '+' : '';
   return \`<span class="font-semibold \${cls}">\${sign}€\${fmtM(profitEur)}</span>\`;
+}
+function statusPill(s) {
+  if (!s) return '<span class="text-slate-600">—</span>';
+  const map = {
+    ACTIVE:           ['bg-emerald-500/20 text-emerald-300', 'ACTIVE'],
+    PAUSED:           ['bg-slate-500/20 text-slate-400',     'PAUSED'],
+    CAMPAIGN_PAUSED:  ['bg-orange-500/20 text-orange-300',   'CAMP·PSE'],
+    ADSET_PAUSED:     ['bg-orange-500/20 text-orange-300',   'AS·PSE'],
+    DELETED:          ['bg-slate-700/30 text-slate-500',     'DEL'],
+    ARCHIVED:         ['bg-slate-700/30 text-slate-500',     'ARCH'],
+    IN_PROCESS:       ['bg-blue-500/20 text-blue-300',       'REVIEW'],
+    PENDING_REVIEW:   ['bg-blue-500/20 text-blue-300',       'PENDING'],
+    DISAPPROVED:      ['bg-red-500/20 text-red-300',         'DISAPP'],
+    WITH_ISSUES:      ['bg-red-500/20 text-red-300',         'ISSUES'],
+    PENDING_BILLING_INFO: ['bg-amber-500/20 text-amber-300', 'BILLING'],
+    UNKNOWN:          ['bg-slate-500/20 text-slate-400',     '?'],
+  };
+  const e = map[s] || ['bg-slate-500/20 text-slate-400', s];
+  return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ' + e[0] + '" title="' + s + '">' + e[1] + '</span>';
 }
 
 let autoTimer = null;
@@ -394,6 +473,8 @@ function rowCells(a) {
   const swCls = a.ads_on_sleep > 0 ? 'text-purple-300' : 'text-slate-600';
   const otherTag = a.ads_on_other > 0 ? \` <span class="text-amber-400" title="On other page">+\${a.ads_on_other}</span>\` : '';
   const pageSplit = \`<span class="\${csmCls}">\${a.ads_on_csm}</span>/<span class="\${swCls}">\${a.ads_on_sleep}</span>\${otherTag}\`;
+  const l2p = (a.db_leads > 0) ? (a.db_purchases / a.db_leads * 100) : null;
+  const l2pCls = l2p != null && l2p >= 5 ? 'text-emerald-300 font-semibold' : 'text-slate-500';
   return [
     \`<td class="px-2 py-1.5 text-center border-l border-slate-700">\${deliv}\${extraStatus}</td>\`,
     \`<td class="px-2 py-1.5 text-center">\${throttled}</td>\`,
@@ -401,17 +482,23 @@ function rowCells(a) {
     // Cost
     \`<td class="px-2 py-1.5 text-right"><span class="text-slate-500 text-[10px]">\${a.ccy || ""}</span> \${fmtM(a.spend)}</td>\`,
     \`<td class="px-2 py-1.5 text-right text-slate-400">€\${fmtM(a.spend_eur)}</td>\`,
+    \`<td class="px-2 py-1.5 text-right">\${a.cpm ? "€" + fmtM(a.cpm) : "—"}</td>\`,
+    \`<td class="px-2 py-1.5 text-right">\${a.cpc ? "€" + fmtM(a.cpc) : "—"}</td>\`,
     // Outcome (DB)
     \`<td class="px-2 py-1.5 text-right bg-emerald-900/10 \${leadCls}">\${a.db_leads || 0}</td>\`,
     \`<td class="px-2 py-1.5 text-right bg-emerald-900/10 text-slate-400">\${a.db_cpl ? "€" + fmtM(a.db_cpl) : "—"}</td>\`,
+    \`<td class="px-2 py-1.5 text-right bg-emerald-900/10 \${l2pCls}">\${l2p != null ? l2p.toFixed(0) + "%" : "—"}</td>\`,
     \`<td class="px-2 py-1.5 text-right bg-emerald-900/10 \${purCls}">\${a.db_purchases || 0}</td>\`,
     \`<td class="px-2 py-1.5 text-right bg-emerald-900/10 \${a.db_revenue_eur > 0 ? 'font-semibold text-emerald-300' : 'text-slate-500'}">€\${fmtM(a.db_revenue_eur)}</td>\`,
     \`<td class="px-2 py-1.5 text-right bg-emerald-900/10">\${roasBadge(a.spend_eur, a.db_purchases, a.db_roas)}</td>\`,
     \`<td class="px-2 py-1.5 text-right bg-emerald-900/10 border-r border-slate-700">\${profitText(a.profit_eur)}</td>\`,
     // Funnel
     \`<td class="px-2 py-1.5 text-right">\${fmtN(a.impressions)}</td>\`,
+    \`<td class="px-2 py-1.5 text-right">\${fmtN(a.reach)}</td>\`,
+    \`<td class="px-2 py-1.5 text-right">\${a.frequency ? a.frequency.toFixed(2) : "—"}</td>\`,
     \`<td class="px-2 py-1.5 text-right">\${a.ctr ? a.ctr.toFixed(2) + "%" : "—"}</td>\`,
     \`<td class="px-2 py-1.5 text-right">\${fmtN(a.landing_views)}</td>\`,
+    \`<td class="px-2 py-1.5 text-right">\${a.cost_per_lpv != null ? "€" + fmtM(a.cost_per_lpv) : "—"}</td>\`,
     // Video
     \`<td class="px-2 py-1.5 text-right">\${fmtN(a.v_3s)}</td>\`,
     \`<td class="px-2 py-1.5 text-right">\${a.hook_rate != null ? fmtP(a.hook_rate) : "—"}</td>\`,
@@ -520,6 +607,7 @@ async function drilldown(accountId, name) {
       <summary class="flex items-center gap-3 text-sm font-semibold">
         <span class="text-indigo-400">▸</span>
         <span class="flex-1 truncate">\${c.campaign_name}</span>
+        \${statusPill(c.effective_status)}
         <span class="text-slate-400 text-xs">spend €\${fmtM(c.spend_eur)}</span>
         <span class="text-emerald-300 text-xs">rev €\${fmtM(c.db_revenue_eur)}</span>
         <span class="text-xs">\${profitText(c.profit_eur)}</span>
@@ -534,6 +622,7 @@ async function drilldown(accountId, name) {
         <summary class="flex items-center gap-3 text-xs">
           <span class="text-indigo-400">▸</span>
           <span class="flex-1 truncate">\${a.adset_name}</span>
+          \${statusPill(a.effective_status)}
           <span class="text-slate-400">spend €\${fmtM(a.spend_eur)}</span>
           <span class="text-emerald-300">rev €\${fmtM(a.db_revenue_eur)}</span>
           \${profitText(a.profit_eur)}
@@ -544,7 +633,8 @@ async function drilldown(accountId, name) {
       for (const ad of a.ads.sort(byProfit)) {
         const adTint = roiTint(ad.spend_eur, ad.db_purchases, ad.db_roas);
         html += \`<div class="text-xs grid grid-cols-12 gap-2 items-center py-0.5 px-1 border-l border-slate-700 \${adTint}">
-          <span class="col-span-5 truncate text-slate-300" title="\${ad.ad_name}">\${ad.ad_name}</span>
+          <span class="col-span-4 truncate text-slate-300" title="\${ad.ad_name}">\${ad.ad_name}</span>
+          <span class="col-span-1 text-center">\${statusPill(ad.effective_status)}</span>
           <span class="col-span-1 text-right text-slate-500">€\${fmtM(ad.spend_eur)}</span>
           <span class="col-span-1 text-right text-emerald-300">€\${fmtM(ad.db_revenue_eur)}</span>
           <span class="col-span-1 text-right">\${profitText(ad.profit_eur)}</span>
@@ -629,6 +719,418 @@ function renderStripe(d) {
     \${list || '<div class="text-xs text-slate-500">no payments yet</div>'}\`;
 }
 
+function syncNavLinks() {
+  const p = document.getElementById("preset").value;
+  const k = encodeURIComponent(KEY);
+  document.getElementById("link-ads").href = "/admin/dashboard/ads?preset=" + p + "&key=" + k;
+  document.getElementById("link-camp").href = "/admin/dashboard/campaigns?preset=" + p + "&key=" + k;
+  document.getElementById("link-adset").href = "/admin/dashboard/adsets?preset=" + p + "&key=" + k;
+}
+document.getElementById("refresh").addEventListener("click", load);
+document.getElementById("preset").addEventListener("change", () => { syncNavLinks(); load(); });
+syncNavLinks();
+document.getElementById("autorefresh").addEventListener("change", (e) => {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  if (e.target.checked) { autoTimer = setInterval(load, 60000); }
+});
+load();
+</script>
+</body>
+</html>`;
+}
+
+type DashLevel = "ad" | "adset" | "campaign";
+const LEVEL_CONFIG: Record<DashLevel, {
+  title: string;
+  endpoint: string;
+  dataKey: string;
+  primaryName: string;
+  primaryId: string;
+  subName?: string;
+  extraCols: { label: string; field: string; align?: "left" | "right" }[];
+  adsManagerSelector: string; // 'selected_ad_ids' | 'selected_campaign_ids' | 'selected_adset_ids'
+}> = {
+  ad: {
+    title: "By Ad",
+    endpoint: "/admin/dashboard/ads-data",
+    dataKey: "ads",
+    primaryName: "ad_name",
+    primaryId: "ad_id",
+    subName: "adset_name",
+    extraCols: [{ label: "Campaign", field: "campaign_name" }],
+    adsManagerSelector: "selected_ad_ids",
+  },
+  adset: {
+    title: "By Ad Set",
+    endpoint: "/admin/dashboard/adsets-data",
+    dataKey: "rows",
+    primaryName: "adset_name",
+    primaryId: "adset_id",
+    subName: "campaign_name",
+    extraCols: [{ label: "Ads", field: "ad_count", align: "right" }],
+    adsManagerSelector: "selected_adset_ids",
+  },
+  campaign: {
+    title: "By Campaign",
+    endpoint: "/admin/dashboard/campaigns-data",
+    dataKey: "rows",
+    primaryName: "campaign_name",
+    primaryId: "campaign_id",
+    extraCols: [
+      { label: "Adsets", field: "adset_count", align: "right" },
+      { label: "Ads", field: "ad_count", align: "right" },
+    ],
+    adsManagerSelector: "selected_campaign_ids",
+  },
+};
+
+function renderFlatDashboard(key: string, level: DashLevel): string {
+  const cfg = LEVEL_CONFIG[level];
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sleep Wired — ${cfg.title}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+    .num { font-variant-numeric: tabular-nums; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: rgb(51 65 85 / 0.7); }
+    th.sortable.active { color: #e0e7ff; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+<div class="max-w-[1900px] mx-auto px-4 py-5">
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <div>
+      <h1 class="text-xl font-bold">Sleep Wired — ${cfg.title}</h1>
+      <p id="meta" class="text-xs text-slate-400 mt-1">Loading…</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="inline-flex rounded border border-slate-700 overflow-hidden text-xs">
+        ${["By Account|/admin/dashboard|account","By Campaign|/admin/dashboard/campaigns|campaign","By Ad Set|/admin/dashboard/adsets|adset","By Ad|/admin/dashboard/ads|ad"].map(s=>{const [lbl,path,lv]=s.split("|");const active=lv===level;return active?`<span class="px-3 py-1.5 bg-indigo-600 text-white font-semibold">${lbl}</span>`:`<a href="${path}?key=__KEY__" class="nav-link px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300">${lbl}</a>`}).join("")}
+      </div>
+      <select id="preset" class="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm">
+        <option value="last_72h" selected>Last 72h (rolling)</option>
+        <option value="today">Today (acct TZ)</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="last_3d">Last 3 days</option>
+        <option value="last_7d">Last 7 days</option>
+        <option value="last_14d">Last 14 days</option>
+        <option value="last_30d">Last 30 days</option>
+        <option value="this_month">This month</option>
+        <option value="lifetime">Lifetime</option>
+      </select>
+      <label class="flex items-center gap-1 text-xs text-slate-400">
+        <input type="checkbox" id="autorefresh" class="accent-indigo-500" /> Auto 60s
+      </label>
+      <button id="refresh" class="bg-indigo-600 hover:bg-indigo-500 rounded px-4 py-1.5 text-sm font-semibold">Refresh</button>
+    </div>
+  </div>
+
+  <!-- Totals -->
+  <div id="totals" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-4"></div>
+
+  <!-- Filters -->
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 mb-4 flex flex-wrap gap-3 items-center text-xs">
+    <input id="search" type="text" placeholder="Search ad / campaign / adset" class="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 flex-1 min-w-[200px]" />
+    <select id="f-account" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5">
+      <option value="">All accounts</option>
+    </select>
+    <select id="f-spend" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5">
+      <option value="any">Any spend</option>
+      <option value="delivering" selected>Spend &gt; 0 (delivering)</option>
+      <option value="purchasing">With purchases (DB)</option>
+    </select>
+    <select id="f-status" class="bg-slate-800 border border-slate-700 rounded px-2 py-1.5" title="Filter by effective_status">
+      <option value="">All statuses</option>
+      <option value="ACTIVE">Only ACTIVE</option>
+      <option value="PAUSED_ANY">Any paused</option>
+      <option value="ISSUES">Review / Disapproved</option>
+    </select>
+    <label class="flex items-center gap-1 text-slate-400">
+      <input type="checkbox" id="f-zero" class="accent-indigo-500" /> Hide zero spend
+    </label>
+    <span class="text-slate-500 text-[10px] ml-auto"><span id="row-count">0</span> ads</span>
+  </div>
+
+  <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs num">
+        <thead>
+          <tr class="bg-slate-800/70 text-[10px] uppercase text-slate-400 tracking-wider border-b border-slate-700">
+            <th class="text-left px-2 py-2 sortable" data-sort="account_name">Acct</th>
+            <th class="text-left px-2 py-2 sortable min-w-[180px]" data-sort="${cfg.primaryName}">${cfg.title.replace("By ","")}</th>
+            ${cfg.extraCols.map(c=>`<th class="text-${c.align||"left"} px-2 py-2 sortable ${c.align==="right"?"":"min-w-[140px]"}" data-sort="${c.field}">${c.label}</th>`).join("")}
+            <th class="text-center px-2 py-2 sortable" data-sort="effective_status" title="Meta effective_status (live)">Status</th>
+            ${level !== "ad" ? '<th class="text-right px-2 py-2 sortable" data-sort="deliv_pct" title="ads delivering / total active">%Deliv</th>' : '<th class="text-center px-2 py-2" title="● delivering ◌ throttled">St</th>'}
+            <th class="text-right px-2 py-2 sortable" data-sort="spend_eur">Spend €</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="cpm" title="Cost per 1000 impressions — account-friendship proxy">CPM</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="cpc" title="Cost per link click">CPC</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="impressions">Impr</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="reach">Reach</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="frequency" title="Avg times same user saw the ad">Freq</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="ctr">CTR</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="hook_rate">Hook%</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="hold_rate">Hold%</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="landing_views">LPV</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="cost_per_lpv" title="Cost per landing page view">CPLPV</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="initiated_checkout">IC·px</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_leads">Lead</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_cpl">CPL</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="lead_to_pur" title="DB Purchases / DB Leads">L→P%</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_purchases">Pur</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_revenue_eur">Rev €</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_roas">ROAS</th>
+            <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="profit_eur">Profit</th>
+            <th class="text-right px-2 py-2"></th>
+          </tr>
+        </thead>
+        <tbody id="ads-body"></tbody>
+        <tfoot class="bg-slate-800/30 font-semibold border-t border-slate-700"><tr id="totals-row"></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-slate-500 leading-relaxed">
+    <span class="font-semibold">Color legend:</span>
+    <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 bg-emerald-900/40 border-l-2 border-emerald-400"></span> ROAS ≥ 2x</span>
+    <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 bg-emerald-950/30 border-l-2 border-emerald-600"></span> ROAS 1-2x</span>
+    <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 bg-amber-950/30 border-l-2 border-amber-500"></span> ROAS &lt; 1x</span>
+    <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 bg-red-950/40 border-l-2 border-red-500"></span> Spend &gt; 0, no purchases</span>
+    <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 border-l-2 border-slate-700"></span> No spend</span>
+  </div>
+  <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">
+    Outcome cols (Lead/CPL/Pur/Rev/ROAS/Profit) = DB-attributed via leads.utm_content (ad_id), AOV €27.
+    Hook% = 3s plays / impr. Hold% = ThruPlay / 3s. Default sort: Profit desc. Click any header to sort.
+  </p>
+</div>
+
+<script>
+const KEY = ${JSON.stringify(key)};
+const LEVEL = ${JSON.stringify({ endpoint: cfg.endpoint, dataKey: cfg.dataKey, primaryName: cfg.primaryName, primaryId: cfg.primaryId, subName: cfg.subName ?? null, extraCols: cfg.extraCols, adsManagerSelector: cfg.adsManagerSelector, title: cfg.title })};
+// Fix nav links with KEY
+document.querySelectorAll(".nav-link").forEach(a => { a.href = a.getAttribute("href").replace("__KEY__", encodeURIComponent(KEY)); });
+const fmtN = (n) => n == null || isNaN(n) ? "—" : Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const fmtM = (n) => n == null || isNaN(n) ? "—" : Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtP = (n) => n == null || isNaN(n) ? "—" : (Number(n) * 100).toFixed(2) + "%";
+
+function roiTint(spendEur, dbPurchases, dbRoas) {
+  if (!spendEur || spendEur <= 0) return "";
+  if (!dbPurchases || dbPurchases <= 0) return "bg-red-950/40 border-l-2 border-red-500";
+  if (dbRoas == null) return "";
+  if (dbRoas >= 2) return "bg-emerald-900/50 border-l-2 border-emerald-400";
+  if (dbRoas >= 1) return "bg-emerald-950/40 border-l-2 border-emerald-600";
+  return "bg-amber-950/40 border-l-2 border-amber-500";
+}
+function roasBadge(spendEur, dbPurchases, dbRoas) {
+  if (!spendEur || spendEur <= 0) return '<span class="text-slate-600">—</span>';
+  if (!dbPurchases || dbPurchases <= 0) return '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-semibold">0.00x</span>';
+  if (dbRoas == null) return '<span class="text-slate-500">—</span>';
+  let cls = 'bg-amber-500/20 text-amber-300';
+  if (dbRoas >= 2) cls = 'bg-emerald-500/30 text-emerald-200';
+  else if (dbRoas >= 1) cls = 'bg-emerald-600/20 text-emerald-300';
+  return \`<span class="px-1.5 py-0.5 rounded font-semibold \${cls}">\${dbRoas.toFixed(2)}x</span>\`;
+}
+function profitText(profitEur) {
+  if (profitEur == null) return '<span class="text-slate-500">—</span>';
+  const cls = profitEur > 0 ? 'text-emerald-400' : profitEur < 0 ? 'text-red-400' : 'text-slate-400';
+  const sign = profitEur > 0 ? '+' : '';
+  return \`<span class="font-semibold \${cls}">\${sign}€\${fmtM(profitEur)}</span>\`;
+}
+// Effective status pill — short, color-coded
+function statusPill(s) {
+  if (!s) return '<span class="text-slate-600">—</span>';
+  const map = {
+    ACTIVE:           ['bg-emerald-500/20 text-emerald-300', 'ACTIVE'],
+    PAUSED:           ['bg-slate-500/20 text-slate-400',     'PAUSED'],
+    CAMPAIGN_PAUSED:  ['bg-orange-500/20 text-orange-300',   'CAMP·PSE'],
+    ADSET_PAUSED:     ['bg-orange-500/20 text-orange-300',   'AS·PSE'],
+    DELETED:          ['bg-slate-700/30 text-slate-500',     'DEL'],
+    ARCHIVED:         ['bg-slate-700/30 text-slate-500',     'ARCH'],
+    IN_PROCESS:       ['bg-blue-500/20 text-blue-300',       'REVIEW'],
+    PENDING_REVIEW:   ['bg-blue-500/20 text-blue-300',       'PENDING'],
+    DISAPPROVED:      ['bg-red-500/20 text-red-300',         'DISAPP'],
+    WITH_ISSUES:      ['bg-red-500/20 text-red-300',         'ISSUES'],
+    PENDING_BILLING_INFO: ['bg-amber-500/20 text-amber-300', 'BILLING'],
+    UNKNOWN:          ['bg-slate-500/20 text-slate-400',     '?'],
+  };
+  const e = map[s] || ['bg-slate-500/20 text-slate-400', s];
+  return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ' + e[0] + '" title="' + s + '">' + e[1] + '</span>';
+}
+
+let allAds = [];
+let sortCol = "profit_eur";
+let sortDir = -1; // -1 desc, 1 asc
+let autoTimer = null;
+
+async function load() {
+  document.getElementById("meta").textContent = "Loading…";
+  const preset = document.getElementById("preset").value;
+  const r = await fetch(LEVEL.endpoint + "?preset=" + preset + "&key=" + encodeURIComponent(KEY));
+  if (!r.ok) { document.getElementById("meta").textContent = "Error: " + r.status; return; }
+  const d = await r.json();
+  allAds = (d[LEVEL.dataKey] || []).map(a => {
+    const aa = a.ads_active || 0;
+    const ad = a.ads_delivering || 0;
+    const deliv_pct = aa > 0 ? (ad / aa * 100) : (a.impressions > 0 ? 100 : 0);
+    const lead_to_pur = (a.db_leads > 0) ? (a.db_purchases / a.db_leads * 100) : null;
+    return { ...a, deliv_pct, lead_to_pur };
+  });
+  populateAccountFilter(allAds);
+  render();
+  const dt = new Date(d.generated_at);
+  document.getElementById("meta").textContent = "Updated " + dt.toLocaleTimeString() + " · preset=" + d.preset + " · " + allAds.length + " " + LEVEL.title.toLowerCase() + " rows";
+}
+
+function populateAccountFilter(ads) {
+  const sel = document.getElementById("f-account");
+  const current = sel.value;
+  const accts = [...new Set(ads.map(a => a.account_name))].sort();
+  sel.innerHTML = '<option value="">All accounts (' + accts.length + ')</option>' + accts.map(a => '<option value="' + a + '">' + a + '</option>').join("");
+  if (current) sel.value = current;
+}
+
+function applyFilters(ads) {
+  const search = document.getElementById("search").value.trim().toLowerCase();
+  const fAcct = document.getElementById("f-account").value;
+  const fSpend = document.getElementById("f-spend").value;
+  const fZero = document.getElementById("f-zero").checked;
+  const fStatus = document.getElementById("f-status").value;
+  return ads.filter(a => {
+    if (fAcct && a.account_name !== fAcct) return false;
+    if (fSpend === "delivering" && (!a.spend_eur || a.spend_eur <= 0)) return false;
+    if (fSpend === "purchasing" && (!a.db_purchases || a.db_purchases <= 0)) return false;
+    if (fZero && (!a.spend_eur || a.spend_eur <= 0)) return false;
+    if (fStatus) {
+      const s = a.effective_status || "";
+      if (fStatus === "ACTIVE" && s !== "ACTIVE") return false;
+      if (fStatus === "PAUSED_ANY" && !(s === "PAUSED" || s === "CAMPAIGN_PAUSED" || s === "ADSET_PAUSED" || s === "ARCHIVED")) return false;
+      if (fStatus === "ISSUES" && !(s === "IN_PROCESS" || s === "PENDING_REVIEW" || s === "DISAPPROVED" || s === "WITH_ISSUES" || s === "PENDING_BILLING_INFO")) return false;
+    }
+    if (search) {
+      const hay = ((a.ad_name||"") + " " + (a.campaign_name||"") + " " + (a.adset_name||"") + " " + (a.account_name||"")).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+function sortAds(ads) {
+  return [...ads].sort((x, y) => {
+    const a = x[sortCol]; const b = y[sortCol];
+    if (a == null && b == null) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    if (typeof a === "string") return a.localeCompare(b) * sortDir;
+    return (a - b) * sortDir;
+  });
+}
+
+function renderTotals(filtered) {
+  const sumSpend = filtered.reduce((s, x) => s + (x.spend_eur || 0), 0);
+  const sumImpr = filtered.reduce((s, x) => s + (x.impressions || 0), 0);
+  const sumClicks = filtered.reduce((s, x) => s + (x.link_clicks || 0), 0);
+  const sumLPV = filtered.reduce((s, x) => s + (x.landing_views || 0), 0);
+  const sumLead = filtered.reduce((s, x) => s + (x.db_leads || 0), 0);
+  const sumPur = filtered.reduce((s, x) => s + (x.db_purchases || 0), 0);
+  const sumRev = filtered.reduce((s, x) => s + (x.db_revenue_eur || 0), 0);
+  const profit = sumRev - sumSpend;
+  const roas = sumSpend > 0 ? sumRev / sumSpend : null;
+  const ctr = sumImpr > 0 ? (sumClicks / sumImpr) * 100 : 0;
+
+  const cells = [
+    { label: "Ads (filtered)", html: '<div class="text-base font-bold num mt-0.5">' + filtered.length + '</div>' },
+    { label: "Spend €", html: '<div class="text-base font-bold num mt-0.5">€' + fmtM(sumSpend) + '</div>' },
+    { label: "Revenue €", html: '<div class="text-base font-bold num mt-0.5 ' + (sumRev > 0 ? 'text-emerald-300' : 'text-slate-400') + '">€' + fmtM(sumRev) + '</div>' },
+    { label: "ROAS (DB)", html: '<div class="text-base font-bold num mt-0.5">' + (roas != null ? roas.toFixed(2) + 'x' : '—') + '</div>' },
+    { label: "Profit", html: '<div class="text-base font-bold num mt-0.5 ' + (profit > 0 ? 'text-emerald-300' : profit < 0 ? 'text-red-400' : 'text-slate-400') + '">' + (profit > 0 ? '+' : '') + '€' + fmtM(profit) + '</div>' },
+    { label: "Leads (DB)", html: '<div class="text-base font-bold num mt-0.5 ' + (sumLead > 0 ? 'text-emerald-300' : 'text-slate-400') + '">' + fmtN(sumLead) + '</div>' },
+    { label: "Purchases", html: '<div class="text-base font-bold num mt-0.5 ' + (sumPur > 0 ? 'text-emerald-300' : 'text-slate-400') + '">' + sumPur + '</div>' },
+  ];
+  document.getElementById("totals").innerHTML = cells.map(c =>
+    '<div class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2"><div class="text-[10px] uppercase tracking-wider text-slate-400">' + c.label + '</div>' + c.html + '</div>'
+  ).join("");
+}
+
+function render() {
+  const filtered = applyFilters(allAds);
+  const sorted = sortAds(filtered);
+  renderTotals(filtered);
+  document.getElementById("row-count").textContent = filtered.length;
+
+  document.querySelectorAll("th.sortable").forEach(th => {
+    th.classList.toggle("active", th.dataset.sort === sortCol);
+    const base = th.textContent.replace(/[▲▼]\\s*$/, "").trim();
+    th.textContent = base + (th.dataset.sort === sortCol ? (sortDir < 0 ? " ▼" : " ▲") : "");
+  });
+
+  const tbody = document.getElementById("ads-body");
+  tbody.innerHTML = sorted.map(a => {
+    const tint = roiTint(a.spend_eur, a.db_purchases, a.db_roas);
+    const adLink = "https://business.facebook.com/adsmanager/manage/ads?act=" + (a.account_id || "").replace("act_","") + "&" + LEVEL.adsManagerSelector + "=" + (a[LEVEL.primaryId] || "");
+    const primaryName = a[LEVEL.primaryName] || "?";
+    const subName = LEVEL.subName ? (a[LEVEL.subName] || "") : "";
+    const extraTds = LEVEL.extraCols.map(function(c) {
+      const v = a[c.field];
+      const align = c.align === "right" ? "text-right" : "text-left";
+      const shown = (typeof v === "number") ? fmtN(v) : (v || "—");
+      return '<td class="px-2 py-1.5 text-[10px] text-slate-400 ' + align + ' truncate max-w-[200px]" title="' + String(v||"") + '">' + shown + '</td>';
+    }).join("");
+    const statusCell = LEVEL.title === "By Ad"
+      ? '<td class="px-2 py-1.5 text-center">' + (a.impressions > 0 ? '<span class="text-emerald-400">●</span>' : '<span class="text-slate-600">◌</span>') + '</td>'
+      : '<td class="px-2 py-1.5 text-right text-[10px] ' + (a.deliv_pct >= 80 ? 'text-emerald-400' : a.deliv_pct >= 40 ? 'text-amber-400' : 'text-red-400') + '">' + (a.ads_active > 0 ? (a.ads_delivering + '/' + a.ads_active) : '—') + '</td>';
+    return '<tr class="border-b border-slate-800/60 hover:bg-slate-800/40 ' + tint + '">' +
+      '<td class="px-2 py-1.5 text-[10px] text-slate-400">' + (a.account_name || "?") + '</td>' +
+      '<td class="px-2 py-1.5"><div class="font-medium text-slate-200 truncate max-w-[260px]" title="' + primaryName + '">' + primaryName + '</div>' + (subName ? '<div class="text-[10px] text-slate-500 truncate max-w-[260px]" title="' + subName + '">' + subName + '</div>' : '') + '</td>' +
+      extraTds +
+      '<td class="px-2 py-1.5 text-center">' + statusPill(a.effective_status) + '</td>' +
+      statusCell +
+      '<td class="px-2 py-1.5 text-right">€' + fmtM(a.spend_eur || 0) + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + (a.cpm ? '€' + fmtM(a.cpm) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + (a.cpc ? '€' + fmtM(a.cpc) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + fmtN(a.impressions) + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + fmtN(a.reach) + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + (a.frequency ? Number(a.frequency).toFixed(2) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + (a.ctr != null ? Number(a.ctr).toFixed(2) + "%" : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + fmtP(a.hook_rate) + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + fmtP(a.hold_rate) + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + fmtN(a.landing_views) + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + (a.cost_per_lpv != null ? '€' + fmtM(a.cost_per_lpv) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right">' + fmtN(a.initiated_checkout) + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10 ' + (a.db_leads > 0 ? "text-emerald-300 font-semibold" : "text-slate-500") + '">' + (a.db_leads || 0) + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10">' + (a.db_cpl != null ? "€" + fmtM(a.db_cpl) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10 ' + (a.lead_to_pur != null && a.lead_to_pur >= 5 ? "text-emerald-300 font-semibold" : "text-slate-500") + '">' + (a.lead_to_pur != null ? a.lead_to_pur.toFixed(0) + "%" : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10 ' + (a.db_purchases > 0 ? "text-emerald-300 font-semibold" : "text-slate-500") + '">' + (a.db_purchases || 0) + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10">€' + fmtM(a.db_revenue_eur || 0) + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10">' + roasBadge(a.spend_eur, a.db_purchases, a.db_roas) + '</td>' +
+      '<td class="px-2 py-1.5 text-right bg-emerald-900/10">' + profitText(a.profit_eur) + '</td>' +
+      '<td class="px-2 py-1.5 text-right"><a href="' + adLink + '" target="_blank" class="text-indigo-400 hover:underline text-[10px]">↗</a></td>' +
+    '</tr>';
+  }).join("");
+
+  if (sorted.length === 0) {
+    const totalCols = 24 + LEVEL.extraCols.length;
+    tbody.innerHTML = '<tr><td colspan="' + totalCols + '" class="text-center px-2 py-8 text-slate-500">No rows match the filters</td></tr>';
+  }
+}
+
+document.querySelectorAll("th.sortable").forEach(th => {
+  th.addEventListener("click", () => {
+    if (sortCol === th.dataset.sort) sortDir = -sortDir; else { sortCol = th.dataset.sort; sortDir = -1; }
+    render();
+  });
+});
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("f-account").addEventListener("change", render);
+document.getElementById("f-spend").addEventListener("change", render);
+document.getElementById("f-status").addEventListener("change", render);
+document.getElementById("f-zero").addEventListener("change", render);
 document.getElementById("refresh").addEventListener("click", load);
 document.getElementById("preset").addEventListener("change", load);
 document.getElementById("autorefresh").addEventListener("change", (e) => {

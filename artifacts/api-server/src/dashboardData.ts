@@ -14,7 +14,6 @@ export const SLEEP_ACCOUNTS = [
   { name: "conta02",            id: "act_1170983253695407", ccy: "EUR" },
   { name: "ads-04",             id: "act_1287159516312816", ccy: "EUR" },
   { name: "ads-05",             id: "act_1431195865644212", ccy: "EUR" },
-  { name: "conta01",            id: "act_1011385913107820", ccy: "BRL" },
   { name: "Compte drop",        id: "act_3819323995020440", ccy: "CHF" },
   { name: "FS-CHF-ADS-01",      id: "act_645632501939900",  ccy: "CHF" },
   { name: "FS-ADS-01",          id: "act_1979277123009440", ccy: "EUR" },
@@ -26,6 +25,9 @@ export const SLEEP_ACCOUNTS = [
   { name: "fluyon-marketing-1", id: "act_26959626660315477",ccy: "EUR" },
   { name: "history-games-1",    id: "act_1557260155591025", ccy: "EUR" },
 ];
+// Removed from scope (BRL contas with billing/permission issues — out of Fluyon user agent):
+//   conta01 (act_1011385913107820), swservices-1 (act_1514589166045399),
+//   drop-brasil-2024 (act_415411388307856), swservices-2 (act_867359391727411)
 
 const FX_TO_EUR: Record<string, number> = { EUR: 1.0, CHF: 1.05, BRL: 0.16, USD: 0.92 };
 
@@ -74,6 +76,9 @@ export type Row = {
   ads_on_csm: number;
   ads_on_sleep: number;
   ads_on_other: number;
+  // effective_status from Meta (ACTIVE/PAUSED/CAMPAIGN_PAUSED/ADSET_PAUSED/IN_PROCESS/DISAPPROVED/...)
+  // populated only on breakdown/flat queries (campaign/adset/ad), not on account-level rollup
+  effective_status?: string;
   // diagnostics
   status_err?: string;
 };
@@ -378,18 +383,49 @@ export async function fetchAllAccounts(preset: string, attribution?: Attribution
   return Promise.all(SLEEP_ACCOUNTS.map((a) => fetchAccountInsights(a, preset, attribution)));
 }
 
+// ─── Effective status maps for one account (campaigns/adsets/ads) ─────────────
+type AccountStatusMaps = {
+  campaigns: Map<string, string>;
+  adsets: Map<string, string>;
+  ads: Map<string, string>;
+};
+
+async function fetchAccountStatuses(accountId: string): Promise<AccountStatusMaps> {
+  const out: AccountStatusMaps = {
+    campaigns: new Map(),
+    adsets: new Map(),
+    ads: new Map(),
+  };
+  try {
+    const [camps, asets, ads] = await Promise.all([
+      metaGet(`${accountId}/campaigns`, { fields: "id,effective_status", limit: "200" }),
+      metaGet(`${accountId}/adsets`, { fields: "id,effective_status", limit: "500" }),
+      metaGet(`${accountId}/ads`, { fields: "id,effective_status", limit: "500" }),
+    ]);
+    for (const c of (camps.data || [])) if (c.id) out.campaigns.set(c.id, c.effective_status || "UNKNOWN");
+    for (const a of (asets.data || [])) if (a.id) out.adsets.set(a.id, a.effective_status || "UNKNOWN");
+    for (const a of (ads.data || []))   if (a.id) out.ads.set(a.id, a.effective_status || "UNKNOWN");
+  } catch {
+    // silent — keep empty maps
+  }
+  return out;
+}
+
 // ─── Drilldown: campaigns → adsets → ads inside one account ───────────────────
 export async function fetchAccountBreakdown(accountId: string, preset: string, attribution?: Attribution) {
   const acct = SLEEP_ACCOUNTS.find((a) => a.id === accountId);
   if (!acct) return { error: "unknown account" };
 
-  // Get insights at level=ad with breakdown (each row = ad + parent ids)
-  const data = await metaGet(`${acct.id}/insights`, {
-    fields: `campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,${FIELDS}`,
-    level: "ad",
-    limit: "200",
-    ...buildTimeParams(preset),
-  });
+  // Get insights at level=ad with breakdown (each row = ad + parent ids) + status maps in parallel
+  const [data, statuses] = await Promise.all([
+    metaGet(`${acct.id}/insights`, {
+      fields: `campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,${FIELDS}`,
+      level: "ad",
+      limit: "200",
+      ...buildTimeParams(preset),
+    }),
+    fetchAccountStatuses(acct.id),
+  ]);
   if (data.error) return { error: data.error.message };
 
   const attrib = attribution ?? await fetchAttribution(preset);
@@ -405,10 +441,10 @@ export async function fetchAccountBreakdown(accountId: string, preset: string, a
     const asid = row.adset_id;
     const aid = row.ad_id;
     if (!camps[cid]) {
-      camps[cid] = { ...blank(acct.ccy), campaign_id: cid, campaign_name: row.campaign_name, adsets: {} };
+      camps[cid] = { ...blank(acct.ccy), campaign_id: cid, campaign_name: row.campaign_name, adsets: {}, effective_status: statuses.campaigns.get(cid) };
     }
     if (!camps[cid].adsets[asid]) {
-      camps[cid].adsets[asid] = { ...blank(acct.ccy), adset_id: asid, adset_name: row.adset_name, ads: [] };
+      camps[cid].adsets[asid] = { ...blank(acct.ccy), adset_id: asid, adset_name: row.adset_name, ads: [], effective_status: statuses.adsets.get(asid) };
     }
     // Apply ad-level DB attribution
     const adBucket = attrib.byAd.get(aid);
@@ -418,7 +454,7 @@ export async function fetchAccountBreakdown(accountId: string, preset: string, a
       parsed.db_revenue_eur = adBucket.revenue_eur;
     }
     recomputeDb(parsed);
-    camps[cid].adsets[asid].ads.push({ ...parsed, ad_id: aid, ad_name: row.ad_name });
+    camps[cid].adsets[asid].ads.push({ ...parsed, ad_id: aid, ad_name: row.ad_name, effective_status: statuses.ads.get(aid) });
   }
 
   // Aggregate ads → adsets → camps
@@ -427,6 +463,8 @@ export async function fetchAccountBreakdown(accountId: string, preset: string, a
       a.spend = a.ads.reduce((s, x) => s + x.spend, 0);
       a.spend_eur = a.ads.reduce((s, x) => s + x.spend_eur, 0);
       a.impressions = a.ads.reduce((s, x) => s + x.impressions, 0);
+      a.reach = a.ads.reduce((s, x) => s + (x.reach || 0), 0);
+      a.clicks = a.ads.reduce((s, x) => s + (x.clicks || 0), 0);
       a.link_clicks = a.ads.reduce((s, x) => s + x.link_clicks, 0);
       a.landing_views = a.ads.reduce((s, x) => s + x.landing_views, 0);
       a.purchases = a.ads.reduce((s, x) => s + x.purchases, 0);
@@ -441,22 +479,43 @@ export async function fetchAccountBreakdown(accountId: string, preset: string, a
       a.cpa = a.purchases > 0 ? a.spend / a.purchases : null;
       a.roas = a.spend > 0 ? a.purchase_value / a.spend : null;
       a.hook_rate = a.impressions > 0 ? a.v_3s / a.impressions : null;
+      a.hold_rate = a.v_3s > 0 ? a.v_thruplay / a.v_3s : null;
+      // Derived: cpm, cpc, ctr, freq, cost_per_lpv, cpl
+      a.cpm = a.impressions > 0 ? (a.spend / a.impressions) * 1000 : 0;
+      a.cpc = a.link_clicks > 0 ? a.spend / a.link_clicks : 0;
+      a.ctr = a.impressions > 0 ? (a.link_clicks / a.impressions) * 100 : 0;
+      a.frequency = a.reach > 0 ? a.impressions / a.reach : 0;
+      a.cost_per_lpv = a.landing_views > 0 ? a.spend / a.landing_views : null;
+      a.cpl = a.leads > 0 ? a.spend / a.leads : null;
       recomputeDb(a);
     }
     const adsets = Object.values(c.adsets);
     c.spend = adsets.reduce((s, x) => s + x.spend, 0);
     c.spend_eur = adsets.reduce((s, x) => s + x.spend_eur, 0);
     c.impressions = adsets.reduce((s, x) => s + x.impressions, 0);
+    c.reach = adsets.reduce((s, x) => s + (x.reach || 0), 0);
+    c.clicks = adsets.reduce((s, x) => s + (x.clicks || 0), 0);
     c.link_clicks = adsets.reduce((s, x) => s + x.link_clicks, 0);
     c.landing_views = adsets.reduce((s, x) => s + x.landing_views, 0);
     c.purchases = adsets.reduce((s, x) => s + x.purchases, 0);
     c.purchase_value = adsets.reduce((s, x) => s + x.purchase_value, 0);
     c.leads = adsets.reduce((s, x) => s + x.leads, 0);
+    c.initiated_checkout = adsets.reduce((s, x) => s + (x.initiated_checkout || 0), 0);
+    c.v_3s = adsets.reduce((s, x) => s + (x.v_3s || 0), 0);
+    c.v_thruplay = adsets.reduce((s, x) => s + (x.v_thruplay || 0), 0);
     c.db_leads = adsets.reduce((s, x) => s + x.db_leads, 0);
     c.db_purchases = adsets.reduce((s, x) => s + x.db_purchases, 0);
     c.db_revenue_eur = adsets.reduce((s, x) => s + x.db_revenue_eur, 0);
     c.cpa = c.purchases > 0 ? c.spend / c.purchases : null;
     c.roas = c.spend > 0 ? c.purchase_value / c.spend : null;
+    c.hook_rate = c.impressions > 0 ? c.v_3s / c.impressions : null;
+    c.hold_rate = c.v_3s > 0 ? c.v_thruplay / c.v_3s : null;
+    c.cpm = c.impressions > 0 ? (c.spend / c.impressions) * 1000 : 0;
+    c.cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0;
+    c.ctr = c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0;
+    c.frequency = c.reach > 0 ? c.impressions / c.reach : 0;
+    c.cost_per_lpv = c.landing_views > 0 ? c.spend / c.landing_views : null;
+    c.cpl = c.leads > 0 ? c.spend / c.leads : null;
     recomputeDb(c);
   }
 
@@ -468,6 +527,121 @@ export async function fetchAccountBreakdown(accountId: string, preset: string, a
       adsets: Object.values(c.adsets).map((a) => ({ ...a })),
     })),
   };
+}
+
+// ─── Flat ad-level view across all accounts (1 row per ad) ───────────────────
+export type AdFlatRow = Row & {
+  account_id: string;
+  account_name: string;
+  campaign_id: string;
+  campaign_name: string;
+  adset_id: string;
+  adset_name: string;
+  ad_id: string;
+  ad_name: string;
+};
+
+export async function fetchAllAdsFlat(preset: string, attribution?: Attribution): Promise<AdFlatRow[]> {
+  const attrib = attribution ?? await fetchAttribution(preset);
+  const results = await Promise.all(SLEEP_ACCOUNTS.map(async (a) => {
+    const bd: any = await fetchAccountBreakdown(a.id, preset, attrib);
+    if (bd.error) return [] as AdFlatRow[];
+    const ads: AdFlatRow[] = [];
+    for (const c of bd.campaigns || []) {
+      for (const aset of c.adsets || []) {
+        for (const ad of aset.ads || []) {
+          ads.push({
+            ...ad,
+            ccy: a.ccy,
+            account_id: a.id,
+            account_name: a.name,
+            campaign_id: c.campaign_id,
+            campaign_name: c.campaign_name,
+            adset_id: aset.adset_id,
+            adset_name: aset.adset_name,
+          });
+        }
+      }
+    }
+    return ads;
+  }));
+  return results.flat();
+}
+
+// ─── Flat campaign-level view across all accounts (1 row per campaign) ───────
+export type CampaignFlatRow = Row & {
+  account_id: string;
+  account_name: string;
+  campaign_id: string;
+  campaign_name: string;
+  adset_count: number;
+  ad_count: number;
+};
+
+export async function fetchAllCampaignsFlat(preset: string, attribution?: Attribution): Promise<CampaignFlatRow[]> {
+  const attrib = attribution ?? await fetchAttribution(preset);
+  const results = await Promise.all(SLEEP_ACCOUNTS.map(async (a) => {
+    const bd: any = await fetchAccountBreakdown(a.id, preset, attrib);
+    if (bd.error) return [] as CampaignFlatRow[];
+    const camps: CampaignFlatRow[] = [];
+    for (const c of bd.campaigns || []) {
+      const allAds = (c.adsets || []).flatMap((x: any) => x.ads || []);
+      camps.push({
+        ...c,
+        ccy: a.ccy,
+        account_id: a.id,
+        account_name: a.name,
+        campaign_id: c.campaign_id,
+        campaign_name: c.campaign_name,
+        adset_count: (c.adsets || []).length,
+        ad_count: allAds.length,
+        ads_active: allAds.length,
+        ads_delivering: allAds.filter((x: any) => (x.impressions || 0) > 0).length,
+      });
+    }
+    return camps;
+  }));
+  return results.flat();
+}
+
+// ─── Flat adset-level view across all accounts (1 row per adset) ─────────────
+export type AdsetFlatRow = Row & {
+  account_id: string;
+  account_name: string;
+  campaign_id: string;
+  campaign_name: string;
+  adset_id: string;
+  adset_name: string;
+  ad_count: number;
+};
+
+export async function fetchAllAdsetsFlat(preset: string, attribution?: Attribution): Promise<AdsetFlatRow[]> {
+  const attrib = attribution ?? await fetchAttribution(preset);
+  const results = await Promise.all(SLEEP_ACCOUNTS.map(async (a) => {
+    const bd: any = await fetchAccountBreakdown(a.id, preset, attrib);
+    if (bd.error) return [] as AdsetFlatRow[];
+    const rows: AdsetFlatRow[] = [];
+    for (const c of bd.campaigns || []) {
+      for (const aset of c.adsets || []) {
+        const ads = aset.ads || [];
+        rows.push({
+          ...aset,
+          ccy: a.ccy,
+          account_id: a.id,
+          account_name: a.name,
+          campaign_id: c.campaign_id,
+          campaign_name: c.campaign_name,
+          adset_id: aset.adset_id,
+          adset_name: aset.adset_name,
+          ad_count: ads.length,
+          ads_active: ads.length,
+          ads_delivering: ads.filter((x: any) => (x.impressions || 0) > 0).length,
+        });
+      }
+    }
+    return rows;
+  }));
+  return results.flat();
 }
 
 // ─── Lead stats ────────────────────────────────────────────────────────────────
