@@ -46,6 +46,75 @@ router.get("/admin/dashboard", (req, res) => {
   res.send(renderDashboard(req.query.key as string));
 });
 
+// ─── CSV export — Excel-compatible (UTF-8 BOM + comma separator) ─────────────
+function csvEscape(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+function toCsv(headers: string[], rows: Record<string, unknown>[]): string {
+  const lines = [headers.join(",")];
+  for (const r of rows) lines.push(headers.map(h => csvEscape(r[h])).join(","));
+  // UTF-8 BOM so Excel detects encoding
+  return "﻿" + lines.join("\r\n");
+}
+function expandRow(r: Record<string, unknown>): Record<string, unknown> {
+  // Add computed fields useful for the spreadsheet
+  const spend_eur = Number(r.spend_eur ?? 0);
+  const imp = Number(r.impressions ?? 0);
+  const lc = Number(r.link_clicks ?? 0);
+  const lpv = Number(r.landing_views ?? 0);
+  const v_3s = Number(r.v_3s ?? 0);
+  const v_thruplay = Number(r.v_thruplay ?? 0);
+  return {
+    ...r,
+    ctr_link_pct: imp > 0 ? +(lc / imp * 100).toFixed(2) : 0,
+    cost_per_link_click: lc > 0 ? +(spend_eur / lc).toFixed(4) : "",
+    hook_pct: imp > 0 ? +(v_3s / imp * 100).toFixed(2) : 0,
+    hold_pct: v_3s > 0 ? +(v_thruplay / v_3s * 100).toFixed(2) : 0,
+  };
+}
+async function csvForLevel(req: Request, res: Response, level: "ad" | "adset" | "campaign") {
+  if (!isAuthorized(req)) { res.status(403).send("Forbidden"); return; }
+  const preset = (req.query.preset as string) || "last_72h";
+  try {
+    const attribution = await fetchAttribution(preset);
+    let rows: Record<string, unknown>[];
+    let baseCols: string[];
+    if (level === "ad") {
+      rows = (await fetchAllAdsFlat(preset, attribution)) as unknown as Record<string, unknown>[];
+      baseCols = ["account_name", "campaign_name", "adset_name", "ad_name", "ad_id", "effective_status"];
+    } else if (level === "adset") {
+      rows = (await fetchAllAdsetsFlat(preset, attribution)) as unknown as Record<string, unknown>[];
+      baseCols = ["account_name", "campaign_name", "adset_name", "adset_id", "effective_status", "ad_count", "ads_active", "ads_delivering"];
+    } else {
+      rows = (await fetchAllCampaignsFlat(preset, attribution)) as unknown as Record<string, unknown>[];
+      baseCols = ["account_name", "campaign_name", "campaign_id", "effective_status", "adset_count", "ad_count", "ads_delivering"];
+    }
+    const metricCols = [
+      "ccy", "spend", "spend_eur",
+      "impressions", "reach", "frequency",
+      "clicks", "link_clicks", "ctr", "ctr_link_pct",
+      "cpc", "cost_per_link_click", "cpm",
+      "landing_views", "cost_per_lpv",
+      "v_3s", "v_thruplay", "hook_pct", "hold_pct",
+      "leads", "initiated_checkout", "purchases", "purchase_value",
+      "db_leads", "db_purchases", "db_revenue_eur", "db_roas", "db_cpa", "db_cpl", "profit_eur",
+    ];
+    const headers = [...baseCols, ...metricCols];
+    const expanded = rows.map(expandRow);
+    const csv = toCsv(headers, expanded);
+    const filename = `sleep-${level}s-${preset}-${new Date().toISOString().slice(0,10)}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (e) { res.status(500).send(`error: ${(e as Error).message}`); }
+}
+router.get("/admin/dashboard/ads/export",       (req, res) => { void csvForLevel(req, res, "ad"); });
+router.get("/admin/dashboard/adsets/export",    (req, res) => { void csvForLevel(req, res, "adset"); });
+router.get("/admin/dashboard/campaigns/export", (req, res) => { void csvForLevel(req, res, "campaign"); });
+
 router.get("/admin/dashboard/ads-data", async (req, res) => {
   if (!isAuthorized(req)) return res.status(403).json({ error: "Forbidden" });
   const preset = (req.query.preset as string) || "last_72h";
@@ -829,6 +898,7 @@ function renderFlatDashboard(key: string, level: DashLevel): string {
       <label class="flex items-center gap-1 text-xs text-slate-400">
         <input type="checkbox" id="autorefresh" class="accent-indigo-500" /> Auto 60s
       </label>
+      <button id="export-csv" class="bg-emerald-600 hover:bg-emerald-500 rounded px-4 py-1.5 text-sm font-semibold" title="Export current view as CSV (Excel-compatible)">⬇ Export CSV</button>
       <button id="refresh" class="bg-indigo-600 hover:bg-indigo-500 rounded px-4 py-1.5 text-sm font-semibold">Refresh</button>
     </div>
   </div>
@@ -1132,6 +1202,11 @@ document.getElementById("f-spend").addEventListener("change", render);
 document.getElementById("f-status").addEventListener("change", render);
 document.getElementById("f-zero").addEventListener("change", render);
 document.getElementById("refresh").addEventListener("click", load);
+document.getElementById("export-csv").addEventListener("click", () => {
+  const preset = document.getElementById("preset").value;
+  const exportUrl = LEVEL.endpoint.replace("-data", "/export") + "?preset=" + preset + "&key=" + encodeURIComponent(KEY);
+  window.location.href = exportUrl;
+});
 document.getElementById("preset").addEventListener("change", load);
 document.getElementById("autorefresh").addEventListener("change", (e) => {
   if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
