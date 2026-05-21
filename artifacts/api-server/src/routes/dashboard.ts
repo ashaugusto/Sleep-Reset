@@ -115,6 +115,24 @@ router.get("/admin/dashboard/ads/export",       (req, res) => { void csvForLevel
 router.get("/admin/dashboard/adsets/export",    (req, res) => { void csvForLevel(req, res, "adset"); });
 router.get("/admin/dashboard/campaigns/export", (req, res) => { void csvForLevel(req, res, "campaign"); });
 
+// ─── Toggle ad/adset/campaign status (ACTIVE ↔ PAUSED) ────────────────────────
+router.post("/admin/dashboard/toggle", async (req, res) => {
+  if (!isAuthorized(req)) { res.status(403).json({ error: "Forbidden" }); return; }
+  const id = (req.query.id as string) || "";
+  const status = (req.query.status as string) || "";
+  const level = (req.query.level as string) || "";
+  if (!id || !/^\d+$/.test(id)) { res.status(400).json({ error: "id required (numeric)" }); return; }
+  if (!["ACTIVE", "PAUSED"].includes(status)) { res.status(400).json({ error: "status must be ACTIVE or PAUSED" }); return; }
+  if (!["ad", "adset", "campaign"].includes(level)) { res.status(400).json({ error: "level must be ad|adset|campaign" }); return; }
+  try {
+    const token = process.env.META_ACCESS_TOKEN || "";
+    const r = await fetch(`https://graph.facebook.com/v21.0/${id}?status=${status}&access_token=${encodeURIComponent(token)}`, { method: "POST" });
+    const data = await r.json();
+    if ((data as any).error) { res.status(400).json(data); return; }
+    res.json({ ok: true, id, status, level, response: data });
+  } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+});
+
 router.get("/admin/dashboard/ads-data", async (req, res) => {
   if (!isAuthorized(req)) return res.status(403).json({ error: "Forbidden" });
   const preset = (req.query.preset as string) || "last_72h";
@@ -958,6 +976,7 @@ function renderFlatDashboard(key: string, level: DashLevel): string {
             <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_revenue_eur">Rev €</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="db_roas">ROAS</th>
             <th class="text-right px-2 py-2 bg-emerald-900/10 sortable text-emerald-300" data-sort="profit_eur">Profit</th>
+            <th class="text-center px-2 py-2" title="Toggle ACTIVE/PAUSED">Action</th>
             <th class="text-right px-2 py-2"></th>
           </tr>
         </thead>
@@ -1032,6 +1051,47 @@ function statusPill(s) {
   };
   const e = map[s] || ['bg-slate-500/20 text-slate-400', s];
   return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ' + e[0] + '" title="' + s + '">' + e[1] + '</span>';
+}
+
+// Toggle button — derives target action from effective_status
+function toggleBtn(a) {
+  const id = a[LEVEL.primaryId] || '';
+  const name = (a[LEVEL.primaryName] || '').replace(/'/g, "\\\\'");
+  const eff = a.effective_status || '';
+  const isActive = eff === 'ACTIVE';
+  const isPaused = ['PAUSED', 'CAMPAIGN_PAUSED', 'ADSET_PAUSED', 'ARCHIVED'].includes(eff);
+  // For PAUSED descendants (CAMP·PSE / AS·PSE / ARCH), turning ACTIVE here only flips the configured_status of THIS entity —
+  // the effective_status will still inherit from the paused parent until the parent is reactivated. Still a valid action.
+  if (isActive) {
+    return '<button onclick="toggleEntity(\\''+id+'\\',\\''+name+'\\',\\'PAUSED\\',this)" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 hover:bg-amber-500/40 text-amber-300" title="Pause this '+LEVEL.title.toLowerCase().replace('by ','')+'">⏸ Pause</button>';
+  }
+  if (isPaused) {
+    return '<button onclick="toggleEntity(\\''+id+'\\',\\''+name+'\\',\\'ACTIVE\\',this)" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300" title="Activate this '+LEVEL.title.toLowerCase().replace('by ','')+'">▶ Activate</button>';
+  }
+  // Disapproved / Review / Unknown — cannot toggle from dashboard
+  return '<span class="text-[10px] text-slate-600" title="Cannot toggle '+eff+' from dashboard">—</span>';
+}
+
+async function toggleEntity(id, name, targetStatus, btn) {
+  const verb = targetStatus === 'PAUSED' ? 'Pause' : 'Activate';
+  if (!confirm(verb + ' "' + name + '"?\\n\\nThis will set the ' + LEVEL.title.toLowerCase().replace('by ','') + ' status to ' + targetStatus + ' in Meta Ads.')) return;
+  const originalText = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '…';
+  try {
+    const url = '/admin/dashboard/toggle?id=' + id + '&status=' + targetStatus + '&level=' + LEVEL.primaryId.replace('_id','') + '&key=' + encodeURIComponent(KEY);
+    const r = await fetch(url, { method: 'POST' });
+    const data = await r.json();
+    if (!r.ok || data.error) {
+      alert('Error: ' + (data.error?.message || data.error || r.status));
+      btn.disabled = false; btn.innerHTML = originalText;
+      return;
+    }
+    // Refresh data
+    await load();
+  } catch (e) {
+    alert('Network error: ' + e.message);
+    btn.disabled = false; btn.innerHTML = originalText;
+  }
 }
 
 let allAds = [];
@@ -1180,12 +1240,13 @@ function render() {
       '<td class="px-2 py-1.5 text-right bg-emerald-900/10">€' + fmtM(a.db_revenue_eur || 0) + '</td>' +
       '<td class="px-2 py-1.5 text-right bg-emerald-900/10">' + roasBadge(a.spend_eur, a.db_purchases, a.db_roas) + '</td>' +
       '<td class="px-2 py-1.5 text-right bg-emerald-900/10">' + profitText(a.profit_eur) + '</td>' +
+      '<td class="px-2 py-1.5 text-center">' + toggleBtn(a) + '</td>' +
       '<td class="px-2 py-1.5 text-right"><a href="' + adLink + '" target="_blank" class="text-indigo-400 hover:underline text-[10px]">↗</a></td>' +
     '</tr>';
   }).join("");
 
   if (sorted.length === 0) {
-    const totalCols = 24 + LEVEL.extraCols.length;
+    const totalCols = 25 + LEVEL.extraCols.length;
     tbody.innerHTML = '<tr><td colspan="' + totalCols + '" class="text-center px-2 py-8 text-slate-500">No rows match the filters</td></tr>';
   }
 }
