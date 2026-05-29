@@ -1389,53 +1389,12 @@ load();
 </html>`;
 }
 
-// ─── VSL + page-view engagement funnel (our own DB) ───────────────────────────
-router.get("/admin/dashboard/vsl", async (req: Request, res: Response) => {
-  if (!isAuthorized(req)) return res.status(403).send("Forbidden — pass ?key=<DASHBOARD_SECRET>");
-  const days = Math.min(90, Math.max(1, parseInt(String(req.query.days ?? "7"), 10) || 7));
-  try {
-    const { rows } = await pool.query(
-      `SELECT event, count(*)::int AS total, count(DISTINCT client_id)::int AS uniq
-       FROM engagement_events WHERE created_at >= now() - ($1 || ' days')::interval
-       GROUP BY event`,
-      [days],
-    );
-    const m: Record<string, { total: number; uniq: number }> = {};
-    for (const r of rows as { event: string; total: number; uniq: number }[]) m[r.event] = { total: r.total, uniq: r.uniq };
-    const g = (e: string) => m[e]?.uniq ?? 0;
-    const views = g("page_view");
-    const pct = (n: number) => (views ? Math.round((n / views) * 100) : 0);
-    // Retention por TEMPO (VSL = 17min): mostra ate onde a pessoa assiste antes de sair.
-    const funnel: [string, number, number][] = [
-      ["Chegaram na home (page view)", views, 100],
-      ["Video comecou (autoplay)", g("vsl_autoplay"), pct(g("vsl_autoplay"))],
-      ["Passaram de 30s", g("vsl_t30s"), pct(g("vsl_t30s"))],
-      ["Chegaram a 1 min", g("vsl_t1m"), pct(g("vsl_t1m"))],
-      ["Chegaram a 2 min", g("vsl_t2m"), pct(g("vsl_t2m"))],
-      ["Chegaram a 5 min", g("vsl_t5m"), pct(g("vsl_t5m"))],
-      ["Chegaram a 10 min", g("vsl_t10m"), pct(g("vsl_t10m"))],
-      ["Assistiram ate o fim (~17min)", g("vsl_complete"), pct(g("vsl_complete"))],
-      ["▶ Deram play com SOM (unmute)", g("vsl_play"), pct(g("vsl_play"))],
-    ];
-    const k = encodeURIComponent(String(req.query.key ?? ""));
-    const rowsHtml = funnel.map(([label, n, p]) => `
-      <tr><td style="padding:10px 14px;border-bottom:1px solid #1e293b">${label}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #1e293b;text-align:right;font-weight:700">${n}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #1e293b;width:40%"><div style="background:#1e293b;border-radius:6px;height:20px"><div style="background:#C9A14A;height:20px;border-radius:6px;width:${p}%"></div></div></td>
-      <td style="padding:10px 14px;border-bottom:1px solid #1e293b;text-align:right;color:#94a3b8">${p}%</td></tr>`).join("");
-    res.send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VSL Funnel</title></head>
-      <body style="background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif;margin:0;padding:24px">
-      <div style="max-width:760px;margin:0 auto">
-        <h1 style="font-size:20px;margin:0 0 4px">VSL &amp; Page Engagement <span style="color:#94a3b8;font-size:13px">— ultimos ${days} dias (visitantes unicos)</span></h1>
-        <div style="margin:10px 0">${[7, 14, 30].map((d) => `<a href="/admin/dashboard/vsl?key=${k}&amp;days=${d}" style="color:#C9A14A;margin-right:12px">${d}d</a>`).join("")}<a href="/admin/dashboard?key=${k}" style="color:#94a3b8;margin-left:8px">&larr; dashboard</a></div>
-        <table style="width:100%;border-collapse:collapse;background:#111827;border-radius:10px;overflow:hidden">
-          <thead><tr style="color:#94a3b8;font-size:12px;text-transform:uppercase"><th style="padding:10px 14px;text-align:left">Etapa</th><th style="padding:10px 14px;text-align:right">Unicos</th><th style="padding:10px 14px">&nbsp;</th><th style="padding:10px 14px;text-align:right">% visitas</th></tr></thead>
-          <tbody>${rowsHtml}</tbody></table>
-        <p style="color:#64748b;font-size:12px;margin-top:14px">Autoplay mudo toca pra todos que chegam &rarr; os marcos de tempo mostram ate onde assistem (retencao). &quot;Play com SOM&quot; = deu unmute (engajamento forte). Se muita gente chega mas cai antes de 1min = problema no inicio da VSL/hook; se nem chega na home = problema no ad/quiz.</p>
-      </div></body></html>`);
-  } catch (e) {
-    res.status(500).send("erro: " + String(e));
-  }
+// ─── /vsl legado → redireciona pro dashboard principal ────────────────────────
+// A retenção da VSL (autoplay→30s→1m→2m→5m→10m→fim + unmute) agora vive na seção
+// "Home Page Funnel" do dashboard principal. Página separada removida (redundante).
+router.get("/admin/dashboard/vsl", (req: Request, res: Response) => {
+  const k = encodeURIComponent(String(req.query.key ?? ""));
+  res.redirect(302, "/admin/dashboard?key=" + k);
 });
 
 export default router;
