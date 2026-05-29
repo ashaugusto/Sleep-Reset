@@ -158,7 +158,6 @@ export default function Quiz() {
   const [step, setStep] = useState(0); // 0..QUESTIONS.length-1 = questions; .length = capture; .length+1 = submitting
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [email, setEmail] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
   const fired = useRef<Set<string>>(new Set());
@@ -214,9 +213,7 @@ export default function Quiz() {
   async function submitCapture() {
     setErr("");
     const emailClean = email.trim().toLowerCase();
-    const waClean = whatsapp.replace(/[^\d+]/g, "");
     if (!/^.+@.+\..+$/.test(emailClean)) { setErr("Please enter a valid email."); return; }
-    if (waClean.length < 7) { setErr("Please enter a valid WhatsApp number with country code."); return; }
     setSubmitting(true);
     try {
       // 1) Submit answers, get profile id + type
@@ -250,7 +247,6 @@ export default function Quiz() {
         body: JSON.stringify({
           profile_id: submitData.profile_id,
           email: emailClean,
-          whatsapp: waClean,
           event_id: leadEventId,
           fbp: getCookie("_fbp"),
           fbc: getCookie("_fbc"),
@@ -402,7 +398,7 @@ export default function Quiz() {
               Where do we send your Sleep Type report?
             </h1>
             <p className="text-sm text-[#4B5563] mb-6">
-              We'll send your personalized analysis and 7-night protocol via email and WhatsApp — including the exact mechanism behind your insomnia type and what fixes it.
+              We'll send your personalized analysis and 7-night protocol via email — including the exact mechanism behind your insomnia type and what fixes it.
             </p>
 
             <div className="space-y-3">
@@ -417,20 +413,6 @@ export default function Quiz() {
                   className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white focus:border-[#0E2541] focus:outline-none text-base"
                 />
               </label>
-              <label className="block">
-                <span className="block text-xs font-bold text-[#6B7280] uppercase tracking-[0.14em] mb-1.5">WhatsApp (with country code)</span>
-                <input
-                  type="tel"
-                  required
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="+44 7700 900000"
-                  inputMode="tel"
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white focus:border-[#0E2541] focus:outline-none text-base"
-                />
-                <span className="block text-[11px] text-[#6B7280] mt-1">Used to send your protocol + one follow-up. Never shared.</span>
-              </label>
-
               {err && <p className="text-sm text-red-600 font-medium">{err}</p>}
 
               <button

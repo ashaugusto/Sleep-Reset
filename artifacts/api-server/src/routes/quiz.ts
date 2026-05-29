@@ -120,13 +120,14 @@ router.post("/quiz/capture", async (req: Request, res: Response) => {
     fbp?: string;
     fbc?: string;
   };
-  if (!profile_id || !email || !whatsapp) {
-    return res.status(400).json({ ok: false, error: "profile_id, email, whatsapp required" });
+  if (!profile_id || !email) {
+    return res.status(400).json({ ok: false, error: "profile_id, email required" });
   }
   const emailClean = email.trim().toLowerCase();
-  const waClean = whatsapp.replace(/[^\d+]/g, "");
-  if (!/^.+@.+\..+$/.test(emailClean) || waClean.length < 7) {
-    return res.status(400).json({ ok: false, error: "invalid email or whatsapp" });
+  // WhatsApp optional — removed from quiz to reduce cold-traffic friction (29/05).
+  const waClean = whatsapp ? whatsapp.replace(/[^\d+]/g, "") : null;
+  if (!/^.+@.+\..+$/.test(emailClean)) {
+    return res.status(400).json({ ok: false, error: "invalid email" });
   }
   try {
     const { rows } = await pool.query(
@@ -134,7 +135,7 @@ router.post("/quiz/capture", async (req: Request, res: Response) => {
        SET email = $1, whatsapp = $2, captured_at = now()
        WHERE id = $3
        RETURNING id, type, score, email, whatsapp`,
-      [emailClean.slice(0, 256), waClean.slice(0, 32), profile_id],
+      [emailClean.slice(0, 256), waClean ? waClean.slice(0, 32) : null, profile_id],
     );
     if (rows.length === 0) return res.status(404).json({ ok: false, error: "profile not found" });
 
