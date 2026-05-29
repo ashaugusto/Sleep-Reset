@@ -44,11 +44,25 @@ app.post(
     }
     try {
       const sig = Array.isArray(signature) ? signature[0] : signature;
-      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      // Signature verification (isolated from stripe-replit-sync upsert which can fail
+      // when its schema isn't migrated). We use the Stripe SDK directly so signature
+      // validation is independent of the sync layer.
+      const Stripe = (await import("stripe")).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2025-07-30.basil" as Stripe.LatestApiVersion });
+      const whSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+      let verifiedEvent: Stripe.Event;
+      try {
+        verifiedEvent = await stripe.webhooks.constructEventAsync(req.body as Buffer, sig, whSecret);
+      } catch (sigErr) {
+        logger.error(sigErr, "Webhook signature verification failed");
+        res.status(400).json({ error: "Invalid signature" });
+        return;
+      }
 
       // Mark lead as purchased on checkout.session.completed
       try {
-        const evt = JSON.parse((req.body as Buffer).toString("utf8")) as {
+        const evt = verifiedEvent as unknown as {
           type?: string;
           data?: { object?: { id?: string; customer_details?: { email?: string }; metadata?: { email?: string } } };
         };
@@ -138,6 +152,14 @@ app.post(
         }
       } catch (leadErr) {
         logger.error(leadErr, "Lead update on webhook failed (non-fatal)");
+      }
+
+      // Best-effort: pass through to stripe-replit-sync upsert. May fail if its
+      // schema isn't migrated — that's not blocking our critical lead-update path.
+      try {
+        await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      } catch (syncErr) {
+        logger.warn({ err: syncErr }, "stripe-replit-sync processWebhook failed (non-fatal, lead already updated)");
       }
 
       res.status(200).json({ received: true });

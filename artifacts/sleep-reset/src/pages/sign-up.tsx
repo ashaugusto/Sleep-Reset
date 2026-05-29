@@ -59,11 +59,9 @@ export default function SignUpPage() {
 
       queryClient.clear();
 
-      if (!data.onboardingComplete) {
-        setLocation("/onboarding");
-      } else {
-        setLocation("/dashboard");
-      }
+      // Post-purchase OTO: surface the Recovery Pack once at peak intent, then continue.
+      const next = data.onboardingComplete ? "/dashboard" : "/onboarding";
+      setLocation(`/upgrade?oto=1&next=${encodeURIComponent(next)}`);
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);

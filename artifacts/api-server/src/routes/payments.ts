@@ -19,7 +19,7 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     return;
   }
 
-  const { email, name, whatsapp, hero_variant, fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content } = req.body as {
+  const { email, name, whatsapp, hero_variant, fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, lead_event_id, bump } = req.body as {
     email?: string;
     name?: string;
     whatsapp?: string;
@@ -30,6 +30,8 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     utm_medium?: string;
     utm_campaign?: string;
     utm_content?: string;
+    lead_event_id?: string;
+    bump?: boolean;
   };
   if (!email) {
     res.status(400).json({ message: "Email is required" });
@@ -96,10 +98,16 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   const basePath = process.env.APP_URL ? "" : "/sleep-reset";
   const baseUrl = `${appUrl}${basePath}`;
 
+  // Order bump: the Recovery Pack (€19) added as a 2nd line item if the buyer checked it.
+  const bumpPriceId = process.env.STRIPE_PRICE_PREMIUM;
+  const wantsBump = bump === true && !!bumpPriceId;
+  const lineItems: { price: string; quantity: number }[] = [{ price: priceId, quantity: 1 }];
+  if (wantsBump) lineItems.push({ price: bumpPriceId as string, quantity: 1 });
+
   const session = await stripe.checkout.sessions.create({
     customer: customer.id,
     payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: lineItems,
     mode: "payment",
     success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/`,
@@ -112,6 +120,7 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
       fbc: fbc ?? "",
       utm_source: utm_source ?? "",
       utm_campaign: utm_campaign ?? "",
+      bump_recovery_pack: wantsBump ? "1" : "",
     },
   });
 
@@ -147,9 +156,10 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   const eventSourceUrl = `${process.env.APP_URL || "https://sleepwired.com"}/`;
   try {
     if (leadId) {
+      // Prefer browser-generated event_id so fbq Lead and CAPI Lead dedupe; fallback to leadId
       void sendCapiEvent({
         eventName: "Lead",
-        eventId: leadId,
+        eventId: lead_event_id && lead_event_id.length > 0 ? lead_event_id : leadId,
         eventSourceUrl,
         userData,
         customData,

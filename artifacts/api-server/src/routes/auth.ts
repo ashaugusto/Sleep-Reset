@@ -59,6 +59,7 @@ router.post("/auth/register", async (req, res) => {
   let stripeCustomerId: string | null = null;
   let verifiedEmail: string | null = null;
   let verifiedName: string | null = null;
+  let boughtRecoveryPack = false;
 
   try {
     const stripe = getStripeClient();
@@ -68,6 +69,9 @@ router.post("/auth/register", async (req, res) => {
       res.status(402).json({ message: "Payment not completed" });
       return;
     }
+
+    // Order bump bought on the initial checkout → grant Recovery Pack to the new account.
+    boughtRecoveryPack = session.metadata?.bump_recovery_pack === "1";
 
     verifiedEmail =
       (session.customer as { email?: string } | null)?.email ??
@@ -127,6 +131,7 @@ router.post("/auth/register", async (req, res) => {
       name: finalName,
       passwordHash,
       purchasedAt: new Date(),
+      premiumPurchasedAt: boughtRecoveryPack ? new Date() : null,
       stripeCustomerId,
     })
     .returning();

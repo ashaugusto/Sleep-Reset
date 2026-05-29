@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { pool } from "@workspace/db";
 import { getRecoveryEmail, type RecoveryStep } from "./recoveryEmails";
 import { getPostPurchaseEmail, getMorningReminderEmail, type PostPurchaseStep } from "./postPurchaseEmails";
 
@@ -12,6 +13,39 @@ function getResend(): Resend | null {
 }
 
 const FROM = process.env.RESEND_FROM || "Sleep Rewire <onboarding@resend.dev>";
+
+// Append to email_log table. Non-fatal — never blocks the email flow.
+async function logEmail(args: {
+  email: string;
+  leadId?: string | null;
+  userId?: string | null;
+  emailType: string;
+  step?: number | null;
+  subject?: string | null;
+  resendId?: string | null;
+  success: boolean;
+  error?: string | null;
+}): Promise<void> {
+  try {
+    await pool.query(
+      `INSERT INTO email_log (email, lead_id, user_id, email_type, step, subject, resend_id, success, error)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        args.email.toLowerCase().trim(),
+        args.leadId ?? null,
+        args.userId ?? null,
+        args.emailType,
+        args.step ?? null,
+        args.subject ?? null,
+        args.resendId ?? null,
+        args.success,
+        args.error ?? null,
+      ],
+    );
+  } catch (e) {
+    console.error("[email-log] insert failed (non-fatal):", e);
+  }
+}
 
 // ─── Recovery email (abandoned checkout sequence) ────────────────────────────
 export async function sendRecoveryEmail({
@@ -33,15 +67,18 @@ export async function sendRecoveryEmail({
   const firstName = (name?.split(" ")[0] || "").trim();
   const { subject, html } = getRecoveryEmail(step, { firstName, heroVariant: heroVariant ?? null });
   try {
-    const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    const { data, error } = await resend.emails.send({ from: FROM, to: email, subject, html });
     if (error) {
       console.error(`[email] Recovery step ${step} send error for ${email}:`, error);
+      await logEmail({ email, emailType: "recovery", step, subject, success: false, error: JSON.stringify(error).slice(0, 500) });
       return false;
     }
     console.log(`[email] Recovery step ${step} sent to ${email}`);
+    await logEmail({ email, emailType: "recovery", step, subject, resendId: data?.id ?? null, success: true });
     return true;
   } catch (err) {
     console.error(`[email] Recovery step ${step} send failed for ${email}:`, err);
+    await logEmail({ email, emailType: "recovery", step, subject, success: false, error: (err as Error).message?.slice(0, 500) });
     return false;
   }
 }
@@ -65,15 +102,18 @@ export async function sendPostPurchaseEmail({
   const firstName = (name?.split(" ")[0] || "").trim();
   const { subject, html } = getPostPurchaseEmail(step, { firstName, leadId });
   try {
-    const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    const { data, error } = await resend.emails.send({ from: FROM, to: email, subject, html });
     if (error) {
       console.error(`[email] PostPurchase step ${step} send error for ${email}:`, error);
+      await logEmail({ email, leadId, emailType: "post_purchase", step, subject, success: false, error: JSON.stringify(error).slice(0, 500) });
       return false;
     }
     console.log(`[email] PostPurchase step ${step} sent to ${email}`);
+    await logEmail({ email, leadId, emailType: "post_purchase", step, subject, resendId: data?.id ?? null, success: true });
     return true;
   } catch (err) {
     console.error(`[email] PostPurchase step ${step} send failed for ${email}:`, err);
+    await logEmail({ email, leadId, emailType: "post_purchase", step, subject, success: false, error: (err as Error).message?.slice(0, 500) });
     return false;
   }
 }
@@ -98,15 +138,18 @@ export async function sendMorningReminderEmail({
   const firstName = (name?.split(" ")[0] || "").trim();
   const { subject, html } = getMorningReminderEmail({ firstName, dayNumber, leadId });
   try {
-    const { error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    const { data, error } = await resend.emails.send({ from: FROM, to: email, subject, html });
     if (error) {
       console.error(`[email] Morning reminder send error for ${email}:`, error);
+      await logEmail({ email, leadId, emailType: "morning_reminder", step: dayNumber, subject, success: false, error: JSON.stringify(error).slice(0, 500) });
       return false;
     }
     console.log(`[email] Morning reminder (day ${dayNumber}) sent to ${email}`);
+    await logEmail({ email, leadId, emailType: "morning_reminder", step: dayNumber, subject, resendId: data?.id ?? null, success: true });
     return true;
   } catch (err) {
     console.error(`[email] Morning reminder send failed for ${email}:`, err);
+    await logEmail({ email, leadId, emailType: "morning_reminder", step: dayNumber, subject, success: false, error: (err as Error).message?.slice(0, 500) });
     return false;
   }
 }
@@ -270,19 +313,78 @@ export async function sendWelcomeEmail({
 </html>`;
 
   try {
-    const { error } = await resend.emails.send({
-      from: FROM,
-      to: email,
-      subject: "✅ Your Sleep Rewire Protocol access is ready — start tonight",
-      html,
-    });
+    const subject = "✅ Your Sleep Rewire Protocol access is ready — start tonight";
+    const { data, error } = await resend.emails.send({ from: FROM, to: email, subject, html });
 
     if (error) {
       console.error("[email] Resend error:", error);
+      await logEmail({ email, emailType: "welcome", subject, success: false, error: JSON.stringify(error).slice(0, 500) });
     } else {
       console.log(`[email] Welcome email sent to ${email}`);
+      await logEmail({ email, emailType: "welcome", subject, resendId: data?.id ?? null, success: true });
     }
   } catch (err) {
     console.error("[email] Failed to send welcome email:", err);
+    await logEmail({ email, emailType: "welcome", success: false, error: (err as Error).message?.slice(0, 500) });
+  }
+}
+
+// ─── Account pending email (paid but no account or incomplete onboarding) ───
+export async function sendAccountPendingEmail({
+  email,
+  name,
+  leadId,
+  stage,
+}: {
+  email: string;
+  name?: string | null;
+  leadId?: string | null;
+  stage: "no_account" | "onboarding_incomplete";
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set — skipping account-pending email");
+    return false;
+  }
+  const firstName = (name?.split(" ")[0] || "").trim() || "there";
+  const signUrl = `${APP_URL()}${BASE_PATH()}/sign-up`;
+  const onboardUrl = `${APP_URL()}${BASE_PATH()}/onboarding`;
+  const isNoAccount = stage === "no_account";
+  const subject = isNoAccount
+    ? "Your Sleep Wired access is waiting — 1 step left"
+    : "Finish your Sleep Wired setup — you're almost there";
+  const msg = isNoAccount
+    ? `You paid for The Cognitive Shutdown Method but haven't created your account yet. Without the account, the 7-night protocol can't unlock. Takes 60 seconds:`
+    : `Your account is created, but you haven't finished the short onboarding (5 questions). The protocol needs your sleep window calibrated to start working tonight.`;
+  const cta = isNoAccount ? "Create my account" : "Finish onboarding";
+  const ctaUrl = isNoAccount ? signUrl : onboardUrl;
+  const html = `<!DOCTYPE html><html><body style="font-family:Inter,Arial,sans-serif;background:#0d1117;color:#e6edf3;margin:0;padding:32px;">
+<div style="max-width:560px;margin:0 auto;background:#161b22;border:1px solid #30363d;border-radius:14px;padding:32px;">
+  <p style="font-size:18px;font-weight:600;margin:0 0 16px;">Hey ${firstName},</p>
+  <p style="font-size:15px;color:#c9d1d9;line-height:1.6;margin:0 0 20px;">${msg}</p>
+  <p style="text-align:center;margin:24px 0;">
+    <a href="${ctaUrl}" style="display:inline-block;background:#238636;color:#fff;padding:14px 28px;border-radius:8px;font-weight:700;text-decoration:none;">${cta} →</a>
+  </p>
+  <p style="font-size:13px;color:#8b949e;line-height:1.5;margin:20px 0 0;">
+    You already paid €27. This is just the final access step. Any issues, reply to this email and we'll sort it out.
+  </p>
+  <p style="font-size:11px;color:#6e7681;margin:28px 0 0;border-top:1px solid #30363d;padding-top:16px;">
+    Sleep Wired · support@sleepwired.com · 60-night money-back guarantee
+  </p>
+</div></body></html>`;
+  try {
+    const { data, error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    if (error) {
+      console.error(`[email] AccountPending(${stage}) send error for ${email}:`, error);
+      await logEmail({ email, leadId, emailType: "account_pending", subject, success: false, error: JSON.stringify(error).slice(0, 500) });
+      return false;
+    }
+    console.log(`[email] AccountPending(${stage}) sent to ${email}`);
+    await logEmail({ email, leadId, emailType: "account_pending", subject, resendId: data?.id ?? null, success: true });
+    return true;
+  } catch (err) {
+    console.error(`[email] AccountPending(${stage}) failed for ${email}:`, err);
+    await logEmail({ email, leadId, emailType: "account_pending", subject, success: false, error: (err as Error).message?.slice(0, 500) });
+    return false;
   }
 }

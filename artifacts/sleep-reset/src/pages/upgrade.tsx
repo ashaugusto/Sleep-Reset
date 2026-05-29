@@ -25,6 +25,9 @@ export default function Upgrade() {
     query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId || "") },
   });
   const [loading, setLoading] = useState(false);
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const isOto = params.get("oto") === "1";
+  const otoNext = params.get("next") || "/dashboard";
 
   const alreadyOwns = !!user?.premiumPurchasedAt;
 
@@ -52,10 +55,11 @@ export default function Upgrade() {
         <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
           <Headphones className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-serif">Recovery Pack</h1>
+        <h1 className="text-3xl font-serif">{isOto ? "Wait — one thing before you start" : "Recovery Pack"}</h1>
         <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
-          The 7 nights got you sleeping again. The Recovery Pack is the toolkit for when life knocks
-          sleep out of rhythm — travel, illness, anxiety, shift work.
+          {isOto
+            ? "Your 7-night protocol is ready. Add the Recovery Pack now — the toolkit for when life knocks sleep out of rhythm (travel, illness, 3 AM anxiety, shift work). This is the only time you'll see it at this price."
+            : "The 7 nights got you sleeping again. The Recovery Pack is the toolkit for when life knocks sleep out of rhythm — travel, illness, anxiety, shift work."}
         </p>
       </div>
 
@@ -92,16 +96,29 @@ export default function Upgrade() {
         </Card>
       ) : (
         <div className="space-y-3">
+          {isOto && (
+            <p className="text-center text-xs font-bold uppercase tracking-wider text-primary">
+              One-time offer — only on this page
+            </p>
+          )}
           <div className="text-center space-y-1">
             <p className="text-3xl font-serif">€19</p>
             <p className="text-xs text-muted-foreground">one-time · lifetime access</p>
           </div>
           <Button className="w-full h-12 text-base" onClick={handleCheckout} disabled={loading}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Unlock Recovery Pack — €19"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isOto ? "Yes — add the Recovery Pack for €19" : "Unlock Recovery Pack — €19"}
           </Button>
           <p className="text-[11px] text-muted-foreground text-center">
             Same 60-night money-back guarantee. Reply to any email to refund.
           </p>
+          {isOto && (
+            <button
+              onClick={() => setLocation(otoNext)}
+              className="w-full text-center text-xs text-muted-foreground underline underline-offset-4 pt-1"
+            >
+              No thanks — I'll risk the next bad night without it
+            </button>
+          )}
         </div>
       )}
 
