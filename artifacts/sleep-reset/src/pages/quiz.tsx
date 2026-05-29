@@ -176,6 +176,12 @@ export default function Quiz() {
       fired.current.add("start");
       logEvent("quiz_start");
     }
+    // Record which ad-hook the visitor arrived from (?h=) so it's stored on the
+    // sleep_profile and carried to the homepage hero for message-match.
+    try {
+      const adHook = new URLSearchParams(window.location.search).get("h");
+      if (adHook) window.sessionStorage.setItem("sw_hero_variant", adHook);
+    } catch {}
     document.documentElement.classList.remove("dark");
   }, []);
 
@@ -264,16 +270,19 @@ export default function Quiz() {
       logEvent("quiz_complete");
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
 
-      // 3) Redirect to homepage with hero variant mapped from quiz type,
-      // preserving ALL original ad UTMs so Meta attribution stays intact
-      // and the homepage can adapt copy based on the full path (ad → quiz → home).
+      // 3) Redirect to homepage, preserving ALL original ad UTMs (Meta attribution intact).
+      // Hero (message-match): the AD's hook wins — the visitor clicked that promise, and the
+      // VSL's narrative mirrors it (3am opening / "tried everything" / authority / "asleep in 15").
+      // Only when the ad carries no hook do we fall back to the quiz-type mapping.
+      const HERO_KEYS = new Set(["default", "hyperarousal", "melatonin", "wake3am", "notyourself"]);
       const typeToHero: Record<string, string> = {
-        onset: "hyperarousal",       // "brain forgot how to shut down"
-        maintenance: "wake3am",      // "3:47am. House asleep. Your brain isn't."
-        mixed: "default",            // CBT-I authority
-        circadian: "melatonin",      // "tried everything, still awake"
+        onset: "hyperarousal",       // "your brain forgot how to shut down"
+        maintenance: "wake3am",      // "it's 3:47am. the house is asleep. your brain isn't."
+        mixed: "default",            // "remember what it felt like to wake up rested"
+        circadian: "melatonin",      // "you've tried everything. still awake at 3am."
       };
-      const hero = typeToHero[submitData.type] || "default";
+      const adHook = new URLSearchParams(window.location.search).get("h");
+      const hero = (adHook && HERO_KEYS.has(adHook)) ? adHook : (typeToHero[submitData.type] || "default");
       const out = new URLSearchParams(window.location.search);
       out.set("h", hero);
       out.set("qp", submitData.profile_id);
