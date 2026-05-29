@@ -1405,13 +1405,17 @@ router.get("/admin/dashboard/vsl", async (req: Request, res: Response) => {
     const g = (e: string) => m[e]?.uniq ?? 0;
     const views = g("page_view");
     const pct = (n: number) => (views ? Math.round((n / views) * 100) : 0);
+    // Retention por TEMPO (VSL = 17min): mostra ate onde a pessoa assiste antes de sair.
     const funnel: [string, number, number][] = [
-      ["Visitas (page view)", views, 100],
-      ["Play c/ som (unmute)", g("vsl_play"), pct(g("vsl_play"))],
-      ["Assistiu 25%", g("vsl_25"), pct(g("vsl_25"))],
-      ["Assistiu 50%", g("vsl_50"), pct(g("vsl_50"))],
-      ["Assistiu 75%", g("vsl_75"), pct(g("vsl_75"))],
-      ["Assistiu ate o fim", g("vsl_complete"), pct(g("vsl_complete"))],
+      ["Chegaram na home (page view)", views, 100],
+      ["Video comecou (autoplay)", g("vsl_autoplay"), pct(g("vsl_autoplay"))],
+      ["Passaram de 30s", g("vsl_t30s"), pct(g("vsl_t30s"))],
+      ["Chegaram a 1 min", g("vsl_t1m"), pct(g("vsl_t1m"))],
+      ["Chegaram a 2 min", g("vsl_t2m"), pct(g("vsl_t2m"))],
+      ["Chegaram a 5 min", g("vsl_t5m"), pct(g("vsl_t5m"))],
+      ["Chegaram a 10 min", g("vsl_t10m"), pct(g("vsl_t10m"))],
+      ["Assistiram ate o fim (~17min)", g("vsl_complete"), pct(g("vsl_complete"))],
+      ["▶ Deram play com SOM (unmute)", g("vsl_play"), pct(g("vsl_play"))],
     ];
     const k = encodeURIComponent(String(req.query.key ?? ""));
     const rowsHtml = funnel.map(([label, n, p]) => `
@@ -1427,7 +1431,7 @@ router.get("/admin/dashboard/vsl", async (req: Request, res: Response) => {
         <table style="width:100%;border-collapse:collapse;background:#111827;border-radius:10px;overflow:hidden">
           <thead><tr style="color:#94a3b8;font-size:12px;text-transform:uppercase"><th style="padding:10px 14px;text-align:left">Etapa</th><th style="padding:10px 14px;text-align:right">Unicos</th><th style="padding:10px 14px">&nbsp;</th><th style="padding:10px 14px;text-align:right">% visitas</th></tr></thead>
           <tbody>${rowsHtml}</tbody></table>
-        <p style="color:#64748b;font-size:12px;margin-top:14px">Play = deu &quot;tap for sound&quot; (engajou). O autoplay mudo toca pra todos, por isso nao conta como play. Quartis = profundidade de visualizacao.</p>
+        <p style="color:#64748b;font-size:12px;margin-top:14px">Autoplay mudo toca pra todos que chegam &rarr; os marcos de tempo mostram ate onde assistem (retencao). &quot;Play com SOM&quot; = deu unmute (engajamento forte). Se muita gente chega mas cai antes de 1min = problema no inicio da VSL/hook; se nem chega na home = problema no ad/quiz.</p>
       </div></body></html>`);
   } catch (e) {
     res.status(500).send("erro: " + String(e));

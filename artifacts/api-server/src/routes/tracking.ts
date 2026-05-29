@@ -54,7 +54,9 @@ router.post("/track/view", async (req: Request, res: Response) => {
 const ALLOWED_EVENTS = new Set([
   "page_view",
   "scroll_50", "scroll_75",
-  "vsl_play", "vsl_25", "vsl_50", "vsl_75", "vsl_complete",
+  "vsl_autoplay", "vsl_play", "vsl_complete",
+  "vsl_t30s", "vsl_t1m", "vsl_t2m", "vsl_t5m", "vsl_t10m",
+  "vsl_25", "vsl_50", "vsl_75",
   "cta_click",
   "form_submit",
   "quiz_start", "quiz_questions_done", "quiz_complete",

@@ -299,14 +299,27 @@ function VimeoPlayer() {
   function onTime() {
     const v = ref.current;
     if (!v || !v.duration) return;
-    const p = v.currentTime / v.duration;
-    for (const [t, label] of [[0.25, "25"], [0.5, "50"], [0.75, "75"]] as const) {
-      if (p >= t && !fired.current.has(label)) {
+    const s = v.currentTime;
+    // Time-based retention milestones — far more useful than %-quartiles for a 17min VSL.
+    // Tells us how deep into the video people actually get (where they drop off).
+    for (const [sec, label] of [[30, "30s"], [60, "1m"], [120, "2m"], [300, "5m"], [600, "10m"]] as const) {
+      if (s >= sec && !fired.current.has(label)) {
         fired.current.add(label);
-        gtm.vslProgress(Number(label));
-        logEvent("vsl_" + label);
+        logEvent("vsl_t" + label);
       }
     }
+    // Keep %-quartiles too (pixel side, for Meta custom audiences later)
+    const p = v.currentTime / v.duration;
+    for (const [t, label] of [[0.25, "25"], [0.5, "50"], [0.75, "75"]] as const) {
+      if (p >= t && !fired.current.has("q" + label)) {
+        fired.current.add("q" + label);
+        gtm.vslProgress(Number(label));
+      }
+    }
+  }
+  function onPlay() {
+    // Fires when the muted autoplay actually starts — "video began" for everyone who reaches the page.
+    if (!fired.current.has("auto")) { fired.current.add("auto"); logEvent("vsl_autoplay"); }
   }
   function unmute() {
     const v = ref.current;
@@ -326,6 +339,7 @@ function VimeoPlayer() {
         muted
         playsInline
         preload="auto"
+        onPlay={onPlay}
         onTimeUpdate={onTime}
         onEnded={() => { if (!fired.current.has("done")) { fired.current.add("done"); gtm.vslComplete(); logEvent("vsl_complete"); } }}
         className="w-full h-full object-cover"
