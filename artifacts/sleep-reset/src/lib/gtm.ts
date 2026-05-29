@@ -57,7 +57,7 @@ export const gtm = {
   },
 
   // Email submitted on order form — intent signal before Stripe redirect
-  lead(email: string) {
+  lead(email: string, eventId?: string) {
     push({
       event: "Lead",
       content_ids: [PRODUCT_ID],
@@ -67,6 +67,7 @@ export const gtm = {
       value: 27,
       currency: "EUR",
       email,
+      ...(eventId ? { event_id: eventId } : {}),
     });
   },
 
@@ -81,6 +82,18 @@ export const gtm = {
       value: 27,
       currency: "EUR",
     });
+  },
+
+  // VSL watch-depth — fired by the native player at 25/50/75%
+  vslProgress(pct: number) {
+    push({ event: "VSLProgress", percent: pct, content_ids: [PRODUCT_ID], content_name: `${PRODUCT_NAME} — VSL` });
+    try { (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq?.("trackCustom", "VSL" + pct); } catch { /* noop */ }
+  },
+
+  // VSL watched to the end
+  vslComplete() {
+    push({ event: "VSLComplete", content_ids: [PRODUCT_ID], content_name: `${PRODUCT_NAME} — VSL` });
+    try { (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq?.("trackCustom", "VSLComplete"); } catch { /* noop */ }
   },
 
   initiateCheckout(email: string, sessionId?: string | null) {
@@ -116,6 +129,7 @@ export const gtm = {
       value: 27,
       currency: "EUR",
       transaction_id: sessionId,
+      event_id: sessionId,
       num_items: 1,
       ...(email ? { email } : {}),
     });
@@ -128,6 +142,27 @@ export const gtm = {
         items: [{ item_id: "sleep-rewire-7night", item_name: "The Sleep Rewire Protocol", price: 27, quantity: 1 }],
       },
     });
+  },
+
+  // Quiz captured (email + WhatsApp gate) — fires Meta Lead + custom QuizComplete.
+  // Lead is the sub-event Meta will learn on while campaign optimization stays on Purchase.
+  // eventId is shared with server-side CAPI for dedup.
+  quizComplete(type: string, email: string, eventId: string) {
+    push({
+      event: "Lead",
+      content_ids: [PRODUCT_ID],
+      content_name: PRODUCT_NAME + " — Quiz",
+      content_type: "product",
+      page_type: "quiz",
+      value: 0,
+      currency: "EUR",
+      email,
+      quiz_type: type,
+      event_id: eventId,
+    });
+    try {
+      (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq?.("trackCustom", "QuizComplete", { type, currency: "EUR", value: 0 });
+    } catch { /* noop */ }
   },
 
   completeRegistration(email?: string | null) {

@@ -20,6 +20,8 @@ import Welcome from "@/pages/welcome";
 import Upgrade from "@/pages/upgrade";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Terms from "@/pages/terms";
+import Quiz from "@/pages/quiz";
+import QuizResult from "@/pages/quiz-result";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const queryClient = new QueryClient();
@@ -79,6 +81,8 @@ function Router() {
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
+      <Route path="/quiz" component={Quiz} />
+      <Route path="/quiz/result" component={QuizResult} />
       <Route path="/solution">
         <Redirect to="/" />
       </Route>

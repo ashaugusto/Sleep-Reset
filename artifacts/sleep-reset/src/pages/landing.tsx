@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   Moon, Shield, ChevronDown, ArrowRight, Lock, Play,
   Sparkles, Headphones, Calculator, FileText, Sunrise,
@@ -80,7 +80,7 @@ const TESTIMONIALS = [
     location: "Dublin, Ireland",
     age: 34,
     role: "Software engineer",
-    quote: "Used to take me 90 minutes to fall asleep most nights. After the protocol, I'm out in 15. Didn't expect it to work that fast.",
+    quote: "Most nights it used to take me around 90 minutes to fall asleep. I'd basically accepted that this was just how my brain was and nothing would really change it. By Night 4-5 of the protocol I was usually out in about 15 minutes and staying asleep until my alarm. Waking up without feeling wrecked the next morning is something I hadn't felt in years.",
   },
   {
     initial: "C",
@@ -88,7 +88,7 @@ const TESTIMONIALS = [
     location: "Curitiba, Brazil",
     age: 38,
     role: "Marketing",
-    quote: "My mind wouldn't stop. The Cognitive Shutdown thing finally gave me a way to actually disconnect at night. Sleep got deeper too.",
+    quote: "I'd lie down and my mind just wouldn't stop, replaying work, bills and conversations late into the night. I'd already tried meditation, sleep podcasts, a bunch of stuff, and nothing really stuck. By Night 3 of the protocol I could actually 'switch off' in under 30 minutes, and my sleep got noticeably deeper. In the mornings I have way more energy and even my patience with people has improved.",
   },
   {
     initial: "G",
@@ -96,7 +96,7 @@ const TESTIMONIALS = [
     location: "Genève, Switzerland",
     age: 41,
     role: "Finance consultant",
-    quote: "Tried melatonin, meditation apps, nothing held. This is the first thing that actually stopped the racing thoughts before bed.",
+    quote: "I was already on the melatonin + meditation app combo; it helped one night and the next I was back to the same racing thoughts before bed. I almost didn't try anything else because it all sounded like the same promise in a different package. In the first few nights of the protocol the racing thoughts started to dial down, and by around Night 5 I could go to bed without that 'tonight I'm not going to sleep' panic. That sense of control over my sleep is something I hadn't felt in a long time.",
   },
   {
     initial: "M",
@@ -104,7 +104,7 @@ const TESTIMONIALS = [
     location: "Berlin, Germany",
     age: 36,
     role: "Designer",
-    quote: "Felt lighter by night 4. Less tension when I lay down. Hadn't slept like this in years.",
+    quote: "I'd get into bed already tense, like I was about to go into a fight with sleep every night. Honestly, I didn't think a 7-night guided routine would change much, it sounded almost too simple. By around Night 4 I was lying down more relaxed and falling asleep faster, without that full-body tension. It had been years since I woke up with the feeling that I'd actually had a real night's sleep.",
   },
 ];
 
@@ -119,68 +119,83 @@ type HeroVariant = {
 
 const HEROES: Record<string, HeroVariant> = {
   default: {
-    eyebrow: <>Built on CBT-I — 30+ years of peer-reviewed clinical research</>,
+    eyebrow: <>For the ones lying awake while the world sleeps</>,
     h1: (
       <>
-        Fall asleep in under 15 minutes.<br />
-        <em className="italic">Stay asleep</em> until your alarm.<br />
-        In 7 nights.
+        Remember what it felt like to<br />
+        wake up <em className="italic">actually rested?</em>
       </>
     ),
     sub: (
       <>
-        The Cognitive Shutdown Method™ is a 7-night CBT-I protocol used by sleep clinics — repackaged so you can start tonight, lying in your own bed.{" "}
-        <strong className="text-[#0E2541]">No pills. No meditation app. No willpower.</strong>{" "}
-        Just the system that retrains an anxious brain to sleep.
+        Before the 3 a.m. ceiling-staring. Before dragging through your days on fumes, short with the people you love.{" "}
+        <strong className="text-[#0E2541]">That version of you isn't gone — your brain just forgot how to switch off.</strong>{" "}
+        In 7 nights, the protocol sleep clinics use teaches it how again. No pills. No willpower.
       </>
     ),
   },
   hyperarousal: {
-    eyebrow: <>What sleep clinics call it — and why supplements can't fix it</>,
+    eyebrow: <>The real reason you can't switch off at night</>,
     h1: (
       <>
-        It's not insomnia.<br />
-        It's <em className="italic">cognitive hyperarousal</em>.
+        Your brain forgot<br />
+        <em className="italic">how to shut down.</em>
       </>
     ),
     sub: (
       <>
-        Your brain learned to stay alert at night — and no supplement turns that off.{" "}
-        <strong className="text-[#0E2541]">CBT-I is the only protocol clinically shown to retrain it.</strong>{" "}
-        7 nights. Self-guided. From your own bed, starting tonight.
+        Chronic stress broke your brain's natural shutdown sequence — so you lie there wired while the world sleeps.{" "}
+        <strong className="text-[#0E2541]">CBT-I is the clinically-proven way to rebuild it.</strong>{" "}
+        7 nights to reset it, from your own bed.
       </>
     ),
   },
   melatonin: {
-    eyebrow: <>If supplements stopped working — read this first</>,
+    eyebrow: <>If melatonin, magnesium and apps stopped working</>,
     h1: (
       <>
-        Melatonin doesn't fix this.<br />
-        <em className="italic">Here's what does.</em>
+        You've tried everything.<br />
+        <em className="italic">You're still awake at 3am.</em>
       </>
     ),
     sub: (
       <>
-        Melatonin signals "it's dark out." Your problem isn't the dark — it's a brain that won't shut down.{" "}
-        <strong className="text-[#0E2541]">CBT-I is what sleep clinics use when supplements fail.</strong>{" "}
+        Melatonin, magnesium, meditation apps — none of them touch the real cause: a brain that won't shut off.{" "}
+        <strong className="text-[#0E2541]">CBT-I is what sleep clinics actually use — not another supplement.</strong>{" "}
         7 nights, from your own bed.
       </>
     ),
   },
   wake3am: {
-    eyebrow: <>If you wake at 3AM with your mind running</>,
+    eyebrow: <>If your mind sprints the moment the lights go out</>,
     h1: (
       <>
-        Waking at 3AM<br />
-        isn't insomnia.<br />
-        <em className="italic">It's something else.</em>
+        It's 3:47am.<br />
+        The house is asleep.<br />
+        <em className="italic">Your brain isn't.</em>
       </>
     ),
     sub: (
       <>
-        It's a cortisol surge meeting a brain that never fully powered down.{" "}
-        <strong className="text-[#0E2541]">CBT-I is the protocol clinics use to break that loop in 7 nights.</strong>{" "}
-        Self-guided, from your bed.
+        The replay of your day, tomorrow's what-ifs, the racing you can't switch off — this isn't bad luck, it's a brain stuck in alert mode.{" "}
+        <strong className="text-[#0E2541]">CBT-I is the protocol clinics use to quiet it in 7 nights.</strong>{" "}
+        From your own bed, starting tonight.
+      </>
+    ),
+  },
+  notyourself: {
+    eyebrow: <>When broken sleep stops being just a night problem</>,
+    h1: (
+      <>
+        You haven't felt like<br />
+        <em className="italic">yourself in months.</em>
+      </>
+    ),
+    sub: (
+      <>
+        The fog, the irritability, snapping at the people you love — it's not who you are, it's months of broken sleep.{" "}
+        <strong className="text-[#0E2541]">CBT-I retrains an anxious brain in 7 nights.</strong>{" "}
+        Not a pill. A protocol. Start tonight.
       </>
     ),
   },
@@ -203,6 +218,55 @@ function cx(...c: (string | false | undefined | null)[]) {
   return c.filter(Boolean).join(" ");
 }
 
+// Resolve the Facebook click id (fbc). On the first load from an ad the Meta
+// pixel may not have written the _fbc cookie yet, so the server-side CAPI was
+// receiving an empty fbc (lowers Event Match Quality). Fall back to building it
+// from the fbclid URL param (fb.1.<ts>.<fbclid>) and persist it for later events.
+function resolveFbc(): string {
+  if (typeof window === "undefined") return "";
+  const m = document.cookie.match(/(?:^|;\s*)_fbc=([^;]+)/);
+  if (m) return m[1];
+  const fbclid = new URLSearchParams(window.location.search).get("fbclid");
+  if (fbclid) {
+    const fbc = `fb.1.${Date.now()}.${fbclid}`;
+    try { document.cookie = `_fbc=${fbc};path=/;max-age=7776000`; } catch {}
+    return fbc;
+  }
+  return "";
+}
+
+function clientId(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    let id = localStorage.getItem("sw_cid");
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
+      localStorage.setItem("sw_cid", id);
+    }
+    return id;
+  } catch { return ""; }
+}
+
+// Fire engagement events to our own DB (powers the dashboard), alongside GA4/pixel.
+// Endpoint /api/sw/e (generic name) chosen to avoid adblocker heuristics on "track".
+function logEvent(event: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const u = new URLSearchParams(window.location.search);
+    void fetch("/api/sw/e", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event,
+        ad_id: u.get("utm_content") || "",
+        hero_variant: window.sessionStorage.getItem("sw_hero_variant") || "default",
+        client_id: clientId(),
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch { /* noop */ }
+}
+
 function useCountdown(target: Date) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -220,74 +284,85 @@ function useCountdown(target: Date) {
 }
 
 function scrollToOrder() {
+  logEvent("cta_click");
   document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ─── VSL Player (click-to-play) ─────────────────────
+// ─── VSL Player (muted autoplay → tap for sound) ────
+// Self-hosted VSL — native player. Autoplay muted (grabs attention), tap to unmute.
+// Engagement tracking: ViewVSL on unmute, 25/50/75% progress, and complete.
 function VimeoPlayer() {
-  const [playing, setPlaying] = useState(false);
+  const ref = useRef<HTMLVideoElement>(null);
+  const [unmuted, setUnmuted] = useState(false);
+  const fired = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!playing) return;
-    if (document.querySelector(`script[src="${VIMEO_PLAYER_API}"]`)) return;
-    const s = document.createElement("script");
-    s.src = VIMEO_PLAYER_API;
-    s.async = true;
-    document.head.appendChild(s);
-  }, [playing]);
-
-  if (!playing) {
-    return (
-      <button
-        type="button"
-        onClick={() => { gtm.vslPlay(); setPlaying(true); }}
-        className="relative w-full block group rounded-2xl overflow-hidden border border-[#E5E7EB] bg-[#0E2541] shadow-[0_6px_30px_rgba(14,37,65,0.10)]"
-        style={{ aspectRatio: "16 / 9" }}
-        aria-label="Play explainer video"
-      >
-        <img
-          src="/images/sleep-peaceful.png"
-          alt=""
-          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/40 via-black/10 to-transparent">
-          <div className="w-20 h-20 rounded-full bg-[#C9A14A] flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform">
-            <Play className="w-8 h-8 text-white fill-white ml-1" />
-          </div>
-        </div>
-        <div className="absolute bottom-4 left-5 right-5 text-left">
-          <p className="text-white text-sm font-semibold drop-shadow">
-            Watch — the 4-minute method overview
-          </p>
-          <p className="text-white/70 text-xs mt-0.5">
-            Why this is the only thing that fixes anxious-brain insomnia long-term
-          </p>
-        </div>
-      </button>
-    );
+  function onTime() {
+    const v = ref.current;
+    if (!v || !v.duration) return;
+    const p = v.currentTime / v.duration;
+    for (const [t, label] of [[0.25, "25"], [0.5, "50"], [0.75, "75"]] as const) {
+      if (p >= t && !fired.current.has(label)) {
+        fired.current.add(label);
+        gtm.vslProgress(Number(label));
+        logEvent("vsl_" + label);
+      }
+    }
   }
-
+  function unmute() {
+    const v = ref.current;
+    if (v) { v.muted = false; v.volume = 1; if (v.paused) void v.play().catch(() => {}); }
+    if (!fired.current.has("play")) { fired.current.add("play"); gtm.vslPlay(); logEvent("vsl_play"); }
+    setUnmuted(true);
+  }
   return (
-    <div className="rounded-2xl overflow-hidden border border-[#E5E7EB] shadow-[0_6px_30px_rgba(14,37,65,0.10)]" style={{ aspectRatio: "16/9" }}>
-      <iframe
-        src={`https://player.vimeo.com/video/${VIMEO_ID}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&playsinline=1&byline=0&portrait=0&title=0`}
-        frameBorder={0}
-        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-        referrerPolicy="strict-origin-when-cross-origin"
-        className="w-full h-full"
-        title={`${METHOD} — method overview`}
+    <div
+      className="relative rounded-2xl overflow-hidden border border-[#E5E7EB] bg-[#0E2541] shadow-[0_6px_30px_rgba(14,37,65,0.10)]"
+      style={{ aspectRatio: "16/9" }}
+    >
+      <video
+        ref={ref}
+        src="/videos/vsl_emocional.mp4"
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        onTimeUpdate={onTime}
+        onEnded={() => { if (!fired.current.has("done")) { fired.current.add("done"); gtm.vslComplete(); logEvent("vsl_complete"); } }}
+        className="w-full h-full object-cover"
       />
+      {!unmuted && (
+        <button
+          type="button"
+          onClick={unmute}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/30 hover:bg-black/15 transition-colors"
+          aria-label="Tap for sound"
+        >
+          <span className="w-16 h-16 rounded-full bg-[#C9A14A] flex items-center justify-center shadow-2xl">
+            <Play className="w-7 h-7 text-white fill-white ml-1" />
+          </span>
+          <span className="text-white text-sm font-bold drop-shadow tracking-wide">🔊 Tap for sound</span>
+        </button>
+      )}
     </div>
   );
 }
 
 // ─── Inline Order Form ──────────────────────────────
-function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
-  const [email, setEmail] = useState("");
+function OrderForm({ id, priceToday, prefillEmail, prefillWhatsapp }: {
+  id?: string;
+  priceToday: number;
+  prefillEmail?: string;
+  prefillWhatsapp?: string;
+}) {
+  const [email, setEmail] = useState(prefillEmail || "");
   const [name, setName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [whatsapp, setWhatsapp] = useState(prefillWhatsapp || "");
+  const [bump, setBump] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  // Hydrate after async fetch on parent
+  useEffect(() => { if (prefillEmail) setEmail(prefillEmail); }, [prefillEmail]);
+  useEffect(() => { if (prefillWhatsapp) setWhatsapp(prefillWhatsapp); }, [prefillWhatsapp]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -295,6 +370,7 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
       toast({ title: "Enter your email to continue", variant: "destructive" });
       return;
     }
+    logEvent("form_submit");
     setLoading(true);
     try {
       const cookies = typeof document !== "undefined" ? document.cookie : "";
@@ -314,7 +390,9 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
         utm_campaign: urlParams.get("utm_campaign") || "",
         utm_content: urlParams.get("utm_content") || "",
       };
-      gtm.lead(email.trim());
+      // Shared event_id so browser fbq Lead and server-side CAPI Lead dedupe
+      const leadEventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      gtm.lead(email.trim(), leadEventId);
       const r = await customFetch("/api/checkout/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -324,7 +402,9 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
           whatsapp: whatsapp.trim() || null,
           hero_variant: heroVariant,
           fbp: cookieValue("_fbp"),
-          fbc: cookieValue("_fbc"),
+          fbc: resolveFbc(),
+          lead_event_id: leadEventId,
+          bump,
           ...utm,
         }),
       });
@@ -377,7 +457,6 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
           <input
             type="email"
             required
-            autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
@@ -385,32 +464,24 @@ function OrderForm({ id, priceToday }: { id?: string; priceToday: number }) {
           />
         </label>
 
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="First name (optional)"
-              autoComplete="given-name"
-              className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm text-[#0E2541] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E2541] focus:ring-2 focus:ring-[#0E2541]/10 transition-all"
-            />
-          </label>
-          <label className="block">
-            <input
-              type="tel"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="WhatsApp (optional)"
-              autoComplete="tel"
-              inputMode="tel"
-              className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm text-[#0E2541] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E2541] focus:ring-2 focus:ring-[#0E2541]/10 transition-all"
-            />
-          </label>
-        </div>
-        <p className="text-[10px] text-[#9CA3AF] -mt-1">
-          Optional — we'll send your sleep window setup and recovery tips. Skip if you prefer email-only.
+        <p className="text-[11px] text-[#9CA3AF] -mt-1">
+          Instant access — you set your password right after checkout.
         </p>
+
+        <label className="flex items-start gap-3 p-3.5 bg-[#FAF3E0] border border-[#E8D8A8] rounded-xl cursor-pointer">
+          <input
+            type="checkbox"
+            checked={bump}
+            onChange={(e) => setBump(e.target.checked)}
+            className="mt-0.5 w-4 h-4 accent-[#C9A14A] shrink-0"
+          />
+          <span className="text-sm text-[#1F2937] leading-snug">
+            <strong>Yes — add the Recovery Pack for {CURRENCY}19</strong>
+            <span className="block text-[#6B7280] text-xs mt-0.5">
+              The toolkit for when life knocks sleep out of rhythm — jet-lag, 3 AM anxiety, stress weeks, shift work. Lock in your results for life.
+            </span>
+          </span>
+        </label>
 
         <button
           type="submit"
@@ -458,24 +529,65 @@ function PrimaryCta({ children, priceToday }: { children: React.ReactNode; price
         {children} <ArrowRight className="w-5 h-5" />
       </button>
       <p className="text-xs text-[#6B7280] mt-3">
-        {CURRENCY}{priceToday} today · {CURRENCY}{PRICE_AFTER} from May 24 · {GUARANTEE_DAYS}-day refund · keep everything
+        {CURRENCY}{priceToday} today · {CURRENCY}{PRICE_AFTER} from {BUMP_LABEL} · {GUARANTEE_DAYS}-day refund · keep everything
       </p>
     </div>
   );
 }
 
 // ──────────────────── MAIN ─────────────────────────
+// Map quiz type → human label for the welcome bar
+const TYPE_BADGE: Record<string, string> = {
+  onset: "Onset Insomniac",
+  maintenance: "3am Waker",
+  mixed: "Mixed Pattern",
+  circadian: "Circadian Disrupted",
+};
+
 export default function Landing() {
   const [, setLocation] = useLocation();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const cd = useCountdown(BUMP_DATE);
   const priceToday = cd.expired ? PRICE_AFTER : PRICE_TODAY;
   const { key: heroKey, variant: hero } = useHeroVariant();
+  const [showSticky, setShowSticky] = useState(false);
+  const [quizProfile, setQuizProfile] = useState<{ type: string; email: string; whatsapp: string } | null>(null);
+
+  // Detect ?qp=<profile_id> arrival from /quiz — fetch profile to prefill form + show welcome bar
+  useEffect(() => {
+    const qp = new URLSearchParams(window.location.search).get("qp");
+    if (!qp) return;
+    fetch("/api/quiz/profile/" + encodeURIComponent(qp))
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.ok && d?.profile) {
+          setQuizProfile({ type: d.profile.type, email: d.profile.email || "", whatsapp: d.profile.whatsapp || "" });
+          logEvent("homepage_from_quiz");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const fired = new Set<string>();
+    const onScroll = () => {
+      setShowSticky(window.scrollY > 700);
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      if (max <= 0) return;
+      const pct = window.scrollY / max;
+      if (pct >= 0.5 && !fired.has("50")) { fired.add("50"); logEvent("scroll_50"); }
+      if (pct >= 0.75 && !fired.has("75")) { fired.add("75"); logEvent("scroll_75"); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     // Shared event_id so browser pixel and server-side CAPI dedupe
     const eventId = `vc_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     gtm.viewVSL(eventId);
+    logEvent("page_view");
     // Server-side ViewContent (CAPI) — deterministic attribution, immune to ITP/adblocker
     try {
       const cookies = document.cookie;
@@ -489,7 +601,7 @@ export default function Landing() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fbp: cookieValue("_fbp"),
-          fbc: cookieValue("_fbc"),
+          fbc: resolveFbc(),
           hero_variant: window.sessionStorage.getItem("sw_hero_variant") || "default",
           utm_source: urlParams.get("utm_source") || "",
           utm_medium: urlParams.get("utm_medium") || "",
@@ -521,6 +633,15 @@ export default function Landing() {
       className="min-h-[100dvh]"
       style={{ background: "#FAFAF7", color: "#1F2937", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
     >
+      {/* Quiz welcome bar — only when arriving from /quiz with ?qp= */}
+      {quizProfile && (
+        <div className="bg-[#C9A14A] text-center py-2 px-4 border-b border-[#B58D38]">
+          <p className="text-xs sm:text-sm font-semibold text-white tracking-wide">
+            Welcome, <strong>{TYPE_BADGE[quizProfile.type] || "Sleeper"}</strong> — your personalized program is below ↓
+          </p>
+        </div>
+      )}
+
       {/* Urgency strip */}
       <div className="bg-[#0E2541] text-center py-2.5 px-4">
         <p className="text-xs sm:text-sm font-semibold text-white tracking-wide">
@@ -593,6 +714,26 @@ export default function Landing() {
           </div>
         </div>
       </Section>
+
+      {/* ═══════════════ EMPATHY ═══════════════ */}
+      <section className="bg-[#0E2541] py-16">
+        <Section>
+          <h2
+            className="text-3xl sm:text-4xl text-center text-white leading-[1.15] tracking-tight"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
+          >
+            You don't just have a sleep problem.<br />
+            <span className="italic text-[#C9A14A]">You have a life problem.</span>
+          </h2>
+          <div className="mt-7 space-y-4 text-[#C7D2E0] text-base sm:text-lg leading-relaxed max-w-xl mx-auto text-center">
+            <p>The fog that makes you forget what someone said five minutes ago. The fuse so short you snap at the people you love — and hate yourself for it after. The quiet dread at 10 p.m. because you already know what's coming.</p>
+            <p>And lately, the worst part: wondering if this foggy, exhausted person is just <em>who you are now.</em></p>
+            <p className="text-white font-semibold text-xl sm:text-2xl pt-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              It's not. It's what years of broken sleep do to a brain that never gets to fully power down — and a brain that learned to stay alert can be taught to let go.
+            </p>
+          </div>
+        </Section>
+      </section>
 
       {/* ═══════════════ BETA TESTERS — early access feedback ═══════════════ */}
       <section className="bg-[#FAFAF7] border-y border-[#EFEFEC] py-14">
@@ -866,7 +1007,12 @@ export default function Landing() {
             The protocol runs for 7 nights. Most people feel a clear difference by Night 3. You have {GUARANTEE_DAYS} nights to try it — full refund if it doesn't work, and you keep every bonus regardless.
           </p>
 
-          <OrderForm id="order-form" priceToday={priceToday} />
+          <OrderForm
+            id="order-form"
+            priceToday={priceToday}
+            prefillEmail={quizProfile?.email}
+            prefillWhatsapp={quizProfile?.whatsapp}
+          />
 
           {!cd.expired && (
             <p className="text-center text-xs text-[#B23B2A] font-semibold mt-5 tracking-wide tabular-nums">
@@ -971,7 +1117,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#FAFAF7] py-10 px-5 border-t border-[#EFEFEC]">
+      <footer className="bg-[#FAFAF7] pt-10 pb-28 px-5 border-t border-[#EFEFEC]">
         <div className="max-w-2xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Moon className="w-4 h-4 text-[#0E2541]" />
@@ -992,6 +1138,27 @@ export default function Landing() {
           </p>
         </div>
       </footer>
+
+      {/* Sticky CTA — keeps the offer + risk reversal in reach at all times */}
+      {showSticky && !cd.expired && (
+        <div
+          className="fixed bottom-0 inset-x-0 z-50 bg-[#0E2541]/95 backdrop-blur border-t border-[#C9A14A]/40 px-4 py-3"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        >
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+            <div className="leading-tight">
+              <p className="text-white font-bold text-sm">Start tonight — {CURRENCY}{priceToday}</p>
+              <p className="text-white/70 text-[11px]">{GUARANTEE_DAYS}-night refund · keep everything</p>
+            </div>
+            <button
+              onClick={scrollToOrder}
+              className="shrink-0 bg-[#C9A14A] hover:bg-[#B58D38] text-white font-extrabold text-sm py-3 px-5 rounded-xl flex items-center gap-1.5"
+            >
+              Get access <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
