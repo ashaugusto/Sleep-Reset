@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { fetchAllAccounts, fetchLeadStats, fetchStripeRevenue, fetchAccountBreakdown, fetchAttribution, fetchAllAdsFlat, fetchAllCampaignsFlat, fetchAllAdsetsFlat } from "../dashboardData";
+import { fetchAllAccounts, fetchLeadStats, fetchStripeRevenue, fetchAccountBreakdown, fetchAttribution, fetchAllAdsFlat, fetchAllCampaignsFlat, fetchAllAdsetsFlat, fetchHomeFunnel } from "../dashboardData";
+import { pool } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -44,6 +45,16 @@ router.get("/admin/dashboard", (req, res) => {
   if (!isAuthorized(req)) return res.status(403).send("Forbidden — pass ?key=<DASHBOARD_SECRET>");
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(renderDashboard(req.query.key as string));
+});
+
+// JSON: home page funnel (Meta delivery → DB engagement → leads → purchases)
+router.get("/admin/dashboard/home-funnel", async (req, res) => {
+  if (!isAuthorized(req)) return res.status(403).json({ error: "Forbidden" });
+  const preset = (req.query.preset as string) || "last_7d";
+  try {
+    const data = await fetchHomeFunnel(preset);
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: (e as Error).message }); }
 });
 
 // ─── CSV export — Excel-compatible (UTF-8 BOM + comma separator) ─────────────
@@ -236,6 +247,34 @@ function renderDashboard(key: string): string {
 
   <div id="totals" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 mb-5"></div>
 
+  <!-- Home Page Funnel — Meta delivery → DB engagement → leads → purchases -->
+  <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mb-5">
+    <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-sm">Home Page Funnel <span class="text-[10px] text-slate-500 font-normal">(Meta → DB engagement → lead → purchase)</span></h2>
+        <p class="text-[10px] text-slate-500 mt-0.5">Each row = unique visitors at that step in the selected period. % = of LPV (top-of-page baseline). Drop = vs previous step. DB rows can be under-counted by adblockers; Meta rows are authoritative for ad-side; Lead/Purchase are server-side (immune to adblock).</p>
+      </div>
+      <span id="funnel-meta" class="text-[10px] text-slate-500"></span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs num">
+        <thead>
+          <tr class="bg-slate-800/70 text-[10px] uppercase text-slate-400 tracking-wider border-b border-slate-700">
+            <th class="text-left px-3 py-2">Step</th>
+            <th class="text-left px-2 py-2 w-14">Source</th>
+            <th class="text-right px-3 py-2">Count</th>
+            <th class="text-right px-3 py-2" title="% of LPV (Meta)">% of LPV</th>
+            <th class="text-right px-3 py-2" title="Drop-off from previous step">Drop</th>
+            <th class="px-3 py-2 w-2/5">Funnel</th>
+          </tr>
+        </thead>
+        <tbody id="home-funnel-body">
+          <tr><td colspan="6" class="text-center px-3 py-6 text-slate-500">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Ads health summary (live) + Page comparison -->
   <div id="ads-health-section" class="grid lg:grid-cols-2 gap-4 mb-5">
     <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -404,8 +443,57 @@ async function load() {
   if (!r.ok) { document.getElementById("meta").textContent = "Error: " + r.status; return; }
   const d = await r.json();
   renderTotals(d); renderAdsHealth(d); renderByPage(d); renderAccounts(d); renderLeads(d); renderStripe(d);
+  loadHomeFunnel(preset);
   const dt = new Date(d.generated_at);
   document.getElementById("meta").textContent = "Updated " + dt.toLocaleTimeString() + " · preset=" + d.preset + " · 15 accounts";
+}
+
+async function loadHomeFunnel(preset) {
+  const body = document.getElementById("home-funnel-body");
+  const meta = document.getElementById("funnel-meta");
+  try {
+    const r = await fetch("/admin/dashboard/home-funnel?preset=" + preset + "&key=" + encodeURIComponent(KEY));
+    if (!r.ok) { body.innerHTML = '<tr><td colspan="6" class="text-center px-3 py-6 text-red-400">Error ' + r.status + '</td></tr>'; return; }
+    const d = await r.json();
+    renderHomeFunnel(d);
+    meta.textContent = preset + " · " + new Date(d.since).toISOString().slice(0,10) + " → " + new Date(d.until).toISOString().slice(0,10);
+  } catch (e) {
+    body.innerHTML = '<tr><td colspan="6" class="text-center px-3 py-6 text-red-400">' + e.message + '</td></tr>';
+  }
+}
+
+function renderHomeFunnel(d) {
+  const lpv = (d.steps.find(s => s.key === "lpv") || {}).n || 0;
+  const body = document.getElementById("home-funnel-body");
+  let prev = null;
+  body.innerHTML = d.steps.map((s, i) => {
+    const pctOfLpv = lpv > 0 ? (s.n / lpv * 100) : null;
+    const drop = (prev != null && prev > 0) ? ((1 - s.n / prev) * 100) : null;
+    prev = s.n;
+    const barPct = lpv > 0 ? Math.min(100, (s.n / lpv * 100)) : 0;
+    const srcBadge = s.source === "meta"
+      ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300">Meta</span>'
+      : '<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300">DB</span>';
+    const dropCls = drop == null ? 'text-slate-600'
+                   : drop >= 80 ? 'text-red-400 font-semibold'
+                   : drop >= 50 ? 'text-amber-400'
+                   : 'text-slate-400';
+    const dropTxt = drop == null ? '—' : '-' + drop.toFixed(0) + '%';
+    const pctTxt = pctOfLpv == null ? '—' : pctOfLpv.toFixed(1) + '%';
+    const isOutcome = s.key === "lead" || s.key === "purchase";
+    const rowBg = isOutcome ? 'bg-emerald-950/20' : '';
+    const labelHtml = s.note
+      ? '<div>' + s.label + '</div><div class="text-[10px] text-slate-500">' + s.note + '</div>'
+      : s.label;
+    return '<tr class="border-t border-slate-800 ' + rowBg + '">' +
+      '<td class="px-3 py-2">' + labelHtml + '</td>' +
+      '<td class="px-2 py-2">' + srcBadge + '</td>' +
+      '<td class="px-3 py-2 text-right font-semibold">' + s.n.toLocaleString("en-US") + '</td>' +
+      '<td class="px-3 py-2 text-right text-slate-300">' + pctTxt + '</td>' +
+      '<td class="px-3 py-2 text-right ' + dropCls + '">' + dropTxt + '</td>' +
+      '<td class="px-3 py-2"><div class="bg-slate-800/70 rounded h-3 overflow-hidden"><div class="h-3 ' + (isOutcome ? 'bg-emerald-500/60' : 'bg-indigo-500/50') + '" style="width:' + barPct + '%"></div></div></td>' +
+    '</tr>';
+  }).join("");
 }
 
 function renderTotals(d) {
@@ -944,6 +1032,9 @@ function renderFlatDashboard(key: string, level: DashLevel): string {
     <label class="flex items-center gap-1 text-slate-400">
       <input type="checkbox" id="f-zero" class="accent-indigo-500" /> Hide zero spend
     </label>
+    <label class="flex items-center gap-1 text-slate-400">
+      <input type="checkbox" id="f-paused" class="accent-indigo-500" /> Hide paused
+    </label>
     <span class="text-slate-500 text-[10px] ml-auto"><span id="row-count">0</span> ads</span>
   </div>
 
@@ -964,8 +1055,12 @@ function renderFlatDashboard(key: string, level: DashLevel): string {
             <th class="text-right px-2 py-2 sortable" data-sort="reach">Reach</th>
             <th class="text-right px-2 py-2 sortable" data-sort="frequency" title="Avg times same user saw the ad">Freq</th>
             <th class="text-right px-2 py-2 sortable" data-sort="ctr">CTR</th>
-            <th class="text-right px-2 py-2 sortable" data-sort="hook_rate">Hook%</th>
-            <th class="text-right px-2 py-2 sortable" data-sort="hold_rate">Hold%</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="hook_rate" title="3s plays / impressions">Hook%</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="hold_rate" title="ThruPlay / 3s plays">Hold%</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="p25_rate" title="Watched ≥25% / 3s plays">P25</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="p50_rate" title="Watched ≥50% / 3s plays">P50</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="p75_rate" title="Watched ≥75% / 3s plays">P75</th>
+            <th class="text-right px-2 py-2 sortable" data-sort="p95_rate" title="Watched ≥95% / 3s plays">P95</th>
             <th class="text-right px-2 py-2 sortable" data-sort="landing_views">LPV</th>
             <th class="text-right px-2 py-2 sortable" data-sort="cost_per_lpv" title="Cost per landing page view">CPLPV</th>
             <th class="text-right px-2 py-2 sortable" data-sort="initiated_checkout">IC·px</th>
@@ -1110,7 +1205,12 @@ async function load() {
     const ad = a.ads_delivering || 0;
     const deliv_pct = aa > 0 ? (ad / aa * 100) : (a.impressions > 0 ? 100 : 0);
     const lead_to_pur = (a.db_leads > 0) ? (a.db_purchases / a.db_leads * 100) : null;
-    return { ...a, deliv_pct, lead_to_pur };
+    const v3 = a.v_3s || 0;
+    const p25_rate = v3 > 0 ? (a.v_p25 || 0) / v3 : null;
+    const p50_rate = v3 > 0 ? (a.v_p50 || 0) / v3 : null;
+    const p75_rate = v3 > 0 ? (a.v_p75 || 0) / v3 : null;
+    const p95_rate = v3 > 0 ? (a.v_p95 || 0) / v3 : null;
+    return { ...a, deliv_pct, lead_to_pur, p25_rate, p50_rate, p75_rate, p95_rate };
   });
   populateAccountFilter(allAds);
   render();
@@ -1131,12 +1231,17 @@ function applyFilters(ads) {
   const fAcct = document.getElementById("f-account").value;
   const fSpend = document.getElementById("f-spend").value;
   const fZero = document.getElementById("f-zero").checked;
+  const fPaused = document.getElementById("f-paused").checked;
   const fStatus = document.getElementById("f-status").value;
   return ads.filter(a => {
     if (fAcct && a.account_name !== fAcct) return false;
     if (fSpend === "delivering" && (!a.spend_eur || a.spend_eur <= 0)) return false;
     if (fSpend === "purchasing" && (!a.db_purchases || a.db_purchases <= 0)) return false;
     if (fZero && (!a.spend_eur || a.spend_eur <= 0)) return false;
+    if (fPaused) {
+      const s = a.effective_status || "";
+      if (s === "PAUSED" || s === "CAMPAIGN_PAUSED" || s === "ADSET_PAUSED" || s === "ARCHIVED" || s === "DELETED") return false;
+    }
     if (fStatus) {
       const s = a.effective_status || "";
       if (fStatus === "ACTIVE" && s !== "ACTIVE") return false;
@@ -1230,6 +1335,10 @@ function render() {
       '<td class="px-2 py-1.5 text-right">' + (a.ctr != null ? Number(a.ctr).toFixed(2) + "%" : "—") + '</td>' +
       '<td class="px-2 py-1.5 text-right">' + fmtP(a.hook_rate) + '</td>' +
       '<td class="px-2 py-1.5 text-right">' + fmtP(a.hold_rate) + '</td>' +
+      '<td class="px-2 py-1.5 text-right text-slate-300">' + (a.p25_rate != null ? fmtP(a.p25_rate) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right text-slate-300">' + (a.p50_rate != null ? fmtP(a.p50_rate) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right text-slate-300">' + (a.p75_rate != null ? fmtP(a.p75_rate) : "—") + '</td>' +
+      '<td class="px-2 py-1.5 text-right text-slate-300">' + (a.p95_rate != null ? fmtP(a.p95_rate) : "—") + '</td>' +
       '<td class="px-2 py-1.5 text-right">' + fmtN(a.landing_views) + '</td>' +
       '<td class="px-2 py-1.5 text-right">' + (a.cost_per_lpv != null ? '€' + fmtM(a.cost_per_lpv) : "—") + '</td>' +
       '<td class="px-2 py-1.5 text-right">' + fmtN(a.initiated_checkout) + '</td>' +
@@ -1246,7 +1355,7 @@ function render() {
   }).join("");
 
   if (sorted.length === 0) {
-    const totalCols = 25 + LEVEL.extraCols.length;
+    const totalCols = 29 + LEVEL.extraCols.length;
     tbody.innerHTML = '<tr><td colspan="' + totalCols + '" class="text-center px-2 py-8 text-slate-500">No rows match the filters</td></tr>';
   }
 }
@@ -1262,6 +1371,7 @@ document.getElementById("f-account").addEventListener("change", render);
 document.getElementById("f-spend").addEventListener("change", render);
 document.getElementById("f-status").addEventListener("change", render);
 document.getElementById("f-zero").addEventListener("change", render);
+document.getElementById("f-paused").addEventListener("change", render);
 document.getElementById("refresh").addEventListener("click", load);
 document.getElementById("export-csv").addEventListener("click", () => {
   const preset = document.getElementById("preset").value;
@@ -1278,5 +1388,50 @@ load();
 </body>
 </html>`;
 }
+
+// ─── VSL + page-view engagement funnel (our own DB) ───────────────────────────
+router.get("/admin/dashboard/vsl", async (req: Request, res: Response) => {
+  if (!isAuthorized(req)) return res.status(403).send("Forbidden — pass ?key=<DASHBOARD_SECRET>");
+  const days = Math.min(90, Math.max(1, parseInt(String(req.query.days ?? "7"), 10) || 7));
+  try {
+    const { rows } = await pool.query(
+      `SELECT event, count(*)::int AS total, count(DISTINCT client_id)::int AS uniq
+       FROM engagement_events WHERE created_at >= now() - ($1 || ' days')::interval
+       GROUP BY event`,
+      [days],
+    );
+    const m: Record<string, { total: number; uniq: number }> = {};
+    for (const r of rows as { event: string; total: number; uniq: number }[]) m[r.event] = { total: r.total, uniq: r.uniq };
+    const g = (e: string) => m[e]?.uniq ?? 0;
+    const views = g("page_view");
+    const pct = (n: number) => (views ? Math.round((n / views) * 100) : 0);
+    const funnel: [string, number, number][] = [
+      ["Visitas (page view)", views, 100],
+      ["Play c/ som (unmute)", g("vsl_play"), pct(g("vsl_play"))],
+      ["Assistiu 25%", g("vsl_25"), pct(g("vsl_25"))],
+      ["Assistiu 50%", g("vsl_50"), pct(g("vsl_50"))],
+      ["Assistiu 75%", g("vsl_75"), pct(g("vsl_75"))],
+      ["Assistiu ate o fim", g("vsl_complete"), pct(g("vsl_complete"))],
+    ];
+    const k = encodeURIComponent(String(req.query.key ?? ""));
+    const rowsHtml = funnel.map(([label, n, p]) => `
+      <tr><td style="padding:10px 14px;border-bottom:1px solid #1e293b">${label}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #1e293b;text-align:right;font-weight:700">${n}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #1e293b;width:40%"><div style="background:#1e293b;border-radius:6px;height:20px"><div style="background:#C9A14A;height:20px;border-radius:6px;width:${p}%"></div></div></td>
+      <td style="padding:10px 14px;border-bottom:1px solid #1e293b;text-align:right;color:#94a3b8">${p}%</td></tr>`).join("");
+    res.send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VSL Funnel</title></head>
+      <body style="background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif;margin:0;padding:24px">
+      <div style="max-width:760px;margin:0 auto">
+        <h1 style="font-size:20px;margin:0 0 4px">VSL &amp; Page Engagement <span style="color:#94a3b8;font-size:13px">— ultimos ${days} dias (visitantes unicos)</span></h1>
+        <div style="margin:10px 0">${[7, 14, 30].map((d) => `<a href="/admin/dashboard/vsl?key=${k}&amp;days=${d}" style="color:#C9A14A;margin-right:12px">${d}d</a>`).join("")}<a href="/admin/dashboard?key=${k}" style="color:#94a3b8;margin-left:8px">&larr; dashboard</a></div>
+        <table style="width:100%;border-collapse:collapse;background:#111827;border-radius:10px;overflow:hidden">
+          <thead><tr style="color:#94a3b8;font-size:12px;text-transform:uppercase"><th style="padding:10px 14px;text-align:left">Etapa</th><th style="padding:10px 14px;text-align:right">Unicos</th><th style="padding:10px 14px">&nbsp;</th><th style="padding:10px 14px;text-align:right">% visitas</th></tr></thead>
+          <tbody>${rowsHtml}</tbody></table>
+        <p style="color:#64748b;font-size:12px;margin-top:14px">Play = deu &quot;tap for sound&quot; (engajou). O autoplay mudo toca pra todos, por isso nao conta como play. Quartis = profundidade de visualizacao.</p>
+      </div></body></html>`);
+  } catch (e) {
+    res.status(500).send("erro: " + String(e));
+  }
+});
 
 export default router;

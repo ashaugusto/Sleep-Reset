@@ -751,3 +751,78 @@ export async function fetchStripeRevenue(days = 7): Promise<StripeRevenue> {
     return { total_payments: 0, total_revenue_eur: 0, recent_payments: [] };
   }
 }
+
+// ─── Home page funnel (Meta ad delivery → DB engagement → leads → purchases) ───
+export type HomeFunnelStep = {
+  key: string;
+  label: string;
+  n: number;
+  source: "meta" | "db";
+  note?: string;
+};
+export type HomeFunnel = {
+  preset: string;
+  since: string;
+  until: string;
+  steps: HomeFunnelStep[];
+};
+
+export async function fetchHomeFunnel(preset: string): Promise<HomeFunnel> {
+  const { since, until } = presetToRange(preset);
+
+  // ── Meta side: impressions + LPV + IC + Purchase across all accounts ─────
+  let metaImpr = 0, metaLpv = 0, metaIc = 0;
+  try {
+    const accounts = await fetchAllAccounts(preset);
+    for (const a of accounts) {
+      metaImpr += a.impressions || 0;
+      metaLpv += a.landing_views || 0;
+      metaIc += a.initiated_checkout || 0;
+    }
+  } catch { /* keep zeros */ }
+
+  // ── DB side: engagement_events grouped by event, distinct client_id ─────
+  const evRows = await db.execute<{ event: string; n: number }>(sql`
+    SELECT event, COUNT(DISTINCT client_id)::int AS n
+    FROM engagement_events
+    WHERE created_at >= ${since.toISOString()} AND created_at < ${until.toISOString()}
+    GROUP BY event
+  `);
+  const ev: Record<string, number> = {};
+  // drizzle returns either { rows: [...] } or [...] depending on driver — handle both
+  const evArr: any[] = Array.isArray((evRows as any).rows) ? (evRows as any).rows : (evRows as any);
+  for (const r of evArr) ev[r.event] = Number(r.n) || 0;
+
+  // ── DB side: leads + paid leads in window ────────────────────────────────
+  const leadRows = await db.execute<{ leads: number; paid: number }>(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE created_at >= ${since.toISOString()} AND created_at < ${until.toISOString()})::int AS leads,
+      COUNT(*) FILTER (WHERE purchased = true
+                       AND purchased_at >= ${since.toISOString()}
+                       AND purchased_at < ${until.toISOString()})::int AS paid
+    FROM leads
+  `);
+  const leadArr: any[] = Array.isArray((leadRows as any).rows) ? (leadRows as any).rows : (leadRows as any);
+  const dbLeads = Number(leadArr[0]?.leads ?? 0);
+  const dbPaid  = Number(leadArr[0]?.paid ?? 0);
+
+  const steps: HomeFunnelStep[] = [
+    { key: "impr",       label: "Impressions (Meta)",        n: metaImpr,                source: "meta", note: "ad views in feed" },
+    { key: "lpv",        label: "Landing Page View (Meta)",  n: metaLpv,                 source: "meta", note: "browser reached home (Meta count)" },
+    { key: "page_view",  label: "Page View (DB)",            n: ev.page_view || 0,       source: "db",   note: "distinct visitors logged on our server (adblocker-affected)" },
+    { key: "scroll_50",  label: "Scroll 50%",                n: ev.scroll_50 || 0,       source: "db" },
+    { key: "scroll_75",  label: "Scroll 75%",                n: ev.scroll_75 || 0,       source: "db" },
+    { key: "vsl_play",   label: "VSL Play (unmute)",         n: ev.vsl_play || 0,        source: "db",   note: "tapped 'tap for sound'" },
+    { key: "vsl_25",     label: "VSL 25% watched",           n: ev.vsl_25 || 0,          source: "db" },
+    { key: "vsl_50",     label: "VSL 50% watched",           n: ev.vsl_50 || 0,          source: "db" },
+    { key: "vsl_75",     label: "VSL 75% watched",           n: ev.vsl_75 || 0,          source: "db" },
+    { key: "vsl_done",   label: "VSL completed",             n: ev.vsl_complete || 0,    source: "db" },
+    { key: "cta_click",  label: "CTA click (scroll to form)",n: ev.cta_click || 0,       source: "db" },
+    { key: "form_submit",label: "Form submitted",            n: ev.form_submit || 0,     source: "db",   note: "clicked Continue to Stripe" },
+    { key: "lead",       label: "Lead (DB row created)",     n: dbLeads,                 source: "db",   note: "server-side, not blocked by adblocker" },
+    { key: "ic_meta",    label: "Initiate Checkout (Meta px)",n: metaIc,                 source: "meta" },
+    { key: "purchase",   label: "Purchase (DB)",             n: dbPaid,                  source: "db",   note: "Stripe-confirmed" },
+  ];
+
+  return { preset, since: since.toISOString(), until: until.toISOString(), steps };
+}

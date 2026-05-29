@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { sendCapiEvent } from "../lib/meta-capi";
+import { pool } from "@workspace/db";
 import { randomUUID } from "node:crypto";
 
 const router: IRouter = Router();
@@ -46,5 +47,39 @@ router.post("/track/view", async (req: Request, res: Response) => {
 
   res.json({ ok: true, event_id: eventId });
 });
+
+// ─── Engagement events (page view + scroll + VSL depth + CTA + form) → engagement_events ───
+// Endpoint name kept generic (/api/sw/e) to escape adblocker heuristics.
+// Old /api/track/event kept as alias for ~30d so the previously-shipped bundle keeps working.
+const ALLOWED_EVENTS = new Set([
+  "page_view",
+  "scroll_50", "scroll_75",
+  "vsl_play", "vsl_25", "vsl_50", "vsl_75", "vsl_complete",
+  "cta_click",
+  "form_submit",
+  "quiz_start", "quiz_questions_done", "quiz_complete",
+  "quiz_result_view", "quiz_to_checkout",
+  "homepage_from_quiz",
+]);
+async function handleEvent(req: Request, res: Response) {
+  const { event, ad_id, hero_variant, client_id } = req.body as {
+    event?: string; ad_id?: string; hero_variant?: string; client_id?: string;
+  };
+  if (!event || !ALLOWED_EVENTS.has(event)) {
+    res.status(400).json({ ok: false });
+    return;
+  }
+  try {
+    await pool.query(
+      "INSERT INTO engagement_events (event, ad_id, hero_variant, client_id) VALUES ($1,$2,$3,$4)",
+      [event.slice(0, 32), ad_id?.slice(0, 64) || null, hero_variant?.slice(0, 32) || null, client_id?.slice(0, 64) || null],
+    );
+  } catch (e) {
+    console.error("[sw/e] insert failed:", e);
+  }
+  res.json({ ok: true });
+}
+router.post("/sw/e", handleEvent);
+router.post("/track/event", handleEvent); // legacy alias
 
 export default router;
