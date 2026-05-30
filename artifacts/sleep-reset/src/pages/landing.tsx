@@ -199,6 +199,22 @@ const HEROES: Record<string, HeroVariant> = {
       </>
     ),
   },
+  "doctor-cbti": {
+    eyebrow: <>What sleep clinics actually prescribe — not pills</>,
+    h1: (
+      <>
+        NHS, Mayo, the AASM and JAMA<br />
+        <em className="italic">all recommend the same thing.</em>
+      </>
+    ),
+    sub: (
+      <>
+        For chronic insomnia, the first-line treatment isn't medication — it's CBT-I.{" "}
+        <strong className="text-[#0E2541]">We turned the exact clinical protocol into 7 nights you run from your own bed.</strong>{" "}
+        €27. 60-night refund.
+      </>
+    ),
+  },
 };
 
 function useHeroVariant() {
