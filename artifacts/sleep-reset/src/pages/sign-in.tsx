@@ -51,14 +51,14 @@ export default function SignInPage() {
     <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="flex items-center justify-center gap-2 py-5 border-b border-border/40">
         <Moon className="w-4 h-4 text-primary" />
-        <span className="font-bold text-sm">Sleep Rewire</span>
+        <span className="font-bold text-sm">Sleep Wired</span>
       </header>
 
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center space-y-1">
             <h1 className="text-2xl font-extrabold">Sign in</h1>
-            <p className="text-sm text-muted-foreground">Access your Sleep Rewire protocol</p>
+            <p className="text-sm text-muted-foreground">Access your Sleep Wired protocol</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

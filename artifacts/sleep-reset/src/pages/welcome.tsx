@@ -58,7 +58,7 @@ export default function Welcome() {
     <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="flex items-center justify-center gap-2 py-5 border-b border-border/40">
         <Moon className="w-4 h-4 text-primary" />
-        <span className="font-bold text-sm">Sleep Rewire</span>
+        <span className="font-bold text-sm">Sleep Wired</span>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-10 max-w-md mx-auto w-full">
