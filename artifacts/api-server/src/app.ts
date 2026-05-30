@@ -100,6 +100,19 @@ app.post(
               .where(conds.length > 1 ? or(...conds) : conds[0]);
             logger.info({ email, sessionId }, "Lead marked as purchased");
 
+            // Attribution: link quiz profile -> purchase (best-effort, isolated; never blocks the purchase path)
+            if (email) {
+              try {
+                const { pool } = await import("@workspace/db");
+                await pool.query(
+                  "UPDATE sleep_profiles SET converted_at = now() WHERE lower(email) = $1 AND converted_at IS NULL",
+                  [email],
+                );
+              } catch (cErr) {
+                logger.error(cErr, "sleep_profiles converted_at update failed (non-fatal)");
+              }
+            }
+
             // CAPI Purchase + Post-purchase welcome email
             try {
               const leadRows = await db.select().from(leadsTable)
