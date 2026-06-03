@@ -10,6 +10,14 @@ function clientIp(req: Request): string | null {
   return xfwd || req.socket.remoteAddress || null;
 }
 
+// Meta ad review + crawlers run JS and were inflating page_view ~4-5x vs real ad clicks.
+// Drop them silently (200 ok) so the dashboard reflects humans only.
+const BOT_UA = /bot|crawler|spider|crawling|facebookexternalhit|meta-externalagent|headless|puppeteer|playwright|lighthouse|pingdom|preview|scrapy|python-requests|curl\/|wget\//i;
+function isBot(req: Request): boolean {
+  const ua = (req.headers["user-agent"] as string | undefined) ?? "";
+  return ua === "" || BOT_UA.test(ua);
+}
+
 // ─── Track ViewContent server-side ───────────────────────────────────────────
 // Called by the landing page on mount. Browser pixel still fires too (same eventId for dedupe).
 router.post("/track/view", async (req: Request, res: Response) => {
@@ -24,6 +32,10 @@ router.post("/track/view", async (req: Request, res: Response) => {
     event_id?: string;
   };
   const eventId = event_id || `vc_${randomUUID()}`;
+  if (isBot(req)) {
+    res.json({ ok: true, event_id: eventId }); // don't send bot ViewContent to CAPI (poisons EMQ/optimization)
+    return;
+  }
   const eventSourceUrl = `${process.env.APP_URL || "https://sleepwired.com"}/${hero_variant ? `?h=${hero_variant}` : ""}`;
 
   void sendCapiEvent({
@@ -69,6 +81,10 @@ async function handleEvent(req: Request, res: Response) {
   };
   if (!event || !ALLOWED_EVENTS.has(event)) {
     res.status(400).json({ ok: false });
+    return;
+  }
+  if (isBot(req)) {
+    res.json({ ok: true }); // ack, don't store
     return;
   }
   try {

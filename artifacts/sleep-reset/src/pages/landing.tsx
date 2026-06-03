@@ -307,15 +307,35 @@ function scrollToOrder() {
 // ─── VSL Player (muted autoplay → tap for sound) ────
 // Self-hosted VSL — native player. Autoplay muted (grabs attention), tap to unmute.
 // Engagement tracking: ViewVSL on unmute, 25/50/75% progress, and complete.
+// While muted, large synced captions carry the pitch (78% of viewers never unmute —
+// the muted experience has to sell on its own). Hidden the moment sound comes on.
+const MUTED_CAPTIONS: Array<[number, number, string]> = [
+  [0, 5.1, "If you've forgotten what it feels like to fall asleep without a fight…"],
+  [5.1, 11, "…and wake up without dread — stay with me."],
+  [11, 17.3, "I'll show you exactly why you can't sleep…"],
+  [17.3, 24.3, "…and the 7-night method the NHS, Mayo Clinic & the AASM recommend before a single sleeping pill."],
+  [24.3, 30, "Not a supplement. Not a gadget. Not “trying harder.”"],
+  [30, 36.3, "Trying harder is part of the problem — I'll prove it."],
+  [36.3, 42.1, "Let's be honest about what this actually does to you."],
+  [42.1, 52.3, "It's not just the nights. It's the whole next day."],
+  [52.3, 65.2, "Coffee does nothing. Your brain is buffering by 10am."],
+  [65.2, 82.1, "You snap at the people you love — over nothing."],
+  [82.1, 93.1, "And you know that's not who you are."],
+];
+
 function VimeoPlayer() {
   const ref = useRef<HTMLVideoElement>(null);
   const [unmuted, setUnmuted] = useState(false);
+  const [capIdx, setCapIdx] = useState(0);
   const fired = useRef<Set<string>>(new Set());
 
   function onTime() {
     const v = ref.current;
     if (!v || !v.duration) return;
     const s = v.currentTime;
+    // Sync the muted-state caption to the current second (cheap: index compare).
+    const idx = MUTED_CAPTIONS.findIndex(([a, b]) => s >= a && s < b);
+    if (idx !== capIdx) setCapIdx(idx);
     // Time-based retention milestones — far more useful than %-quartiles for a 17min VSL.
     // Tells us how deep into the video people actually get (where they drop off).
     for (const [sec, label] of [[30, "30s"], [60, "1m"], [120, "2m"], [300, "5m"], [600, "10m"]] as const) {
@@ -350,7 +370,7 @@ function VimeoPlayer() {
     >
       <video
         ref={ref}
-        src="/videos/vsl_emocional.mp4"
+        src="/videos/vsl_emocional_v2.mp4"
         autoPlay
         muted
         playsInline
@@ -364,13 +384,22 @@ function VimeoPlayer() {
         <button
           type="button"
           onClick={unmute}
-          className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/30 hover:bg-black/15 transition-colors"
+          className="absolute inset-0 flex flex-col items-center justify-between text-left"
           aria-label="Tap for sound"
         >
-          <span className="w-16 h-16 rounded-full bg-[#C9A14A] flex items-center justify-center shadow-2xl">
-            <Play className="w-7 h-7 text-white fill-white ml-1" />
+          {/* Big synced captions — the muted pitch. Top-anchored so the video's own
+              burned-in captions (bottom) never double up. */}
+          <span className="w-full px-4 pt-4 sm:px-8 sm:pt-7 bg-gradient-to-b from-black/55 via-black/25 to-transparent pb-10">
+            <span className="block max-w-[34ch] mx-auto text-center text-white font-bold leading-snug text-lg sm:text-2xl [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]">
+              {capIdx >= 0 ? MUTED_CAPTIONS[capIdx][2] : "He's explaining why nothing you tried has worked…"}
+            </span>
           </span>
-          <span className="text-white text-sm font-bold drop-shadow tracking-wide">🔊 Tap for sound</span>
+          <span className="mb-4 sm:mb-6 mx-auto flex items-center gap-2.5 rounded-full bg-[#C9A14A] pl-2.5 pr-5 py-2 shadow-2xl animate-pulse">
+            <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+            </span>
+            <span className="text-white text-sm sm:text-base font-bold tracking-wide whitespace-nowrap">🔊 Tap to listen</span>
+          </span>
         </button>
       )}
     </div>
