@@ -16,7 +16,7 @@ import {
 const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
 const CURRENCY = "€";
-const VSL_SRC = "/videos/vsl_emocional_v2.mp4";
+const VSL_SRC = "/videos/vsl_emocional_v3.mp4";
 
 // Episode map — provisional segments of the current VSL until the
 // dedicated cuts are rendered. start = seek offset in seconds.

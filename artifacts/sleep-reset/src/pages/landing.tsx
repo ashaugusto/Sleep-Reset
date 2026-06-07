@@ -370,7 +370,7 @@ function VimeoPlayer() {
     >
       <video
         ref={ref}
-        src="/videos/vsl_emocional_v2.mp4"
+        src="/videos/vsl_emocional_v3.mp4"
         autoPlay
         muted
         playsInline
