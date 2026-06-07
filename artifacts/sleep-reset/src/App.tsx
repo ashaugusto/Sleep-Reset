@@ -46,8 +46,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function RootRedirect() {
   const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <Spinner />;
-  if (!isSignedIn) return <Landing />;
-  if (!user?.purchasedAt) return <Landing />;
+  if (!isSignedIn) return <Watch />;
+  if (!user?.purchasedAt) return <Watch />;
   if (!user?.onboardingComplete) return <Redirect to="/onboarding" />;
   return <Redirect to="/dashboard" />;
 }
@@ -83,6 +83,7 @@ function Router() {
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
       <Route path="/watch" component={Watch} />
+      <Route path="/start" component={Landing} />
       <Route path="/quiz" component={Quiz} />
       <Route path="/quiz/result" component={QuizResult} />
       <Route path="/solution">

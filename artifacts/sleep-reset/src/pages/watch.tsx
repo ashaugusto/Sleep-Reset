@@ -512,7 +512,7 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
                 <Play className="w-5 h-5 fill-black" /> Play
               </button>
               <a
-                href="/#order-form"
+                href="/start#order-form"
                 onClick={() => logEvent("watch_cta_click")}
                 className="flex items-center gap-2 bg-[#E50914] text-white font-bold rounded-[4px] px-6 py-2 text-sm sm:text-base hover:bg-[#f6121d] transition-colors"
               >
@@ -610,7 +610,7 @@ function Faq() {
           Ready to finally sleep? Your first night starts tonight.
         </p>
         <a
-          href="/#order-form"
+          href="/start#order-form"
           onClick={() => logEvent("watch_cta_click")}
           className="inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-lg sm:text-2xl px-8 py-3.5 rounded-[4px] transition-colors"
         >
@@ -695,7 +695,7 @@ export default function Watch() {
             <Search className="hidden sm:block w-5 h-5 text-white cursor-pointer" />
             <Bell className="hidden sm:block w-5 h-5 text-white cursor-pointer" />
             <a
-              href="/#order-form"
+              href="/start#order-form"
               onClick={() => logEvent("watch_cta_click")}
               className="bg-[#E50914] hover:bg-[#f6121d] text-white text-[0.78rem] font-bold px-3.5 py-1.5 rounded-[4px] transition-colors"
             >
@@ -740,7 +740,7 @@ export default function Watch() {
               </p>
             </div>
             <a
-              href="/#order-form"
+              href="/start#order-form"
               onClick={() => logEvent("watch_cta_click")}
               className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3 rounded-[4px] transition-colors"
             >
@@ -759,7 +759,7 @@ export default function Watch() {
           <a href="/privacy-policy" className="hover:underline">Privacy</a>
           <a href="/terms" className="hover:underline">Terms of Use</a>
           <a href="/sign-in" className="hover:underline">Sign In</a>
-          <a href="/#order-form" className="hover:underline">Start the protocol</a>
+          <a href="/start#order-form" className="hover:underline">Start the protocol</a>
         </div>
         <p className="text-[0.72rem] leading-relaxed">
           Sleep Wired is an educational self-help program based on CBT-I and is not a substitute for medical care.
@@ -774,7 +774,7 @@ export default function Watch() {
       {scrolled && (
         <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 px-4 py-3" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.95) 60%, transparent)" }}>
           <a
-            href="/#order-form"
+            href="/start#order-form"
             onClick={() => logEvent("watch_cta_click")}
             className="flex items-center justify-center gap-2 bg-[#E50914] text-white font-bold text-base py-3 rounded-[4px] w-full"
           >
