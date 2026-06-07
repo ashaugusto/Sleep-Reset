@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,23 +7,24 @@ import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { AppLayout } from "@/components/layout";
 
-// Pages
-import Landing from "@/pages/landing";
+// Pages — Watch is the root (paid-traffic entry), so it stays in the main
+// bundle; everything else is code-split to keep root TTI low.
 import Watch from "@/pages/watch";
-import SignIn from "@/pages/sign-in";
-import SignUp from "@/pages/sign-up";
-import Onboarding from "@/pages/onboarding";
-import Dashboard from "@/pages/dashboard";
-import Night from "@/pages/night";
-import SleepLog from "@/pages/sleep-log";
-import Progress from "@/pages/progress";
-import Profile from "@/pages/profile";
-import Welcome from "@/pages/welcome";
-import Upgrade from "@/pages/upgrade";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import Terms from "@/pages/terms";
-import Quiz from "@/pages/quiz";
-import QuizResult from "@/pages/quiz-result";
+const Landing = lazy(() => import("@/pages/landing"));
+const SignIn = lazy(() => import("@/pages/sign-in"));
+const SignUp = lazy(() => import("@/pages/sign-up"));
+const Onboarding = lazy(() => import("@/pages/onboarding"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Night = lazy(() => import("@/pages/night"));
+const SleepLog = lazy(() => import("@/pages/sleep-log"));
+const Progress = lazy(() => import("@/pages/progress"));
+const Profile = lazy(() => import("@/pages/profile"));
+const Welcome = lazy(() => import("@/pages/welcome"));
+const Upgrade = lazy(() => import("@/pages/upgrade"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+const Terms = lazy(() => import("@/pages/terms"));
+const Quiz = lazy(() => import("@/pages/quiz"));
+const QuizResult = lazy(() => import("@/pages/quiz-result"));
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const queryClient = new QueryClient();
@@ -54,6 +56,7 @@ function RootRedirect() {
 
 function Router() {
   return (
+    <Suspense fallback={<div className="min-h-[100dvh] bg-black" />}>
     <Switch>
       <Route path="/" component={RootRedirect} />
       <Route path="/sign-in" component={SignIn} />
@@ -93,6 +96,7 @@ function Router() {
         <AppLayout showNav={false}><NotFound /></AppLayout>
       </Route>
     </Switch>
+    </Suspense>
   );
 }
 
