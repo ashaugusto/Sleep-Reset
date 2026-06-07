@@ -22,8 +22,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.pathname.startsWith("/api/")) return;
 
+  // Navigations (HTML): bypass the browser HTTP cache. Without this, fetch() honors
+  // heuristic caching (no Cache-Control from server historically) and serves a stale
+  // index.html — flash of the old landing before the current bundle loads.
+  const req = event.request.mode === "navigate"
+    ? new Request(event.request, { cache: "no-cache" })
+    : event.request;
+
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then((response) => {
         if (response && response.status === 200) {
           const clone = response.clone();
