@@ -1,4 +1,4 @@
-const CACHE_NAME = "sleep-reset-v1";
+const CACHE_NAME = "sleep-reset-v2";
 const STATIC_ASSETS = ["/", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {
