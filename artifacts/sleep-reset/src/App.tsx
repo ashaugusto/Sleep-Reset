@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout";
 
 // Pages
 import Landing from "@/pages/landing";
+import Watch from "@/pages/watch";
 import SignIn from "@/pages/sign-in";
 import SignUp from "@/pages/sign-up";
 import Onboarding from "@/pages/onboarding";
@@ -81,6 +82,7 @@ function Router() {
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
+      <Route path="/watch" component={Watch} />
       <Route path="/quiz" component={Quiz} />
       <Route path="/quiz/result" component={QuizResult} />
       <Route path="/solution">
