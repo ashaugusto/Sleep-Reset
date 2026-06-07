@@ -16,60 +16,60 @@ import {
 const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
 const CURRENCY = "€";
-const VSL_SRC = "/videos/vsl_emocional_v3.mp4";
+const TRAILER_SRC = "/videos/eps/trailer.mp4";
 
-// Episode map — provisional segments of the current VSL until the
-// dedicated cuts are rendered. start = seek offset in seconds.
+// Episode map — dedicated cuts from the VSL (audio-normalized v3).
+// TOF narrative: connection → pain → curiosity. The hard sell lives on /start.
 type Episode = {
   n: number;
   title: string;
   synopsis: string;
   duration: string;
   thumb: string;
-  start: number;
+  src: string;
   progress?: number; // 0-100, "continue watching" bar
 };
 const EPISODES: Episode[] = [
   {
     n: 1,
     title: "The 3AM Loop",
-    synopsis: "You fall asleep exhausted — then your eyes open at 3:07. Why your brain treats your own bed as a threat.",
-    duration: "3m",
+    synopsis: "Coffee does nothing. Your brain is buffering by 10am. And at 10pm the dread creeps in — because you know what's coming.",
+    duration: "1m 46s",
     thumb: "/images/watch/ep1.jpg",
-    start: 0,
+    src: "/videos/eps/ep1.mp4",
     progress: 35,
   },
   {
     n: 2,
     title: "Why Nothing Worked",
-    synopsis: "Melatonin, sleep teas, white noise, 'sleep hygiene'. The uncomfortable reason every fix made it worse.",
-    duration: "4m",
+    synopsis: "Melatonin, teas, meditation apps, sleep hygiene, wine, pills. They all failed you for one single reason.",
+    duration: "1m 54s",
     thumb: "/images/watch/ep2.jpg",
-    start: 93,
+    src: "/videos/eps/ep2.mp4",
   },
   {
     n: 3,
     title: "The Mechanism",
-    synopsis: "Hyperarousal: the trained alertness loop. And the clinical method (CBT-I) that untrains it — without pills.",
-    duration: "5m",
+    synopsis: "Your brain learned that night time is dangerous. It's called hyperarousal — and the harder you try to sleep, the worse it gets.",
+    duration: "2m 02s",
     thumb: "/images/watch/ep3.jpg",
-    start: 250,
+    src: "/videos/eps/ep3.mp4",
   },
   {
     n: 4,
-    title: "Night One",
-    synopsis: "What actually happens on your first night inside the protocol. Spoiler: you do it lying in bed.",
-    duration: "3m",
+    title: "Why Exactly 3:07 AM",
+    synopsis: "There's a reason millions of people wake at the same hour every night. It's a hormone pulse — and in your brain it lands like an alarm.",
+    duration: "1m 33s",
     thumb: "/images/watch/ep4.jpg",
-    start: 600,
+    src: "/videos/eps/ep4.mp4",
   },
   {
     n: 5,
-    title: "The Decision",
-    synopsis: "7 nights. 60-day guarantee. The exact moment insomnia stops being your identity.",
-    duration: "2m",
+    title: "The Way Back",
+    synopsis: "The most proven insomnia treatment on Earth — recommended first-line by the NHS and Mayo Clinic. So why has nobody given it to you?",
+    duration: "2m 22s",
     thumb: "/images/watch/ep5.jpg",
-    start: 900,
+    src: "/videos/eps/ep5.mp4",
   },
 ];
 
@@ -230,7 +230,7 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
           captions bleeding into the small viewport) */}
       <video
         ref={vref}
-        src={VSL_SRC}
+        src={TRAILER_SRC}
         poster="/images/watch/billboard.jpg"
         autoPlay
         muted
@@ -450,10 +450,7 @@ function PlayerModal({ ep, onClose }: { ep: Episode | null; onClose: () => void 
   useEffect(() => {
     if (!ep) return;
     const v = vref.current;
-    if (v) {
-      v.currentTime = ep.start;
-      void v.play().catch(() => {});
-    }
+    if (v) void v.play().catch(() => {});
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", esc);
     document.body.style.overflow = "hidden";
@@ -471,7 +468,7 @@ function PlayerModal({ ep, onClose }: { ep: Episode | null; onClose: () => void 
         </span>
         <span className="w-8" />
       </div>
-      <video ref={vref} src={VSL_SRC} controls playsInline className="flex-1 w-full min-h-0 object-contain bg-black" />
+      <video ref={vref} src={ep.src} controls playsInline className="flex-1 w-full min-h-0 object-contain bg-black" />
     </div>
   );
 }
