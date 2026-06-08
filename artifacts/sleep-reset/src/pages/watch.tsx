@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Play, Info, Volume2, VolumeX, Search, Bell, ChevronRight,
   X, Plus, ThumbsUp,
+  Headphones, Calculator, FileText, Sunrise, ListChecks, Infinity as InfinityIcon,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════
@@ -333,15 +334,19 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
           WIRED
         </h1>
         <p className="text-[#e5e5e5] text-[0.78rem] sm:text-sm font-medium mt-2 mb-3 [text-shadow:1px_1px_3px_rgba(0,0,0,0.6)]">
-          <span className="text-[#46d369] font-bold">98% Match</span>
-          <span className="mx-2">2026</span>
+          <span className="text-[#46d369] font-bold">Based on CBT-I</span>
+          <span className="mx-2">NHS · Mayo Clinic</span>
           <span className="border border-[#9b9b9b] px-1.5 py-px text-[0.65rem] mr-2">13+</span>
           Limited Series
           <span className="ml-2 border border-[#9b9b9b] rounded px-1 py-px text-[0.6rem] align-middle">HD</span>
         </p>
         <p className="hidden sm:block text-white text-[1.1vw] min-[1400px]:text-base leading-snug max-w-[34rem] [text-shadow:1px_1px_3px_rgba(0,0,0,0.7)]">
-          Why your brain won't shut down at night — and the 7-night clinical protocol that retrains it.
-          No pills. No meditation. Watched lying in the very bed you can't sleep in.
+          Why your brain won't shut down at night — and the CBT-I protocol that retrains it.
+          <strong className="font-semibold"> Not a series you binge. A 7-night protocol you finish</strong> — from the very bed you can't sleep in. No pills. No meditation.
+        </p>
+        {/* Offer line — the one purchase signal that lives above the fold on every device */}
+        <p className="text-[#f5f5f5] text-[0.82rem] sm:text-sm font-semibold mt-2.5 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
+          €{PRICE_TODAY} once · lifetime access · 60-day money-back guarantee
         </p>
 
         <div className="flex items-center gap-3 mt-4 sm:mt-6">
@@ -819,34 +824,67 @@ export default function Watch() {
           ))}
         </Row>
 
+        {/* ── The reveal: this isn't a show, it's a protocol you do ──
+            Placed on "screen two" (above social proof) so cold traffic
+            sees the actual offer — named components, price, guarantee —
+            before deciding to leave. Framed as depth, not a plot twist. */}
+        <section className="px-[4%] mt-12 sm:mt-[4vw]">
+          <div className="max-w-[1100px]">
+            <p className="text-[#E50914] text-[0.72rem] font-bold tracking-[0.25em] uppercase mb-3">
+              The finale isn't on a screen — it's your first full night's sleep
+            </p>
+            <h2 className="text-white font-extrabold leading-[1.05] text-2xl sm:text-4xl max-w-3xl">
+              You've watched enough. This is the one you actually finish.
+            </h2>
+            <p className="text-[#b3b3b3] text-sm sm:text-base mt-3 max-w-2xl">
+              WIRED isn't a series you binge. It's the CBT-I protocol sleep clinics use — rebuilt as 7 guided
+              nights you complete in your own bed. Here's everything you get for {CURRENCY}{PRICE_TODAY}:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-7">
+              {[
+                { Icon: ListChecks, title: "The 7-night protocol", desc: "4 phases — Audit · Compress · Reset · Rewire. Self-guided, done lying in bed." },
+                { Icon: Calculator, title: "Your sleep-window calculator", desc: "Your exact CBT-I sleep window — the calculation clinics charge €300 to run." },
+                { Icon: Headphones, title: "Guided audio sessions", desc: "One short session each night. Press play, lie back — the protocol runs itself." },
+                { Icon: FileText, title: "The brain-dump workbook", desc: "Empty the racing thoughts onto the page so your mind stops replaying them at 3am." },
+                { Icon: Sunrise, title: "The morning protocol", desc: "The first 30 minutes that decide tonight's sleep — light, water, movement, no phone." },
+                { Icon: InfinityIcon, title: "Lifetime access", desc: "Buy once. Every future session, workbook and calculator update — yours forever." },
+              ].map(({ Icon, title, desc }) => (
+                <div key={title} className="bg-[#181818] rounded-md p-5 flex flex-col gap-2">
+                  <Icon className="w-6 h-6 text-[#E50914]" />
+                  <p className="text-white text-[0.95rem] font-bold leading-tight">{title}</p>
+                  <p className="text-[#b3b3b3] text-[0.82rem] leading-snug">{desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Offer bar — price, guarantee, CTA */}
+            <div
+              className="rounded-md mt-5 px-6 sm:px-9 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
+              style={{ background: "linear-gradient(90deg, #1f1f1f 0%, #2a1215 60%, #3d090e 100%)" }}
+            >
+              <div className="flex-1">
+                <p className="text-white text-xl sm:text-2xl font-extrabold leading-tight">
+                  One payment of {CURRENCY}{PRICE_TODAY}. No subscription, ever.
+                </p>
+                <p className="text-[#d2d2d2] text-sm mt-1">
+                  Finish the 7 nights — if your sleep hasn't changed, every cent back. 60-day money-back guarantee.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={startCheckout}
+                className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3.5 rounded-[4px] transition-colors"
+              >
+                <Play className="w-5 h-5 fill-white" /> Start Night 1 — {CURRENCY}{PRICE_TODAY}
+              </button>
+            </div>
+          </div>
+        </section>
+
         <Row title="What People Who Finished the 7 Nights Say">
           {REVIEWS.map((r) => <ReviewCard key={r.name} r={r} />)}
         </Row>
-
-        {/* Offer banner — "because you watched" */}
-        <section className="px-[4%] mt-10 sm:mt-[3vw]">
-          <div
-            className="relative rounded-md overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-5 px-6 sm:px-10 py-8"
-            style={{ background: "linear-gradient(90deg, #1f1f1f 0%, #2a1215 60%, #3d090e 100%)" }}
-          >
-            <div className="flex-1">
-              <p className="text-[#b3b3b3] text-[0.7rem] font-bold tracking-[0.25em] uppercase mb-2">Season finale · your bedroom</p>
-              <h3 className="text-white text-xl sm:text-3xl font-extrabold leading-tight">
-                The last episode can't be streamed.<br className="hidden sm:block" /> It has to be slept.
-              </h3>
-              <p className="text-[#d2d2d2] text-sm sm:text-base mt-2 max-w-xl">
-                The full 7-night protocol — guided audio sessions, your personal sleep window, the brain-dump workbook. {CURRENCY}{PRICE_TODAY}, once. 60-day guarantee.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={startCheckout}
-              className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3 rounded-[4px] transition-colors"
-            >
-              <Play className="w-5 h-5 fill-white" /> Start tonight
-            </button>
-          </div>
-        </section>
 
         <Faq />
       </main>
