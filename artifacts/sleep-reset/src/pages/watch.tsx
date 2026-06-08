@@ -73,18 +73,35 @@ const EPISODES: Episode[] = [
   },
 ];
 
-// "Top 10 Tonight" — the audience's own nights, as title cards.
-const TOP10: { label: string; sub: string; hue: [string, string] }[] = [
-  { label: "Waking at 3:07 AM", sub: "Thriller", hue: ["#1a1a2e", "#16213e"] },
-  { label: "Tired but Wired", sub: "Psychological", hue: ["#0f3460", "#16213e"] },
-  { label: "Racing Mind at Lights-Out", sub: "Drama", hue: ["#2c061f", "#374045"] },
-  { label: "Melatonin Does Nothing", sub: "Documentary", hue: ["#3a0ca3", "#240046"] },
-  { label: "The Sunday-Night Dread", sub: "Horror", hue: ["#10002b", "#3c096c"] },
-  { label: "Coffee Until Noon", sub: "Comedy-drama", hue: ["#432818", "#99582a"] },
-  { label: "Snapping at Everyone", sub: "Family drama", hue: ["#641220", "#85182a"] },
-  { label: "Scrolling Until 2AM", sub: "Reality", hue: ["#012a4a", "#013a63"] },
-  { label: "The Nap Trap", sub: "Mystery", hue: ["#212529", "#343a40"] },
-  { label: "Five Alarms Every Morning", sub: "Action", hue: ["#250902", "#641220"] },
+// "Top 10 Tonight" — the audience's own nights, as poster cards.
+// Each poster is a moody cold-blue still of the pain it names — the
+// viewer recognizes their own night and feels seen before the offer.
+const TOP10: { label: string; sub: string; img: string }[] = [
+  { label: "Waking at 3:07 AM", sub: "Thriller", img: "/images/watch/top1.jpg" },
+  { label: "Tired but Wired", sub: "Psychological", img: "/images/watch/top2.jpg" },
+  { label: "Racing Mind at Lights-Out", sub: "Drama", img: "/images/watch/top3.jpg" },
+  { label: "Melatonin Does Nothing", sub: "Documentary", img: "/images/watch/top4.jpg" },
+  { label: "The Sunday-Night Dread", sub: "Horror", img: "/images/watch/top5.jpg" },
+  { label: "Coffee Until Noon", sub: "Comedy-drama", img: "/images/watch/top6.jpg" },
+  { label: "Snapping at Everyone", sub: "Family drama", img: "/images/watch/top7.jpg" },
+  { label: "Scrolling Until 2AM", sub: "Reality", img: "/images/watch/top8.jpg" },
+  { label: "The Nap Trap", sub: "Mystery", img: "/images/watch/top9.jpg" },
+  { label: "Five Alarms Every Morning", sub: "Action", img: "/images/watch/top10.jpg" },
+];
+
+// ─── Social proof — real beta testers, early free access ────────────
+// FTC (US) / ASA (UK) / EU 2019/2161 require disclosure that these were
+// given free access. Mirrors the TESTIMONIALS block on the main landing.
+// NO invented volume metrics — only these four honest reviews.
+const REVIEWS: { initial: string; name: string; meta: string; nights: string; quote: string }[] = [
+  { initial: "B", name: "Bruno", meta: "Dublin · 34", nights: "Out by Night 4",
+    quote: "It used to take me ~90 minutes to fall asleep — I'd accepted that was just my brain. By Night 4–5 I was out in about 15 minutes and staying asleep until my alarm. Waking up without feeling wrecked is something I hadn't felt in years." },
+  { initial: "C", name: "Caio", meta: "Curitiba · 38", nights: "Switched off by Night 3",
+    quote: "I'd lie down and my mind wouldn't stop — work, bills, conversations. Meditation, sleep podcasts, nothing stuck. By Night 3 I could actually switch off in under 30 minutes, and my sleep got noticeably deeper." },
+  { initial: "G", name: "Gustavo", meta: "Genève · 41", nights: "Calmer by Night 5",
+    quote: "I was on the melatonin + app combo; helped one night, back to racing thoughts the next. A few nights in, the racing started to dial down, and by Night 5 I could go to bed without that 'tonight I won't sleep' panic." },
+  { initial: "M", name: "Markus", meta: "Berlin · 36", nights: "Relaxed by Night 4",
+    quote: "I'd get into bed already tense, like a fight with sleep every night. Didn't think a 7-night routine would change much. By Night 4 I was lying down relaxed and falling asleep faster, without that full-body tension." },
 ];
 
 const FAQS: [string, string][] = [
@@ -410,8 +427,8 @@ function Row({ title, children }: { title: string; children: React.ReactNode }) 
   );
 }
 
-// ─── Top 10 card (signature outlined numeral) ───────────────────────
-function Top10Card({ rank, label, sub, hue }: { rank: number; label: string; sub: string; hue: [string, string] }) {
+// ─── Top 10 card (signature outlined numeral + pain poster) ─────────
+function Top10Card({ rank, label, sub, img }: { rank: number; label: string; sub: string; img: string }) {
   return (
     <div className="relative shrink-0 flex items-end snap-start" onMouseEnter={tick}>
       <span
@@ -428,18 +445,48 @@ function Top10Card({ rank, label, sub, hue }: { rank: number; label: string; sub
       >
         {rank}
       </span>
-      <div
-        className="relative z-10 w-[110px] sm:w-[150px] aspect-[2/3] rounded-[4px] overflow-hidden flex flex-col justify-between p-2.5 transition-transform duration-300 hover:scale-105"
-        style={{ background: `linear-gradient(160deg, ${hue[0]}, ${hue[1]})` }}
-      >
-        <span className="text-[0.55rem] font-bold tracking-[0.2em] text-white/55 uppercase">{sub}</span>
-        <p
-          className="text-white leading-[0.95]"
-          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.35rem", textShadow: "1px 1px 3px rgba(0,0,0,0.6)" }}
-        >
-          {label}
-        </p>
+      <div className="relative z-10 w-[110px] sm:w-[150px] aspect-[2/3] rounded-[4px] overflow-hidden transition-transform duration-300 hover:scale-105 bg-[#15161d]">
+        <img src={img} alt={label} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+        {/* legibility wash: darken top + bottom, leave the still readable in the middle */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.85) 100%)" }} />
+        <div className="absolute inset-0 flex flex-col justify-between p-2.5">
+          <span className="text-[0.55rem] font-bold tracking-[0.2em] text-white/70 uppercase [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">{sub}</span>
+          <p
+            className="text-white leading-[0.95]"
+            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.35rem", textShadow: "0 2px 6px rgba(0,0,0,0.95)" }}
+          >
+            {label}
+          </p>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Review card (Netflix-style social proof) ──────────────────────
+function ReviewCard({ r }: { r: typeof REVIEWS[number] }) {
+  return (
+    <div className="shrink-0 w-[78vw] sm:w-[360px] snap-start bg-[#181818] rounded-md p-5 flex flex-col" onMouseEnter={tick}>
+      <div className="flex items-center gap-3 mb-3">
+        <span
+          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+          style={{ background: "linear-gradient(135deg, #E50914, #7a0c10)" }}
+        >
+          {r.initial}
+        </span>
+        <div className="min-w-0">
+          <p className="text-white text-sm font-semibold leading-tight">{r.name}</p>
+          <p className="text-[#8c8c8c] text-[0.72rem] leading-tight">{r.meta}</p>
+        </div>
+        <span className="ml-auto flex items-center gap-1.5 shrink-0 text-[#46d369]">
+          <ThumbsUp className="w-4 h-4 fill-[#46d369]" />
+          <span className="text-[0.72rem] font-bold">{r.nights}</span>
+        </span>
+      </div>
+      <p className="text-[#d2d2d2] text-[0.84rem] leading-relaxed flex-1">{r.quote}</p>
+      <p className="text-[#6f6f6f] text-[0.62rem] mt-3 pt-3 border-t border-[#2c2c2c]">
+        Beta tester · received free access for honest feedback
+      </p>
     </div>
   );
 }
@@ -717,8 +764,12 @@ export default function Watch() {
 
         <Row title="Top 10 Nights You Know Too Well">
           {TOP10.map((t, i) => (
-            <Top10Card key={t.label} rank={i + 1} label={t.label} sub={t.sub} hue={t.hue} />
+            <Top10Card key={t.label} rank={i + 1} label={t.label} sub={t.sub} img={t.img} />
           ))}
+        </Row>
+
+        <Row title="What People Who Finished the 7 Nights Say">
+          {REVIEWS.map((r) => <ReviewCard key={r.name} r={r} />)}
         </Row>
 
         {/* Offer banner — "because you watched" */}
