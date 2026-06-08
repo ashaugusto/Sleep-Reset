@@ -35,7 +35,7 @@ const EPISODES: Episode[] = [
     title: "The 3AM Loop",
     synopsis: "Coffee does nothing. Your brain is buffering by 10am. And at 10pm the dread creeps in — because you know what's coming.",
     duration: "1m 46s",
-    thumb: "/images/watch/ep1.jpg",
+    thumb: "/images/watch/ep1.jpg?v=2",
     src: "/videos/eps/ep1.mp4",
     progress: 35,
   },
@@ -44,7 +44,7 @@ const EPISODES: Episode[] = [
     title: "Why Nothing Worked",
     synopsis: "Melatonin, teas, meditation apps, sleep hygiene, wine, pills. They all failed you for one single reason.",
     duration: "1m 54s",
-    thumb: "/images/watch/ep2.jpg",
+    thumb: "/images/watch/ep2.jpg?v=2",
     src: "/videos/eps/ep2.mp4",
   },
   {
@@ -52,7 +52,7 @@ const EPISODES: Episode[] = [
     title: "The Mechanism",
     synopsis: "Your brain learned that night time is dangerous. It's called hyperarousal — and the harder you try to sleep, the worse it gets.",
     duration: "2m 02s",
-    thumb: "/images/watch/ep3.jpg",
+    thumb: "/images/watch/ep3.jpg?v=2",
     src: "/videos/eps/ep3.mp4",
   },
   {
@@ -60,7 +60,7 @@ const EPISODES: Episode[] = [
     title: "Why Exactly 3:07 AM",
     synopsis: "There's a reason millions of people wake at the same hour every night. It's a hormone pulse — and in your brain it lands like an alarm.",
     duration: "1m 33s",
-    thumb: "/images/watch/ep4.jpg",
+    thumb: "/images/watch/ep4.jpg?v=2",
     src: "/videos/eps/ep4.mp4",
   },
   {
@@ -68,7 +68,7 @@ const EPISODES: Episode[] = [
     title: "The Way Back",
     synopsis: "The most proven insomnia treatment on Earth — recommended first-line by the NHS and Mayo Clinic. So why has nobody given it to you?",
     duration: "2m 22s",
-    thumb: "/images/watch/ep5.jpg",
+    thumb: "/images/watch/ep5.jpg?v=2",
     src: "/videos/eps/ep5.mp4",
   },
 ];
@@ -225,18 +225,20 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
 
   return (
     <div className="relative w-full" style={{ height: "min(56.25vw + 120px, 92vh)", minHeight: 480 }}>
-      {/* Trailer — video on desktop; static billboard art on mobile
-          (matches Netflix mobile web, and avoids the VSL's burned-in
-          captions bleeding into the small viewport) */}
+      {/* Static billboard art on ALL breakpoints. The trailer.mp4 is a
+          captioned mini-VSL (burned-in subtitles + a candle b-roll scene),
+          which looked wrong autoplaying behind the hero on desktop — it read
+          as "a VSL playing in the background", not a clean Netflix billboard.
+          Until we have a caption-less ambient loop, show the man still frame
+          (same art mobile already used). Keep the <video> as a non-playing
+          poster holder so refs/vars stay wired. */}
       <video
         ref={vref}
         src={TRAILER_SRC}
         poster="/images/watch/billboard.jpg"
-        autoPlay
         muted
-        loop
         playsInline
-        preload="auto"
+        preload="none"
         onPlay={() => { if (!fired.current) { fired.current = true; logEvent("watch_billboard_autoplay"); } }}
         className="hidden sm:block absolute inset-0 w-full h-full object-cover"
       />
