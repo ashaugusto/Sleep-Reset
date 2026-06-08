@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Play, Info, Volume2, VolumeX, Search, Bell, ChevronRight,
+  Play, Info, Search, Bell, ChevronRight,
   X, Plus, ThumbsUp,
   Headphones, Calculator, FileText, Sunrise, ListChecks, Infinity as InfinityIcon,
 } from "lucide-react";
+import { gtm } from "@/lib/gtm";
 
 // ═══════════════════════════════════════════════════════════════════
 // /watch — Netflix-style streaming homepage for Sleep Wired.
@@ -17,7 +18,6 @@ import {
 const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
 const CURRENCY = "€";
-const TRAILER_SRC = "/videos/eps/trailer.mp4";
 
 // Episode map — dedicated cuts from the VSL (audio-normalized v3).
 // TOF narrative: connection → pain → curiosity. The hard sell lives on /start.
@@ -285,31 +285,15 @@ function Intro({ onDone }: { onDone: () => void }) {
 
 // ─── Billboard (hero) ───────────────────────────────────────────────
 function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () => void }) {
-  const vref = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(true);
-  const fired = useRef(false);
-
   return (
     <div className="relative w-full" style={{ height: "min(56.25vw + 120px, 92vh)", minHeight: 480 }}>
-      {/* Trailer — video on desktop; static billboard art on mobile
-          (matches Netflix mobile web, and avoids the VSL's burned-in
-          captions bleeding into the small viewport) */}
-      <video
-        ref={vref}
-        src={TRAILER_SRC}
-        poster="/images/watch/billboard.jpg"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        onPlay={() => { if (!fired.current) { fired.current = true; logEvent("watch_billboard_autoplay"); } }}
-        className="hidden sm:block absolute inset-0 w-full h-full object-cover"
-      />
+      {/* Static cinematic still (cold-blue, on-brand with the Top 10 set).
+          Replaced the autoplay VSL trailer — its burned-in captions and the
+          candle scene read wrong as an ambient hero. Bespoke hero pending. */}
       <img
-        src="/images/watch/billboard.jpg"
+        src="/images/watch/ep3.jpg"
         alt=""
-        className="sm:hidden absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
       />
       {/* Netflix gradient stack: bottom fade into page bg + left vignette for legibility */}
       <div className="absolute inset-0" style={{ background: "linear-gradient(77deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0) 60%)" }} />
@@ -370,20 +354,8 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
         </div>
       </div>
 
-      {/* Right edge: mute toggle + maturity tab (desktop only — no trailer on mobile) */}
-      <div className="hidden sm:flex absolute right-0 bottom-[30%] items-center gap-4">
-        <button
-          type="button"
-          aria-label={muted ? "Unmute trailer" : "Mute trailer"}
-          onClick={() => {
-            const v = vref.current; if (!v) return;
-            v.muted = !v.muted; setMuted(v.muted);
-            if (!v.muted) logEvent("watch_billboard_unmute");
-          }}
-          className="w-10 h-10 rounded-full border border-white/60 text-white flex items-center justify-center hover:bg-white/10 transition-colors"
-        >
-          {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
+      {/* Right edge: maturity tab (Netflix touch) */}
+      <div className="hidden sm:flex absolute right-0 bottom-[30%] items-center">
         <span
           className="text-[#dcdcdc] text-sm py-1 pl-3 pr-8"
           style={{ background: "rgba(51,51,51,0.6)", borderLeft: "3px solid #dcdcdc" }}
@@ -738,6 +710,7 @@ export default function Watch() {
 
   useEffect(() => {
     logEvent("watch_page_view");
+    gtm.viewVSL(); // Meta ViewContent (€27 product) — pixel funnel signal for /watch
     try {
       if (!sessionStorage.getItem("sw_watch_intro")) {
         sessionStorage.setItem("sw_watch_intro", "1");
