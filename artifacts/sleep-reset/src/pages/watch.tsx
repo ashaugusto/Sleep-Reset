@@ -225,20 +225,18 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
 
   return (
     <div className="relative w-full" style={{ height: "min(56.25vw + 120px, 92vh)", minHeight: 480 }}>
-      {/* Static billboard art on ALL breakpoints. The trailer.mp4 is a
-          captioned mini-VSL (burned-in subtitles + a candle b-roll scene),
-          which looked wrong autoplaying behind the hero on desktop — it read
-          as "a VSL playing in the background", not a clean Netflix billboard.
-          Until we have a caption-less ambient loop, show the man still frame
-          (same art mobile already used). Keep the <video> as a non-playing
-          poster holder so refs/vars stay wired. */}
+      {/* Trailer — video on desktop; static billboard art on mobile
+          (matches Netflix mobile web, and avoids the VSL's burned-in
+          captions bleeding into the small viewport) */}
       <video
         ref={vref}
         src={TRAILER_SRC}
         poster="/images/watch/billboard.jpg"
+        autoPlay
         muted
+        loop
         playsInline
-        preload="none"
+        preload="auto"
         onPlay={() => { if (!fired.current) { fired.current = true; logEvent("watch_billboard_autoplay"); } }}
         className="hidden sm:block absolute inset-0 w-full h-full object-cover"
       />
