@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Play, Info, Volume2, VolumeX, Search, Bell, ChevronDown, ChevronRight,
+  Play, Info, Volume2, VolumeX, Search, Bell, ChevronRight,
   X, Plus, ThumbsUp,
 } from "lucide-react";
 
@@ -151,6 +151,54 @@ function logEvent(event: string) {
       keepalive: true,
     }).catch(() => {});
   } catch { /* noop */ }
+}
+
+// ─── Express checkout — Start goes straight to Stripe ───────────────
+// No email form: Stripe collects the email on its hosted page, and the
+// webhook upserts the lead + fires CAPI Purchase from it. We still pass
+// fbp/fbc/utm so Purchase attribution survives. Falls back to the proven
+// /start order form if the express endpoint is unavailable.
+function cookie(k: string): string {
+  if (typeof document === "undefined") return "";
+  const m = document.cookie.match(new RegExp("(?:^|; )" + k.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)"));
+  return m ? decodeURIComponent(m[1]) : "";
+}
+function resolveFbc(): string {
+  const existing = cookie("_fbc");
+  if (existing) return existing;
+  if (typeof window === "undefined") return "";
+  const fbclid = new URLSearchParams(window.location.search).get("fbclid");
+  return fbclid ? `fb.1.${Date.now()}.${fbclid}` : "";
+}
+let checkoutInFlight = false;
+async function startCheckout() {
+  if (checkoutInFlight) return;
+  checkoutInFlight = true;
+  logEvent("watch_cta_click");
+  const fallback = () => { window.location.href = "/start#order-form"; };
+  try {
+    const u = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const r = await fetch("/api/checkout/express", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        hero_variant: "watch",
+        fbp: cookie("_fbp"),
+        fbc: resolveFbc(),
+        utm_source: u.get("utm_source") || "",
+        utm_medium: u.get("utm_medium") || "",
+        utm_campaign: u.get("utm_campaign") || "",
+        utm_content: u.get("utm_content") || "",
+      }),
+    });
+    if (!r.ok) { checkoutInFlight = false; fallback(); return; }
+    const { url } = await r.json();
+    if (url) window.location.href = url;
+    else { checkoutInFlight = false; fallback(); }
+  } catch {
+    checkoutInFlight = false;
+    fallback();
+  }
 }
 
 // ─── Sound design (WebAudio — no asset files) ───────────────────────
@@ -555,13 +603,13 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
               >
                 <Play className="w-5 h-5 fill-black" /> Play
               </button>
-              <a
-                href="/start#order-form"
-                onClick={() => logEvent("watch_cta_click")}
+              <button
+                type="button"
+                onClick={startCheckout}
                 className="flex items-center gap-2 bg-[#E50914] text-white font-bold rounded-[4px] px-6 py-2 text-sm sm:text-base hover:bg-[#f6121d] transition-colors"
               >
                 Start your 7 nights — {CURRENCY}{PRICE_TODAY}
-              </a>
+              </button>
               <span className="w-9 h-9 rounded-full border-2 border-[#5b5b5b] text-white flex items-center justify-center hover:border-white transition-colors cursor-pointer" title="My List">
                 <Plus className="w-5 h-5" />
               </span>
@@ -653,13 +701,13 @@ function Faq() {
         <p className="text-white text-base sm:text-xl mb-4">
           Ready to finally sleep? Your first night starts tonight.
         </p>
-        <a
-          href="/start#order-form"
-          onClick={() => logEvent("watch_cta_click")}
+        <button
+          type="button"
+          onClick={startCheckout}
           className="inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-lg sm:text-2xl px-8 py-3.5 rounded-[4px] transition-colors"
         >
           Start your 7 nights — {CURRENCY}{PRICE_TODAY} <ChevronRight className="w-6 h-6" />
-        </a>
+        </button>
         <p className="text-[#999] text-xs mt-3">One payment · lifetime access · 60-day guarantee</p>
       </div>
     </section>
@@ -739,16 +787,19 @@ export default function Watch() {
             <Search className="hidden sm:block w-5 h-5 text-white cursor-pointer" />
             <Bell className="hidden sm:block w-5 h-5 text-white cursor-pointer" />
             <a
-              href="/start#order-form"
-              onClick={() => logEvent("watch_cta_click")}
+              href="/sign-in"
+              onClick={() => logEvent("watch_signin_click")}
+              className="text-[#e5e5e5] hover:text-white text-[0.78rem] font-semibold transition-colors"
+            >
+              Sign In
+            </a>
+            <button
+              type="button"
+              onClick={startCheckout}
               className="bg-[#E50914] hover:bg-[#f6121d] text-white text-[0.78rem] font-bold px-3.5 py-1.5 rounded-[4px] transition-colors"
             >
               Start — {CURRENCY}{PRICE_TODAY}
-            </a>
-            <span className="w-8 h-8 rounded bg-gradient-to-br from-[#E50914] to-[#7a0c10] flex items-center justify-center text-xs font-bold select-none">
-              Z
-            </span>
-            <ChevronDown className="hidden sm:block w-4 h-4 text-white -ml-2" />
+            </button>
           </div>
         </div>
       </header>
@@ -787,13 +838,13 @@ export default function Watch() {
                 The full 7-night protocol — guided audio sessions, your personal sleep window, the brain-dump workbook. {CURRENCY}{PRICE_TODAY}, once. 60-day guarantee.
               </p>
             </div>
-            <a
-              href="/start#order-form"
-              onClick={() => logEvent("watch_cta_click")}
+            <button
+              type="button"
+              onClick={startCheckout}
               className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3 rounded-[4px] transition-colors"
             >
               <Play className="w-5 h-5 fill-white" /> Start tonight
-            </a>
+            </button>
           </div>
         </section>
 
@@ -821,13 +872,13 @@ export default function Watch() {
       {/* mobile sticky CTA after scroll */}
       {scrolled && (
         <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 px-4 py-3" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.95) 60%, transparent)" }}>
-          <a
-            href="/start#order-form"
-            onClick={() => logEvent("watch_cta_click")}
+          <button
+            type="button"
+            onClick={startCheckout}
             className="flex items-center justify-center gap-2 bg-[#E50914] text-white font-bold text-base py-3 rounded-[4px] w-full"
           >
             <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{PRICE_TODAY}
-          </a>
+          </button>
         </div>
       )}
     </div>

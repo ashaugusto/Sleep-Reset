@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Moon, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Sign-in styled to match the /watch Netflix homepage: dark billboard
+// backdrop, Bebas "W" wordmark, black card, red CTA. Auth logic unchanged.
 export default function SignInPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -12,6 +14,15 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Bebas Neue for the wordmark — injected locally (same as /watch).
+  useEffect(() => {
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap";
+    document.head.appendChild(l);
+    return () => { document.head.removeChild(l); };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,76 +59,89 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
-      <header className="flex items-center justify-center gap-2 py-5 border-b border-border/40">
-        <Moon className="w-4 h-4 text-primary" />
-        <span className="font-bold text-sm">Sleep Wired</span>
+    <div
+      className="relative min-h-[100dvh] flex flex-col text-white"
+      style={{ background: "#141414", fontFamily: "Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+    >
+      {/* Dimmed billboard backdrop */}
+      <img
+        src="/images/watch/billboard.jpg"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover opacity-40"
+      />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(20,20,20,0.85) 60%, #141414 100%)" }} />
+
+      {/* Brand */}
+      <header className="relative z-10 px-[4%] py-5">
+        <a href="/watch" className="inline-flex items-baseline gap-1.5 select-none">
+          <span style={{ fontFamily: "'Bebas Neue', sans-serif", color: "#E50914", fontSize: "1.9rem", lineHeight: 1 }}>W</span>
+          <span className="text-[#E50914] font-extrabold tracking-[0.18em] text-[0.78rem]">SLEEP WIRED</span>
+        </a>
       </header>
 
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-extrabold">Sign in</h1>
-            <p className="text-sm text-muted-foreground">Access your Sleep Wired protocol</p>
-          </div>
+      {/* Card */}
+      <div className="relative z-10 flex-1 flex items-start sm:items-center justify-center px-4 pb-16">
+        <div
+          className="w-full max-w-[420px] rounded-md px-6 sm:px-12 py-8 sm:py-12"
+          style={{ background: "rgba(0,0,0,0.75)" }}
+        >
+          <h1 className="text-3xl font-bold mb-7">Sign In</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition"
-              />
-            </div>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full rounded bg-[#333] text-white px-4 py-3.5 text-sm outline-none border border-transparent focus:border-[#e87c03] focus:bg-[#454545] transition placeholder:text-[#8c8c8c]"
+            />
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" htmlFor="password">Password</label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg border border-border bg-card px-4 py-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full rounded bg-[#333] text-white px-4 py-3.5 pr-11 text-sm outline-none border border-transparent focus:border-[#e87c03] focus:bg-[#454545] transition placeholder:text-[#8c8c8c]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8c8c8c] hover:text-white"
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
 
             {error && (
-              <p className="text-sm text-destructive text-center">{error}</p>
+              <p className="text-sm text-[#e87c03]">{error}</p>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+              className="w-full bg-[#E50914] hover:bg-[#f6121d] text-white font-bold py-3.5 rounded transition-colors disabled:opacity-50"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Don't have an account?{" "}
-            <a href="mailto:support@sleepwired.com" className="text-primary underline">
-              Contact support
-            </a>
+          <p className="text-[#b3b3b3] text-sm mt-8">
+            New to Sleep Wired?{" "}
+            <a href="/watch" className="text-white hover:underline font-medium">Start your 7 nights</a>.
+          </p>
+          <p className="text-[#8c8c8c] text-xs mt-3">
+            Trouble signing in?{" "}
+            <a href="mailto:support@sleepwired.com" className="hover:underline">Contact support</a>.
           </p>
         </div>
       </div>

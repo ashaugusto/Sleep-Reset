@@ -180,6 +180,58 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   res.json({ url: session.url, session_id: session.id });
 });
 
+// ─── Express checkout — Start → Stripe directly (email collected by Stripe) ───
+// No pre-payment email/lead capture (product decision: optimize for Purchase,
+// not intermediate Lead/IC). Stripe collects the email on its hosted page; the
+// /api/stripe/webhook handler upserts the lead and fires CAPI Purchase from
+// customer_details.email + the fbp/fbc/utm we stash in the session metadata.
+router.post("/checkout/express", async (req: Request, res: Response) => {
+  if (!isStripeConfigured()) {
+    res.status(503).json({ message: "Payment is not configured yet. Please try again shortly." });
+    return;
+  }
+
+  const { fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, hero_variant } = req.body as {
+    fbp?: string; fbc?: string; utm_source?: string; utm_medium?: string;
+    utm_campaign?: string; utm_content?: string; hero_variant?: string;
+  };
+
+  const stripe = getStripeClient();
+  const priceId = process.env.STRIPE_PRICE_ID || process.env.VITE_STRIPE_PRICE_ID;
+  if (!priceId) {
+    res.status(503).json({ message: "Product not configured. Please contact support." });
+    return;
+  }
+
+  const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  const basePath = process.env.APP_URL ? "" : "/sleep-reset";
+  const baseUrl = `${appUrl}${basePath}`;
+  const heroVariantClean = (hero_variant ?? "watch").toString().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32) || "watch";
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [{ price: priceId, quantity: 1 }],
+    mode: "payment",
+    customer_creation: "always",
+    success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${appUrl}/watch`,
+    metadata: {
+      source: "watch_express",
+      hero_variant: heroVariantClean,
+      fbp: (fbp ?? "").slice(0, 200),
+      fbc: (fbc ?? "").slice(0, 200),
+      utm_source: (utm_source ?? "").slice(0, 100),
+      utm_medium: (utm_medium ?? "").slice(0, 100),
+      utm_campaign: (utm_campaign ?? "").slice(0, 100),
+      utm_content: (utm_content ?? "").slice(0, 100),
+      ip: clientIp(req) ?? "",
+      ua: ((req.headers["user-agent"] as string | undefined) ?? "").slice(0, 480),
+    },
+  });
+
+  res.json({ url: session.url, session_id: session.id });
+});
+
 // ─── Verify payment session (GET — returns email/name from Stripe) ────────────
 router.get("/auth/claim", async (req: Request, res: Response) => {
   if (!isStripeConfigured()) {

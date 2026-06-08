@@ -70,7 +70,7 @@ app.post(
           const obj = evt.data?.object as {
             id?: string;
             customer_details?: { email?: string; phone?: string };
-            metadata?: { email?: string; fbp?: string; fbc?: string; product?: string; user_id?: string };
+            metadata?: { email?: string; fbp?: string; fbc?: string; product?: string; user_id?: string; hero_variant?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; ip?: string; ua?: string };
             amount_total?: number;
             currency?: string;
           } ?? {};
@@ -90,14 +90,54 @@ app.post(
             return;
           }
           const { db, leadsTable } = await import("@workspace/db");
-          const { eq, or } = await import("drizzle-orm");
+          const { eq, or, sql } = await import("drizzle-orm");
+          const md = obj.metadata ?? {};
           if (email || sessionId) {
             const conds = [];
             if (email) conds.push(eq(leadsTable.email, email));
             if (sessionId) conds.push(eq(leadsTable.stripeSessionId, sessionId));
-            await db.update(leadsTable)
-              .set({ purchased: true, purchasedAt: new Date(), stripeSessionId: sessionId ?? null, updatedAt: new Date() })
-              .where(conds.length > 1 ? or(...conds) : conds[0]);
+            if (email) {
+              // Upsert by email — covers the public flow (lead already exists) AND
+              // the express/Start flow (no pre-payment lead: create it now from the
+              // email Stripe collected, backfilling attribution from session metadata).
+              await db.insert(leadsTable).values({
+                email,
+                whatsapp: obj.customer_details?.phone || null,
+                heroVariant: md.hero_variant || "watch",
+                fbp: md.fbp || null,
+                fbc: md.fbc || null,
+                utmSource: md.utm_source || null,
+                utmMedium: md.utm_medium || null,
+                utmCampaign: md.utm_campaign || null,
+                utmContent: md.utm_content || null,
+                ipAddress: md.ip || null,
+                userAgent: md.ua || null,
+                purchased: true,
+                purchasedAt: new Date(),
+                stripeSessionId: sessionId ?? null,
+              }).onConflictDoUpdate({
+                target: leadsTable.email,
+                set: {
+                  purchased: true,
+                  purchasedAt: new Date(),
+                  stripeSessionId: sessionId ?? null,
+                  whatsapp: sql`COALESCE(${leadsTable.whatsapp}, EXCLUDED.whatsapp)`,
+                  fbp: sql`COALESCE(${leadsTable.fbp}, EXCLUDED.fbp)`,
+                  fbc: sql`COALESCE(${leadsTable.fbc}, EXCLUDED.fbc)`,
+                  utmSource: sql`COALESCE(${leadsTable.utmSource}, EXCLUDED.utm_source)`,
+                  utmMedium: sql`COALESCE(${leadsTable.utmMedium}, EXCLUDED.utm_medium)`,
+                  utmCampaign: sql`COALESCE(${leadsTable.utmCampaign}, EXCLUDED.utm_campaign)`,
+                  utmContent: sql`COALESCE(${leadsTable.utmContent}, EXCLUDED.utm_content)`,
+                  ipAddress: sql`COALESCE(${leadsTable.ipAddress}, EXCLUDED.ip_address)`,
+                  userAgent: sql`COALESCE(${leadsTable.userAgent}, EXCLUDED.user_agent)`,
+                  updatedAt: new Date(),
+                },
+              });
+            } else {
+              await db.update(leadsTable)
+                .set({ purchased: true, purchasedAt: new Date(), stripeSessionId: sessionId ?? null, updatedAt: new Date() })
+                .where(conds.length > 1 ? or(...conds) : conds[0]);
+            }
             logger.info({ email, sessionId }, "Lead marked as purchased");
 
             // Attribution: link quiz profile -> purchase (best-effort, isolated; never blocks the purchase path)
