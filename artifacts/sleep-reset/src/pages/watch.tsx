@@ -17,6 +17,7 @@ import { gtm } from "@/lib/gtm";
 
 const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
+const PRICE_ANCHOR = 47; // open-beta price; rises to €47 at public launch (honest anchor, mirrors landing's price bump — no fake resetting countdown)
 const CURRENCY = "€";
 
 // Episode map — dedicated cuts from the VSL (audio-normalized v3).
@@ -176,6 +177,10 @@ async function startCheckout() {
   if (checkoutInFlight) return;
   checkoutInFlight = true;
   logEvent("watch_cta_click");
+  // Meta InitiateCheckout — express path has no email yet, so fire the pixel
+  // with fbp/fbc-based matching only. Lets Meta optimize on IC (server-side
+  // express checkout intentionally omits it). Email-gated path fires its own.
+  try { gtm.initiateCheckout(""); } catch { /* noop */ }
   const fallback = () => { window.location.href = "/start#order-form"; };
   try {
     const u = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -199,6 +204,42 @@ async function startCheckout() {
   } catch {
     checkoutInFlight = false;
     fallback();
+  }
+}
+
+// ─── Email-gated checkout — captures the lead into the recovery drip ─
+// Reuses /api/checkout/public: it upserts the lead (so the abandonment drip
+// enrolls them if they bail on Stripe) AND fires server-side CAPI Lead + IC,
+// then returns a Stripe URL. Used by the exit-intent gate below. Returns true
+// if the redirect started, false so the caller can show an error.
+async function startCheckoutWithEmail(email: string): Promise<boolean> {
+  const v = email.trim().toLowerCase();
+  const leadEventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  try { gtm.lead(v, leadEventId); } catch { /* noop */ }
+  try {
+    const u = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const r = await fetch("/api/checkout/public", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: v,
+        hero_variant: "watch",
+        fbp: cookie("_fbp"),
+        fbc: resolveFbc(),
+        lead_event_id: leadEventId,
+        utm_source: u.get("utm_source") || "",
+        utm_medium: u.get("utm_medium") || "",
+        utm_campaign: u.get("utm_campaign") || "",
+        utm_content: u.get("utm_content") || "",
+      }),
+    });
+    if (!r.ok) return false;
+    const { url, session_id } = await r.json();
+    try { gtm.initiateCheckout(v, session_id ?? null); } catch { /* noop */ }
+    if (url) { window.location.href = url; return true; }
+    return false;
+  } catch {
+    return false;
   }
 }
 
@@ -330,7 +371,11 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
         </p>
         {/* Offer line — the one purchase signal that lives above the fold on every device */}
         <p className="text-[#f5f5f5] text-[0.82rem] sm:text-sm font-semibold mt-2.5 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
-          €{PRICE_TODAY} once · lifetime access · 60-day money-back guarantee
+          <span className="text-[#9b9b9b] line-through mr-1.5">{CURRENCY}{PRICE_ANCHOR}</span>
+          <span className="text-[#46d369]">{CURRENCY}{PRICE_TODAY} once</span> · lifetime access · 60-day money-back guarantee
+        </p>
+        <p className="text-[#f0c14b] text-[0.68rem] sm:text-[0.72rem] font-bold tracking-wide mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
+          Open-beta price — rises to {CURRENCY}{PRICE_ANCHOR} at public launch
         </p>
 
         <div className="flex items-center gap-3 mt-4 sm:mt-6">
@@ -517,9 +562,20 @@ function ReviewCard({ r }: { r: typeof REVIEWS[number] }) {
 }
 
 // ─── Full-screen episode player ─────────────────────────────────────
-function PlayerModal({ ep, onClose }: { ep: Episode | null; onClose: () => void }) {
+// When an episode ends we surface an end-card — the highest-intent moment
+// on the page. It offers the purchase CTA first, then autoplay-next (with a
+// short countdown) so the viewer keeps qualifying. Terminal episode has no
+// "next" and leans entirely on the offer.
+const AUTOPLAY_SECS = 8;
+function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: () => void; onPlayEp: (ep: Episode) => void }) {
   const vref = useRef<HTMLVideoElement>(null);
+  const [ended, setEnded] = useState(false);
+  const [count, setCount] = useState<number | null>(null);
+  const nextEp = ep ? EPISODES.find((e) => e.n === ep.n + 1) ?? null : null;
+
   useEffect(() => {
+    setEnded(false);
+    setCount(null);
     if (!ep) return;
     const v = vref.current;
     if (v) void v.play().catch(() => {});
@@ -528,6 +584,21 @@ function PlayerModal({ ep, onClose }: { ep: Episode | null; onClose: () => void 
     document.body.style.overflow = "hidden";
     return () => { window.removeEventListener("keydown", esc); document.body.style.overflow = ""; };
   }, [ep, onClose]);
+
+  // Autoplay-next countdown — starts once the card appears and a next ep exists.
+  useEffect(() => {
+    if (!ended || !nextEp) return;
+    setCount(AUTOPLAY_SECS);
+    const id = setInterval(() => {
+      setCount((c) => {
+        if (c === null) return null;
+        if (c <= 1) { clearInterval(id); onPlayEp(nextEp); return null; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [ended, nextEp, onPlayEp]);
+
   if (!ep) return null;
   return (
     <div className="fixed inset-0 z-[90] bg-black flex flex-col" style={{ animation: "swFadeIn 0.35s ease" }}>
@@ -540,7 +611,80 @@ function PlayerModal({ ep, onClose }: { ep: Episode | null; onClose: () => void 
         </span>
         <span className="w-8" />
       </div>
-      <video ref={vref} src={ep.src} controls playsInline className="flex-1 w-full min-h-0 object-contain bg-black" />
+      <div className="relative flex-1 min-h-0">
+        <video
+          ref={vref}
+          src={ep.src}
+          controls
+          playsInline
+          onEnded={() => { logEvent(`watch_ep${ep.n}_complete`); setEnded(true); }}
+          className="absolute inset-0 w-full h-full object-contain bg-black"
+        />
+        {ended && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+            style={{ background: "rgba(10,10,12,0.94)", animation: "swFadeIn 0.4s ease" }}
+          >
+            <p className="text-[#E50914] text-[0.72rem] font-bold tracking-[0.25em] uppercase mb-3">
+              You just watched E{ep.n} — {ep.title}
+            </p>
+            <h3 className="text-white font-extrabold text-2xl sm:text-4xl max-w-xl leading-tight">
+              The finale isn't another episode. It's your first full night of sleep.
+            </h3>
+            <p className="text-[#d2d2d2] text-sm sm:text-base mt-3 max-w-md">
+              Start the 7-night protocol tonight — <span className="text-[#9b9b9b] line-through">{CURRENCY}{PRICE_ANCHOR}</span>{" "}
+              <span className="text-[#46d369] font-bold">{CURRENCY}{PRICE_TODAY}</span> during open beta · 60-day money-back guarantee.
+            </p>
+            <button
+              type="button"
+              onClick={() => { logEvent(`watch_endcard_cta_ep${ep.n}`); startCheckout(); }}
+              className="mt-6 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-8 py-3.5 rounded-[4px] transition-colors"
+            >
+              <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{PRICE_TODAY}
+            </button>
+
+            {nextEp ? (
+              <div className="mt-8 flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={() => { logEvent(`watch_endcard_next_ep${nextEp.n}`); onPlayEp(nextEp); }}
+                  className="group flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/25 rounded-md pl-2 pr-5 py-2 transition-colors"
+                >
+                  <span className="relative w-24 aspect-video rounded overflow-hidden shrink-0">
+                    <img src={nextEp.thumb} alt="" className="w-full h-full object-cover" />
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <Play className="w-5 h-5 text-white fill-white" />
+                    </span>
+                  </span>
+                  <span className="text-left">
+                    <span className="block text-[#b3b3b3] text-[0.68rem] font-semibold uppercase tracking-wide">
+                      {count !== null ? `Next episode in ${count}s` : "Next episode"}
+                    </span>
+                    <span className="block text-white text-sm font-bold">E{nextEp.n} · {nextEp.title}</span>
+                  </span>
+                </button>
+                {count !== null && (
+                  <button
+                    type="button"
+                    onClick={() => setCount(null)}
+                    className="text-[#8c8c8c] hover:text-white text-xs mt-2 transition-colors"
+                  >
+                    Cancel autoplay
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-[#8c8c8c] hover:text-white text-sm mt-8 transition-colors"
+              >
+                Back to episodes
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -691,12 +835,129 @@ function Faq() {
   );
 }
 
+// ─── Authority band — the method's clinical pedigree ────────────────
+// CBT-I (the method WIRED is built on) is genuinely recommended first-line
+// by these bodies. FTC/ASA-safe framing: they endorse the *method*, not our
+// product, and the disclaimer says so explicitly. No borrowed logos.
+function AuthorityBand() {
+  const ORGS = ["NHS", "Mayo Clinic", "AASM", "Harvard Health"];
+  return (
+    <section className="px-[4%] mt-12 sm:mt-[4vw]">
+      <div className="max-w-[1100px] mx-auto rounded-md bg-[#181818] border border-[#262626] px-6 sm:px-9 py-7">
+        <p className="text-center text-[#8c8c8c] text-[0.7rem] font-bold uppercase tracking-[0.22em] mb-5">
+          The method behind WIRED — CBT-I — is recommended first-line by
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+          {ORGS.map((o) => (
+            <span
+              key={o}
+              className="text-[#d2d2d2] text-lg sm:text-2xl font-extrabold tracking-tight opacity-90"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              {o}
+            </span>
+          ))}
+        </div>
+        <p className="text-center text-[#6f6f6f] text-[0.68rem] leading-relaxed mt-6 max-w-2xl mx-auto">
+          Cognitive Behavioral Therapy for Insomnia (CBT-I) is recommended as the first-line treatment for
+          chronic insomnia by these organizations. They recommend the <em>method</em> — they are not
+          affiliated with, and do not endorse, Sleep Wired. WIRED is a self-guided educational program built on CBT-I,
+          not a medical service.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ─── Exit-intent lead gate — capture email into the recovery drip ───
+// Express checkout skips email, so abandoners are unrecoverable. This soft
+// gate fires once per session on exit intent (desktop: cursor leaves toward
+// the tab bar; mobile: fast scroll-up after deep engagement). Submitting
+// saves the lead + redirects to Stripe; dismissing costs nothing.
+function LeadGateModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [open, onClose]);
+  if (!open) return null;
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const v = email.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { setErr(true); return; }
+    setErr(false);
+    setLoading(true);
+    logEvent("watch_leadgate_submit");
+    const ok = await startCheckoutWithEmail(v);
+    if (!ok) { setLoading(false); startCheckout(); } // fall back to express Stripe
+  }
+  return (
+    <div
+      className="fixed inset-0 z-[95] flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.8)", animation: "swFadeIn 0.3s ease" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-[440px] rounded-lg overflow-hidden bg-[#181818] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: "swSlideUp 0.35s cubic-bezier(0.2,0.9,0.3,1)" }}
+      >
+        <button type="button" aria-label="Close" onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+        <div className="px-7 pt-8 pb-7">
+          <p className="text-[#E50914] text-[0.7rem] font-bold tracking-[0.22em] uppercase mb-2">Before you go</p>
+          <h3 className="text-white font-extrabold text-2xl leading-tight">
+            Save your spot at the beta price.
+          </h3>
+          <p className="text-[#b3b3b3] text-sm mt-2.5 leading-snug">
+            Drop your email and we'll hold your <span className="text-[#9b9b9b] line-through">{CURRENCY}{PRICE_ANCHOR}</span>{" "}
+            <span className="text-[#46d369] font-semibold">{CURRENCY}{PRICE_TODAY}</span> access and send you back to finish anytime.
+            No spam — just your link and a nudge if you don't complete.
+          </p>
+          <form onSubmit={submit} className="mt-5 space-y-3">
+            <input
+              type="email"
+              required
+              autoFocus
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setErr(false); }}
+              placeholder="you@email.com"
+              className={`w-full rounded-[4px] bg-[#2a2a2a] text-white placeholder-[#8c8c8c] px-4 py-3 text-base outline-none border ${err ? "border-[#E50914]" : "border-[#404040]"} focus:border-white transition-colors`}
+            />
+            {err && <p className="text-[#E50914] text-xs">Enter a valid email address.</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center gap-2 bg-[#E50914] hover:bg-[#f6121d] disabled:opacity-60 text-white font-bold text-base px-6 py-3.5 rounded-[4px] transition-colors"
+            >
+              {loading ? "Taking you to checkout…" : <>Hold my spot — {CURRENCY}{PRICE_TODAY} <ChevronRight className="w-5 h-5" /></>}
+            </button>
+          </form>
+          <button
+            type="button"
+            onClick={onClose}
+            className="block mx-auto text-[#8c8c8c] hover:text-white text-xs mt-4 transition-colors"
+          >
+            No thanks, I'll pay full price later
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ───────────────────────────────────────────────────────────
 export default function Watch() {
   const [scrolled, setScrolled] = useState(false);
   const [intro, setIntro] = useState(false);
   const [playerEp, setPlayerEp] = useState<Episode | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
 
   // Bebas Neue for title art — injected here so the rest of the app
   // doesn't pay for it.
@@ -723,6 +984,38 @@ export default function Watch() {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Exit-intent lead gate — fires once per session. Skips while a full-screen
+  // surface (intro/player/info) already owns the viewport (body overflow hidden).
+  useEffect(() => {
+    try { if (sessionStorage.getItem("sw_watch_gate")) return; } catch { /* noop */ }
+    let armed = false; // mobile: only after real engagement
+    let lastY = window.scrollY;
+    const fire = () => {
+      try {
+        if (sessionStorage.getItem("sw_watch_gate")) return;
+        if (document.body.style.overflow === "hidden") return; // a modal is open
+        sessionStorage.setItem("sw_watch_gate", "1");
+      } catch { return; }
+      logEvent("watch_leadgate_shown");
+      setGateOpen(true);
+    };
+    const onMouseOut = (e: MouseEvent) => {
+      if (e.clientY <= 0 && !e.relatedTarget) fire();
+    };
+    const onScrollM = () => {
+      const y = window.scrollY;
+      if (y > window.innerHeight * 1.4) armed = true; // scrolled deep
+      if (armed && lastY - y > 45 && y < window.innerHeight * 0.6) fire(); // fast scroll back to top
+      lastY = y;
+    };
+    document.addEventListener("mouseout", onMouseOut);
+    window.addEventListener("scroll", onScrollM, { passive: true });
+    return () => {
+      document.removeEventListener("mouseout", onMouseOut);
+      window.removeEventListener("scroll", onScrollM);
+    };
   }, []);
 
   const openEp = useCallback((ep: Episode) => { setInfoOpen(false); setPlayerEp(ep); }, []);
@@ -837,11 +1130,16 @@ export default function Watch() {
               style={{ background: "linear-gradient(90deg, #1f1f1f 0%, #2a1215 60%, #3d090e 100%)" }}
             >
               <div className="flex-1">
-                <p className="text-white text-xl sm:text-2xl font-extrabold leading-tight">
-                  One payment of {CURRENCY}{PRICE_TODAY}. No subscription, ever.
+                <div className="flex items-baseline gap-2.5 mb-1">
+                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{PRICE_ANCHOR}</span>
+                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{PRICE_TODAY}</span>
+                  <span className="text-[#f0c14b] text-[0.62rem] font-bold uppercase tracking-[0.15em] border border-[#f0c14b]/40 rounded px-1.5 py-0.5">Open beta</span>
+                </div>
+                <p className="text-white text-base sm:text-lg font-extrabold leading-tight">
+                  One payment. No subscription, ever.
                 </p>
                 <p className="text-[#d2d2d2] text-sm mt-1">
-                  Finish the 7 nights — if your sleep hasn't changed, every cent back. 60-day money-back guarantee.
+                  Locked at {CURRENCY}{PRICE_TODAY} during open beta — rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.
                 </p>
               </div>
               <button
@@ -858,6 +1156,8 @@ export default function Watch() {
         <Row title="What People Who Finished the 7 Nights Say">
           {REVIEWS.map((r) => <ReviewCard key={r.name} r={r} />)}
         </Row>
+
+        <AuthorityBand />
 
         <Faq />
       </main>
@@ -877,8 +1177,9 @@ export default function Watch() {
         </p>
       </footer>
 
-      <PlayerModal ep={playerEp} onClose={() => setPlayerEp(null)} />
+      <PlayerModal ep={playerEp} onClose={() => setPlayerEp(null)} onPlayEp={setPlayerEp} />
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} onPlayEp={openEp} />
+      <LeadGateModal open={gateOpen} onClose={() => setGateOpen(false)} />
 
       {/* mobile sticky CTA after scroll */}
       {scrolled && (
