@@ -18,6 +18,7 @@ import { gtm } from "@/lib/gtm";
 const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
 const PRICE_ANCHOR = 47; // open-beta price; rises to €47 at public launch (honest anchor, mirrors landing's price bump — no fake resetting countdown)
+const BUMP_PRICE = 19;   // Recovery Pack — order bump (STRIPE_PRICE_PREMIUM). Same €19 as the /upgrade OTO.
 const CURRENCY = "€";
 
 // Episode map — dedicated cuts from the VSL (audio-normalized v3).
@@ -173,10 +174,10 @@ function resolveFbc(): string {
   return fbclid ? `fb.1.${Date.now()}.${fbclid}` : "";
 }
 let checkoutInFlight = false;
-async function startCheckout() {
+async function startCheckout(bump = false) {
   if (checkoutInFlight) return;
   checkoutInFlight = true;
-  logEvent("watch_cta_click");
+  logEvent(bump ? "watch_cta_click_bump" : "watch_cta_click");
   // Meta InitiateCheckout — express path has no email yet, so fire the pixel
   // with fbp/fbc-based matching only. Lets Meta optimize on IC (server-side
   // express checkout intentionally omits it). Email-gated path fires its own.
@@ -189,6 +190,7 @@ async function startCheckout() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         hero_variant: "watch",
+        bump,
         fbp: cookie("_fbp"),
         fbc: resolveFbc(),
         utm_source: u.get("utm_source") || "",
@@ -726,7 +728,7 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
               </button>
               <button
                 type="button"
-                onClick={startCheckout}
+                onClick={() => startCheckout()}
                 className="flex items-center gap-2 bg-[#E50914] text-white font-bold rounded-[4px] px-6 py-2 text-sm sm:text-base hover:bg-[#f6121d] transition-colors"
               >
                 Start your 7 nights — {CURRENCY}{PRICE_TODAY}
@@ -824,7 +826,7 @@ function Faq() {
         </p>
         <button
           type="button"
-          onClick={startCheckout}
+          onClick={() => startCheckout()}
           className="inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-lg sm:text-2xl px-8 py-3.5 rounded-[4px] transition-colors"
         >
           Start your 7 nights — {CURRENCY}{PRICE_TODAY} <ChevronRight className="w-6 h-6" />
@@ -958,6 +960,7 @@ export default function Watch() {
   const [playerEp, setPlayerEp] = useState<Episode | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
+  const [bump, setBump] = useState(false); // Recovery Pack order bump (offer bar)
 
   // Bebas Neue for title art — injected here so the rest of the app
   // doesn't pay for it.
@@ -1066,7 +1069,7 @@ export default function Watch() {
             </a>
             <button
               type="button"
-              onClick={startCheckout}
+              onClick={() => startCheckout()}
               className="bg-[#E50914] hover:bg-[#f6121d] text-white text-[0.78rem] font-bold px-3.5 py-1.5 rounded-[4px] transition-colors"
             >
               Start — {CURRENCY}{PRICE_TODAY}
@@ -1124,30 +1127,72 @@ export default function Watch() {
               ))}
             </div>
 
-            {/* Offer bar — price, guarantee, CTA */}
+            {/* ── Order bump — the value ladder's first rung ──────────────
+                The 7 nights get you sleeping. The Recovery Pack keeps you
+                sleeping when life throws a bad night (travel, illness, 3AM
+                anxiety, shift work). Same €19 as the post-purchase OTO —
+                offered here so the buyer can add it in one checkout, lifting
+                AOV without a second transaction. Fulfilled via the express
+                checkout's bump line item + metadata.bump_recovery_pack. */}
+            <button
+              type="button"
+              onClick={() => setBump((b) => !b)}
+              aria-pressed={bump}
+              className="w-full text-left rounded-md mt-5 p-4 sm:p-5 flex items-start gap-3.5 transition-colors border-2 border-dashed"
+              style={{
+                borderColor: bump ? "#46d369" : "#f0c14b",
+                background: bump ? "rgba(70,211,105,0.08)" : "rgba(240,193,75,0.06)",
+              }}
+            >
+              <span
+                className="shrink-0 mt-0.5 w-6 h-6 rounded-[5px] flex items-center justify-center border-2 transition-colors"
+                style={{
+                  borderColor: bump ? "#46d369" : "#8a8a8a",
+                  background: bump ? "#46d369" : "transparent",
+                }}
+              >
+                {bump && <ThumbsUp className="w-3.5 h-3.5 text-black" strokeWidth={3} />}
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="text-[#f0c14b] text-[0.6rem] font-bold uppercase tracking-[0.18em]">Add-on · one click</span>
+                  <span className="text-white text-[0.98rem] font-bold">
+                    Yes — add the Recovery Pack for {CURRENCY}{BUMP_PRICE}
+                  </span>
+                </span>
+                <span className="block text-[#c9c9c9] text-[0.83rem] leading-snug mt-1">
+                  7 guided sessions for the nights the old pattern tries to come back — jet lag, illness, 3 AM anxiety, Sunday-night dread, shift work. Relapse insurance for your sleep.
+                  <span className="text-[#9b9b9b]"> Normally sold for {CURRENCY}{BUMP_PRICE} after you finish — grab it now in the same checkout.</span>
+                </span>
+              </span>
+            </button>
+
+            {/* Offer bar — price, guarantee, CTA (total reflects the bump) */}
             <div
-              className="rounded-md mt-5 px-6 sm:px-9 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
+              className="rounded-md mt-3 px-6 sm:px-9 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
               style={{ background: "linear-gradient(90deg, #1f1f1f 0%, #2a1215 60%, #3d090e 100%)" }}
             >
               <div className="flex-1">
                 <div className="flex items-baseline gap-2.5 mb-1">
-                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{PRICE_ANCHOR}</span>
-                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{PRICE_TODAY}</span>
+                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{bump ? PRICE_ANCHOR + BUMP_PRICE : PRICE_ANCHOR}</span>
+                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{bump ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY}</span>
                   <span className="text-[#f0c14b] text-[0.62rem] font-bold uppercase tracking-[0.15em] border border-[#f0c14b]/40 rounded px-1.5 py-0.5">Open beta</span>
                 </div>
                 <p className="text-white text-base sm:text-lg font-extrabold leading-tight">
                   One payment. No subscription, ever.
                 </p>
                 <p className="text-[#d2d2d2] text-sm mt-1">
-                  Locked at {CURRENCY}{PRICE_TODAY} during open beta — rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.
+                  {bump
+                    ? <>7-night protocol <span className="text-white font-semibold">+ Recovery Pack</span> — {CURRENCY}{PRICE_TODAY} + {CURRENCY}{BUMP_PRICE}. One payment, lifetime access to both. 60-day money-back guarantee on the whole order.</>
+                    : <>Locked at {CURRENCY}{PRICE_TODAY} during open beta — rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.</>}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={startCheckout}
+                onClick={() => startCheckout(bump)}
                 className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3.5 rounded-[4px] transition-colors"
               >
-                <Play className="w-5 h-5 fill-white" /> Start Night 1 — {CURRENCY}{PRICE_TODAY}
+                <Play className="w-5 h-5 fill-white" /> Start Night 1 — {CURRENCY}{bump ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY}
               </button>
             </div>
           </div>
@@ -1186,7 +1231,7 @@ export default function Watch() {
         <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 px-4 py-3" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.95) 60%, transparent)" }}>
           <button
             type="button"
-            onClick={startCheckout}
+            onClick={() => startCheckout()}
             className="flex items-center justify-center gap-2 bg-[#E50914] text-white font-bold text-base py-3 rounded-[4px] w-full"
           >
             <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{PRICE_TODAY}

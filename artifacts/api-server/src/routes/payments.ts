@@ -191,9 +191,9 @@ router.post("/checkout/express", async (req: Request, res: Response) => {
     return;
   }
 
-  const { fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, hero_variant } = req.body as {
+  const { fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, hero_variant, bump } = req.body as {
     fbp?: string; fbc?: string; utm_source?: string; utm_medium?: string;
-    utm_campaign?: string; utm_content?: string; hero_variant?: string;
+    utm_campaign?: string; utm_content?: string; hero_variant?: string; bump?: boolean;
   };
 
   const stripe = getStripeClient();
@@ -208,9 +208,16 @@ router.post("/checkout/express", async (req: Request, res: Response) => {
   const baseUrl = `${appUrl}${basePath}`;
   const heroVariantClean = (hero_variant ?? "watch").toString().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32) || "watch";
 
+  // Order bump: the Recovery Pack (€19) added as a 2nd line item if the buyer checked it.
+  // The account-claim flow (routes/auth.ts) grants premium access off metadata.bump_recovery_pack.
+  const bumpPriceId = process.env.STRIPE_PRICE_PREMIUM;
+  const wantsBump = bump === true && !!bumpPriceId;
+  const lineItems: { price: string; quantity: number }[] = [{ price: priceId, quantity: 1 }];
+  if (wantsBump) lineItems.push({ price: bumpPriceId as string, quantity: 1 });
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: lineItems,
     mode: "payment",
     customer_creation: "always",
     success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
@@ -218,6 +225,7 @@ router.post("/checkout/express", async (req: Request, res: Response) => {
     metadata: {
       source: "watch_express",
       hero_variant: heroVariantClean,
+      bump_recovery_pack: wantsBump ? "1" : "",
       fbp: (fbp ?? "").slice(0, 200),
       fbc: (fbc ?? "").slice(0, 200),
       utm_source: (utm_source ?? "").slice(0, 100),
