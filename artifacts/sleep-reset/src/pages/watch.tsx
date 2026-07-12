@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import {
   Play, Info, Search, Bell, ChevronRight,
   X, Plus, ThumbsUp,
@@ -19,6 +19,31 @@ const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
 const PRICE_ANCHOR = 47; // open-beta price; rises to €47 at public launch (honest anchor, mirrors landing's price bump — no fake resetting countdown)
 const BUMP_PRICE = 19;   // Recovery Pack — order bump (STRIPE_PRICE_PREMIUM). Same €19 as the /upgrade OTO.
+
+// ─── Recovery Pack bump — shared across every CTA ───────────────────
+// The bump lives module-level (not inside a single component's useState) so
+// that ticking the Recovery Pack updates the price on EVERY checkout CTA at
+// once — nav, sticky bar, end-card, info modal, FAQ, billboard, offer bar —
+// instead of only the offer bar. Mixed prices across CTAs confuse the buyer
+// on the way to Stripe. useBump() subscribes each CTA; startCheckout() reads
+// the same flag by default so the express order always matches what's shown.
+let bumpOn = false;
+const bumpSubs = new Set<() => void>();
+function setBumpGlobal(next: boolean) {
+  if (bumpOn === next) return;
+  bumpOn = next;
+  bumpSubs.forEach((fn) => fn());
+}
+function useBump(): boolean {
+  return useSyncExternalStore(
+    (cb) => { bumpSubs.add(cb); return () => { bumpSubs.delete(cb); }; },
+    () => bumpOn,
+    () => false, // SSR snapshot — bump always starts off, no hydration mismatch
+  );
+}
+// Displayed prices, bump-aware — used by every CTA so they move together.
+const todayPrice = (b: boolean) => (b ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY);
+const anchorPrice = (b: boolean) => (b ? PRICE_ANCHOR + BUMP_PRICE : PRICE_ANCHOR);
 const CURRENCY = "€";
 
 // Episode map — dedicated cuts from the VSL (audio-normalized v3).
@@ -174,7 +199,7 @@ function resolveFbc(): string {
   return fbclid ? `fb.1.${Date.now()}.${fbclid}` : "";
 }
 let checkoutInFlight = false;
-async function startCheckout(bump = false) {
+async function startCheckout(bump = bumpOn) {
   if (checkoutInFlight) return;
   checkoutInFlight = true;
   logEvent(bump ? "watch_cta_click_bump" : "watch_cta_click");
@@ -328,6 +353,7 @@ function Intro({ onDone }: { onDone: () => void }) {
 
 // ─── Billboard (hero) ───────────────────────────────────────────────
 function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () => void }) {
+  const bump = useBump();
   return (
     <div className="relative w-full" style={{ height: "min(56.25vw + 120px, 92vh)", minHeight: 480 }}>
       {/* Static cinematic still (cold-blue, on-brand with the Top 10 set).
@@ -373,11 +399,12 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
         </p>
         {/* Offer line — the one purchase signal that lives above the fold on every device */}
         <p className="text-[#f5f5f5] text-[0.82rem] sm:text-sm font-semibold mt-2.5 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
-          <span className="text-[#9b9b9b] line-through mr-1.5">{CURRENCY}{PRICE_ANCHOR}</span>
-          <span className="text-[#46d369]">{CURRENCY}{PRICE_TODAY} once</span> · lifetime access · 60-day money-back guarantee
+          <span className="text-[#9b9b9b] line-through mr-1.5">{CURRENCY}{anchorPrice(bump)}</span>
+          <span className="text-[#46d369]">{CURRENCY}{todayPrice(bump)} once</span> · lifetime access · 60-day money-back guarantee
+          {bump && <span className="text-[#f0c14b]"> · incl. Recovery Pack</span>}
         </p>
         <p className="text-[#f0c14b] text-[0.68rem] sm:text-[0.72rem] font-bold tracking-wide mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
-          Open-beta price — rises to {CURRENCY}{PRICE_ANCHOR} at public launch
+          Open-beta price — rises to {CURRENCY}{anchorPrice(bump)} at public launch
         </p>
 
         <div className="flex items-center gap-3 mt-4 sm:mt-6">
@@ -573,6 +600,7 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
   const vref = useRef<HTMLVideoElement>(null);
   const [ended, setEnded] = useState(false);
   const [count, setCount] = useState<number | null>(null);
+  const bump = useBump();
   const nextEp = ep ? EPISODES.find((e) => e.n === ep.n + 1) ?? null : null;
 
   useEffect(() => {
@@ -634,15 +662,15 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
               The finale isn't another episode. It's your first full night of sleep.
             </h3>
             <p className="text-[#d2d2d2] text-sm sm:text-base mt-3 max-w-md">
-              Start the 7-night protocol tonight — <span className="text-[#9b9b9b] line-through">{CURRENCY}{PRICE_ANCHOR}</span>{" "}
-              <span className="text-[#46d369] font-bold">{CURRENCY}{PRICE_TODAY}</span> during open beta · 60-day money-back guarantee.
+              Start the 7-night protocol tonight — <span className="text-[#9b9b9b] line-through">{CURRENCY}{anchorPrice(bump)}</span>{" "}
+              <span className="text-[#46d369] font-bold">{CURRENCY}{todayPrice(bump)}</span> during open beta · 60-day money-back guarantee.
             </p>
             <button
               type="button"
               onClick={() => { logEvent(`watch_endcard_cta_ep${ep.n}`); startCheckout(); }}
               className="mt-6 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-8 py-3.5 rounded-[4px] transition-colors"
             >
-              <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{PRICE_TODAY}
+              <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{todayPrice(bump)}
             </button>
 
             {nextEp ? (
@@ -693,6 +721,7 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
 
 // ─── "More Info" jaw — series detail + offer ────────────────────────
 function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => void; onPlayEp: (ep: Episode) => void }) {
+  const bump = useBump();
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -731,7 +760,7 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
                 onClick={() => startCheckout()}
                 className="flex items-center gap-2 bg-[#E50914] text-white font-bold rounded-[4px] px-6 py-2 text-sm sm:text-base hover:bg-[#f6121d] transition-colors"
               >
-                Start your 7 nights — {CURRENCY}{PRICE_TODAY}
+                Start your 7 nights — {CURRENCY}{todayPrice(bump)}
               </button>
               <span className="w-9 h-9 rounded-full border-2 border-[#5b5b5b] text-white flex items-center justify-center hover:border-white transition-colors cursor-pointer" title="My List">
                 <Plus className="w-5 h-5" />
@@ -796,6 +825,7 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
 // ─── FAQ accordion (Netflix marketing style) ────────────────────────
 function Faq() {
   const [open, setOpen] = useState<number | null>(null);
+  const bump = useBump();
   return (
     <section className="px-[4%] py-12 sm:py-16 max-w-[815px] mx-auto">
       <h2 className="text-white font-extrabold text-2xl sm:text-[2.5rem] text-center mb-6 sm:mb-8">
@@ -829,7 +859,7 @@ function Faq() {
           onClick={() => startCheckout()}
           className="inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-lg sm:text-2xl px-8 py-3.5 rounded-[4px] transition-colors"
         >
-          Start your 7 nights — {CURRENCY}{PRICE_TODAY} <ChevronRight className="w-6 h-6" />
+          Start your 7 nights — {CURRENCY}{todayPrice(bump)} <ChevronRight className="w-6 h-6" />
         </button>
         <p className="text-[#999] text-xs mt-3">One payment · lifetime access · 60-day guarantee</p>
       </div>
@@ -960,7 +990,7 @@ export default function Watch() {
   const [playerEp, setPlayerEp] = useState<Episode | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
-  const [bump, setBump] = useState(false); // Recovery Pack order bump (offer bar)
+  const bump = useBump(); // Recovery Pack order bump — shared so every CTA moves together
 
   // Bebas Neue for title art — injected here so the rest of the app
   // doesn't pay for it.
@@ -1072,7 +1102,7 @@ export default function Watch() {
               onClick={() => startCheckout()}
               className="bg-[#E50914] hover:bg-[#f6121d] text-white text-[0.78rem] font-bold px-3.5 py-1.5 rounded-[4px] transition-colors"
             >
-              Start — {CURRENCY}{PRICE_TODAY}
+              Start — {CURRENCY}{todayPrice(bump)}
             </button>
           </div>
         </div>
@@ -1136,7 +1166,7 @@ export default function Watch() {
                 checkout's bump line item + metadata.bump_recovery_pack. */}
             <button
               type="button"
-              onClick={() => setBump((b) => !b)}
+              onClick={() => setBumpGlobal(!bump)}
               aria-pressed={bump}
               className="w-full text-left rounded-md mt-5 p-4 sm:p-5 flex items-start gap-3.5 transition-colors border-2 border-dashed"
               style={{
@@ -1174,8 +1204,8 @@ export default function Watch() {
             >
               <div className="flex-1">
                 <div className="flex items-baseline gap-2.5 mb-1">
-                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{bump ? PRICE_ANCHOR + BUMP_PRICE : PRICE_ANCHOR}</span>
-                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{bump ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY}</span>
+                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{anchorPrice(bump)}</span>
+                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{todayPrice(bump)}</span>
                   <span className="text-[#f0c14b] text-[0.62rem] font-bold uppercase tracking-[0.15em] border border-[#f0c14b]/40 rounded px-1.5 py-0.5">Open beta</span>
                 </div>
                 <p className="text-white text-base sm:text-lg font-extrabold leading-tight">
@@ -1192,7 +1222,7 @@ export default function Watch() {
                 onClick={() => startCheckout(bump)}
                 className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3.5 rounded-[4px] transition-colors"
               >
-                <Play className="w-5 h-5 fill-white" /> Start Night 1 — {CURRENCY}{bump ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY}
+                <Play className="w-5 h-5 fill-white" /> Start Night 1 — {CURRENCY}{todayPrice(bump)}
               </button>
             </div>
           </div>
@@ -1234,7 +1264,7 @@ export default function Watch() {
             onClick={() => startCheckout()}
             className="flex items-center justify-center gap-2 bg-[#E50914] text-white font-bold text-base py-3 rounded-[4px] w-full"
           >
-            <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{PRICE_TODAY}
+            <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{todayPrice(bump)}
           </button>
         </div>
       )}
