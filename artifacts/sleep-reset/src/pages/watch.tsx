@@ -117,18 +117,35 @@ const TOP10: { label: string; sub: string; img: string }[] = [
   { label: "Five Alarms Every Morning", sub: "Action", img: "/images/watch/top10.jpg" },
 ];
 
-// ─── Social proof — real beta testers, early free access ────────────
-// FTC (US) / ASA (UK) / EU 2019/2161 require disclosure that these were
-// given free access. Mirrors the TESTIMONIALS block on the main landing.
-// NO invented volume metrics — only these four honest reviews.
-const REVIEWS: { initial: string; name: string; meta: string; nights: string; quote: string }[] = [
-  { initial: "B", name: "Bruno", meta: "Dublin · 34", nights: "Out by Night 4",
+// ─── Social proof — real customers + early beta testers ─────────────
+// FTC (US) / ASA (UK) / EU 2019/2161: every card carries an honest,
+// per-item disclosure (`badge`). Paying customers are labelled as such;
+// the original four were given free beta access and say so. NO invented
+// volume metrics — the green tag paraphrases each person's own words.
+const REVIEWS: { initial: string; name: string; meta: string; nights: string; badge: string; quote: string }[] = [
+  // Paying customers (board-supplied, lightly adapted for length).
+  { initial: "L", name: "Laura", meta: "Switzerland · 35", nights: "Waking up actually rested", badge: "Verified Sleep Wired customer",
+    quote: "I invested €27 as a last attempt before going back to heavy sleep medication. It doesn't promise miracles, but it gave me something no gadget ever had: a clear night-by-night plan. The price is nothing next to waking up actually rested." },
+  { initial: "M", name: "Michael", meta: "Ireland · 41", nights: "Bad nights no longer the default", badge: "Verified Sleep Wired customer",
+    quote: "I paid in the middle of the night after lying awake for hours, again — exhausted all day but wired at night. What helped wasn't a magic trick, it was structure. In seven nights I went from 'no idea what I'm doing' to a routine that calmed my brain before it could spiral. I still have bad nights, but they stopped being the default." },
+  { initial: "A", name: "Ana", meta: "Portugal · 33", nights: "Sunday nights no longer dreaded", badge: "Verified Sleep Wired customer",
+    quote: "I bought it on a Monday after another brutal Sunday night. My problem was never falling asleep once — it was the loop: worrying about the week, replaying conversations, checking the clock every 15 minutes. The sessions taught me how to close my Sundays differently — the evening routine, the sleep window, what to do when anxiety kicks in. Sunday nights aren't something I dread anymore." },
+  { initial: "K", name: "Katrin", meta: "Finland · 37", nights: "Sleep is finally predictable", badge: "Verified Sleep Wired customer",
+    quote: "I paid pretty sceptical — I'd already spent money on apps and supplements that changed nothing. The difference here was a clear plan: when to go to bed, when to get up, and what to do when my mind starts racing. My sleep isn't perfect, but now it's predictable." },
+  { initial: "O", name: "Omer", meta: "Turkey · 29", nights: "Sleep stopped feeling random", badge: "Verified Sleep Wired customer",
+    quote: "I paid at 6am, right after a nearly sleepless night. For months I'd tried to fix my sleep with willpower alone. The protocol showed me it wasn't about trying harder, but changing specific behaviours — what time I get out of bed, how I handle waking at 3am, what I do with my phone. It didn't make me a 'perfect sleeper', but it finally stopped feeling random." },
+  { initial: "S", name: "Stefanie", meta: "Germany · 34", nights: "'Tired but wired' faded", badge: "Verified Sleep Wired customer",
+    quote: "I treated the €27 as a test, with almost zero expectations. The 'guided nights' format made it easy — I just hit play and followed along. After the first week, that constant 'tired but wired' feeling at night started to fade." },
+  { initial: "V", name: "Vilas", meta: "Estonia · 39", nights: "Refund honored — kept the tools", badge: "Verified Sleep Wired customer",
+    quote: "I bought the program and later asked for a refund because I was going through a rough personal patch — and the refund was no hassle. Even so, the first sessions made one thing clear: my problem wasn't lack of discipline, it was habits I'd never connected to my sleep. Even without finishing the 7 nights, I walked away with tools I hadn't seen in any app." },
+  // Original beta testers — free early access, disclosed.
+  { initial: "B", name: "Bruno", meta: "Dublin · 34", nights: "Out by Night 4", badge: "Beta tester · received free access for honest feedback",
     quote: "It used to take me ~90 minutes to fall asleep — I'd accepted that was just my brain. By Night 4–5 I was out in about 15 minutes and staying asleep until my alarm. Waking up without feeling wrecked is something I hadn't felt in years." },
-  { initial: "C", name: "Caio", meta: "Curitiba · 38", nights: "Switched off by Night 3",
+  { initial: "C", name: "Caio", meta: "Curitiba · 38", nights: "Switched off by Night 3", badge: "Beta tester · received free access for honest feedback",
     quote: "I'd lie down and my mind wouldn't stop — work, bills, conversations. Meditation, sleep podcasts, nothing stuck. By Night 3 I could actually switch off in under 30 minutes, and my sleep got noticeably deeper." },
-  { initial: "G", name: "Gustavo", meta: "Genève · 41", nights: "Calmer by Night 5",
+  { initial: "G", name: "Gustavo", meta: "Genève · 41", nights: "Calmer by Night 5", badge: "Beta tester · received free access for honest feedback",
     quote: "I was on the melatonin + app combo; helped one night, back to racing thoughts the next. A few nights in, the racing started to dial down, and by Night 5 I could go to bed without that 'tonight I won't sleep' panic." },
-  { initial: "M", name: "Markus", meta: "Berlin · 36", nights: "Relaxed by Night 4",
+  { initial: "M", name: "Markus", meta: "Berlin · 36", nights: "Relaxed by Night 4", badge: "Beta tester · received free access for honest feedback",
     quote: "I'd get into bed already tense, like a fight with sleep every night. Didn't think a 7-night routine would change much. By Night 4 I was lying down relaxed and falling asleep faster, without that full-body tension." },
 ];
 
@@ -584,7 +601,7 @@ function ReviewCard({ r }: { r: typeof REVIEWS[number] }) {
       </div>
       <p className="text-[#d2d2d2] text-[0.84rem] leading-relaxed flex-1">{r.quote}</p>
       <p className="text-[#6f6f6f] text-[0.62rem] mt-3 pt-3 border-t border-[#2c2c2c]">
-        Beta tester · received free access for honest feedback
+        {r.badge}
       </p>
     </div>
   );
@@ -1228,7 +1245,7 @@ export default function Watch() {
           </div>
         </section>
 
-        <Row title="What People Who Finished the 7 Nights Say">
+        <Row title="What People Are Saying">
           {REVIEWS.map((r) => <ReviewCard key={r.name} r={r} />)}
         </Row>
 
