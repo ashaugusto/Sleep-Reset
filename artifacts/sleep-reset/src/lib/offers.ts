@@ -11,7 +11,7 @@ import type { Locale } from "@/lib/i18n";
 //
 //   front     the platform, lifetime access, paid once. The main offer.
 //   bump      Recovery Pack, at the checkout, one click, no redirect.
-//   oto1      the WIRED series, one click after the purchase clears.
+//   oto1      the 3AM Relapse Kit, one click after the purchase clears.
 //   downsell  a single protocol, for whoever said no to the OTO.
 //   seat      a second account, for the partner who gets woken up.
 //   season    Reset Season, four seasonal drops, paid once for the year.
@@ -21,7 +21,15 @@ import type { Locale } from "@/lib/i18n";
 // nothing here is recurring and nothing already sold is ever revoked. Season
 // is a year of content bought in one go, not a subscription.
 //
-// Rationale, pricing and the Hotmart-vs-Stripe split: marketing/flu143-esteira-hotmart.md
+// Decided by Ash on 8 Aug 2026, in the issue interaction on FLU-143:
+//   - Hotmart takes every market, not just PT and ES.
+//   - OTO 1 is the 3AM Relapse Kit, to be produced. The WIRED series was the
+//     alternative, already rendered and free to ship, and was turned down. It
+//     stays free at /watch as top-of-funnel, which is also what the style
+//     decision asked for: cinema on the ad side, clinic on the buying side.
+//   - Recurring revenue is the annual Season pack, never a subscription.
+//
+// Rationale and pricing: marketing/flu143-esteira-hotmart.md
 
 export type Rung = "front" | "bump" | "oto1" | "downsell" | "seat" | "season" | "backend";
 
@@ -38,10 +46,10 @@ export interface Offer {
 export const OFFERS: Record<Rung, Offer> = {
   front: { rung: "front", price: PRICE_TODAY, anchor: PRICE_ANCHOR, shippable: true },
   bump: { rung: "bump", price: BUMP_PRICE, shippable: true },
-  // The five episodes and the trailer are already rendered and sitting in
-  // public/videos/eps. Zero production cost, which is why this is the OTO we
-  // test with rather than the 3AM Relapse Kit that still has to be written.
-  oto1: { rung: "oto1", price: 37, shippable: true },
+  // The Kit has to be written before it can be sold, so the post-purchase step
+  // has no offer to show until it exists. Anything reading this ladder must
+  // check `shippable` and skip the rung, not fall through to a broken page.
+  oto1: { rung: "oto1", price: 47, shippable: false },
   downsell: { rung: "downsell", price: 9, shippable: true },
   seat: { rung: "seat", price: 17, shippable: true },
   season: { rung: "season", price: 39, shippable: false },
@@ -49,11 +57,17 @@ export const OFFERS: Record<Rung, Offer> = {
 };
 
 // ─── Where the money is taken ────────────────────────────────────────────────
-// Stripe is built, works, and costs about 2.9%. Hotmart costs 9.9% and gives
-// back three things Stripe does not: the funnel mechanics as configuration
-// rather than code, merchant-of-record status for EU VAT, and an affiliate
-// market. That market speaks Portuguese and Spanish, so the split is by
-// language: PT and ES on Hotmart, EN and FR on Stripe.
+// Hotmart costs 9.9% + 0.50 USD against Stripe's ~2.9%, and gives back three
+// things Stripe does not: the funnel mechanics as configuration rather than
+// code, merchant-of-record status for EU VAT, and an affiliate market. Ash
+// chose Hotmart for every market, so VITE_HOTMART_LOCALES is meant to stay
+// empty and every language checks out on Hotmart. The extra fee in EN and FR
+// buys one panel and one set of funnel rules instead of two of each.
+//
+// The filter stays in the code as the way back: setting VITE_HOTMART_LOCALES
+// to "pt,es" sends EN and FR to Stripe again without a deploy of new logic.
+// Stripe also remains the fallback whenever a rung has no offer code, so a
+// half-configured Hotmart never becomes a dead button.
 //
 // Vite inlines import.meta.env only for statically written keys, so every
 // variable below is spelled out. Dynamic lookup silently yields undefined in a

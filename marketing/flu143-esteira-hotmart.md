@@ -5,6 +5,24 @@
 
 ---
 
+## Decisões fechadas pelo Ash, 8 de Agosto de 2026
+
+Este documento foi escrito com três perguntas em aberto. Estão respondidas. O que está escrito abaixo delas continua válido como raciocínio, mas onde a recomendação foi contrariada, vale a decisão.
+
+| Pergunta | Recomendação do documento | **Decisão do Ash** |
+|---|---|---|
+| Que mercados na Hotmart | Só PT e ES, EN e FR ficam no Stripe | **Hotmart em tudo** |
+| Qual é o OTO 1 | A série WIRED, já produzida, €37 | **Produzir o 3AM Relapse Kit, €47** |
+| Como entra a recorrência | Reset Season, €39/ano pago uma vez | **Reset Season** (confirmada) |
+
+**Hotmart em tudo.** Custa cerca de €3,50 a mais por venda em EN e FR, e compra um só painel, um só conjunto de regras de funil e o estatuto de Merchant of Record aplicado aos quatro idiomas em vez de dois. A conta de IVA da secção 4 passa a estar coberta em todo o lado, não só em PT e ES. O filtro por idioma fica no código como caminho de volta: `VITE_HOTMART_LOCALES=pt,es` devolve EN e FR ao Stripe sem escrever lógica nova.
+
+**O OTO 1 é o Kit, não a série.** É a opção que o documento marcou como "duas a três semanas antes de haver OTO nenhum", e essa é a consequência aceite: enquanto o Kit não estiver escrito, o funil não tem degrau 3. Em troca, o OTO passa a estar alinhado com a posição (o despertar das 3h) em vez de ser vídeo sobre o mecanismo, e a série WIRED **fica inteira e grátis em `/watch`**, como topo de funil e criativo de anúncio. Isto também fecha a decisão de estilo por outro caminho: cinema do lado do anúncio, clínica do lado da compra. Nenhum episódio sai do ar.
+
+**Reset Season a €39/ano pagos de uma vez.** Sem assinatura, portanto sem fluxo de cancelamento self-service, sem aviso de renovação e sem a revisão de termos que uma subscrição na UE obriga. Na Hotmart cria-se como produto de pagamento único, nunca como plano recorrente.
+
+---
+
 ## 0. A esteira em uma tela
 
 ```
@@ -16,7 +34,7 @@ ENQUETE 5 perguntas  →  RESULTADO (diagnóstico + EP4)     [grátis, não é p
    ↓ order bump no checkout
 2. BUMP      Recovery Pack, 7 protocolos de recaída  +€19   → ticket €46
    ↓ 1 clique, sem redigitar cartão
-3. OTO 1     WIRED, a série completa                  €37
+3. OTO 1     3AM Relapse Kit                          €47   [por produzir]
    ↓ se recusar
 4. DOWNSELL  Um protocolo avulso                       €9
    ↓ já dentro da plataforma, noite 5 a 7
@@ -76,17 +94,19 @@ Legenda de ativos: **PRONTO** = o ficheiro está no repositório hoje · **PARCI
 
 ---
 
-### Degrau 3. OTO 1, um clique, logo após a compra. €37
+### Degrau 3. OTO 1, um clique, logo após a compra. €47
 
-**O que é:** WIRED, a série completa. Os episódios sobre o mecanismo, com o EP4 (*Why Exactly 3:07 AM*) como peça central.
+**Decidido:** o *3AM Relapse Kit*. A série WIRED foi a alternativa e foi recusada; fica grátis em `/watch`, inteira, como topo de funil.
 
-**Ativo:** **PRONTO e parado.** `public/videos/eps/` tem ep1 a ep5 mais trailer, 163 MB de vídeo já produzido, mais as 16 imagens de `images/watch/`. Está tudo de graça em `/watch`, uma página que zero tráfego pago viu.
+**O que é:** o kit para a noite em que a insónia volta depois do protocolo ter funcionado. O produto principal ensina a dormir sete noites; este ensina a recuperar a oitava vez que falha, que é quando o cliente perde a fé no método e pede reembolso. Vende-se a quem acabou de comprar porque é exactamente o medo que ele tem no momento em que paga: *"e quando voltar?"*
 
-**Por que este e não outro:** é o único OTO que podemos lançar esta semana com custo de produção zero. O candidato "correcto" pela posição seria um *3AM Relapse Kit* novo, mas isso é duas a três semanas de produção para testar uma hipótese que ainda não sabemos se paga. Vender o que já está feito responde primeiro à pergunta que interessa: **este público paga por vídeo depois de comprar?** Se sim, produz-se o Relapse Kit e ele passa a ser o OTO 1, com a série a descer para downsell.
+**Ativo:** **POR PRODUZIR.** Duas a três semanas. Enquanto não existir, o funil não tem degrau 3 e vai do bump directo para dentro da plataforma. Consequência aceite na decisão.
 
-**O trade-off, dito de frente:** para vender a série, os EP3 a EP5 saem do `/watch` público. EP1 e EP2 ficam abertos, como topo de funil e prova. Perde-se conteúdo grátis de aquecimento, ganha-se um OTO de margem 100%.
+**Por que este e não a série:** a série é vídeo sobre o mecanismo, e o mecanismo já foi comprado no degrau 1. O Kit está na posição fechada (o despertar das 3h) e é accionável na cama, às 3h, que é onde este público está quando se lembra de nós. Ficar de graça também dá à série o único trabalho que ela faz bem hoje: aquecer tráfego frio antes da enquete.
 
-**Take-rate:** benchmark 10 a 23% para OTO de um clique.
+**Take-rate:** benchmark 10 a 23% para OTO de um clique. Sem histórico próprio.
+
+**Âmbito de produção, para o degrau caber em duas a três semanas:** um protocolo de emergência de 20 minutos em áudio, um cartão impresso de uma página com o que fazer nos primeiros 90 segundos depois de acordar, e três variantes curtas por gatilho (ansiedade, álcool, mudança de horário). Reaproveita a voz, o formato e a cadeia de produção dos áudios das noites 1 a 7, que já existem.
 
 **Hotmart:** Funil de Vendas nativo, upsell com pagamento em um clique sem redigitar o cartão. O produto setup é o degrau 1.
 
@@ -146,7 +166,7 @@ Esta é a parte que nenhuma das outras plataformas dá, e é a que responde ao p
 
 O Mercado de Afiliados da Hotmart põe o produto à frente de gente que já tem audiência e só ganha se vender. Comissão de 50 a 60% no front-end é a norma no low-ticket, e a margem continua boa porque o custo marginal é zero e nós ficamos com a esteira toda a partir do degrau 3.
 
-**A ressalva que decide o desenho:** a força de afiliados da Hotmart é esmagadoramente **PT-BR e ES**. Para EN e FR a plataforma não traz distribuição nenhuma, traz só custo. Como o site já fala as quatro línguas desde ontem, o desenho que faz sentido é dividido, e está na secção 4.
+**A ressalva que fica de pé:** a força de afiliados da Hotmart é esmagadoramente **PT-BR e ES**. Em EN e FR a plataforma não traz distribuição nenhuma, traz só custo, e isso continua verdade depois da decisão de processar tudo lá. O que muda é a leitura: em PT e ES a taxa paga distribuição, em EN e FR paga o IVA e a operação única. Recrutar afiliados só faz sentido nas versões PT e ES.
 
 ---
 
@@ -167,11 +187,13 @@ Premissas rotuladas, todas benchmark de indústria, nenhuma medida por nós:
 |---|---|---|---|
 | 1. Plataforma | €27 | 100% | €27,00 |
 | 2. Recovery Pack (bump) | €19 | 35% | €6,65 |
-| 3. Série WIRED (OTO) | €37 | 12% | €4,44 |
+| 3. 3AM Relapse Kit (OTO) | €47 | 12% | €5,64 |
 | 4. Protocolo avulso (downsell) | €9 | 8% dos que recusaram | €0,63 |
-| | | **AOV** | **≈ €38,70** |
+| | | **AOV** | **≈ €39,90** |
 
-Descontando a taxa Hotmart (9,9% + $0,50), líquido por comprador ≈ **€34,40**.
+Descontando a taxa Hotmart (9,9% + $0,50), líquido por comprador ≈ **€35,50**.
+
+**Até o Kit existir, o degrau 3 vale zero e o AOV é ≈ €33,70** (€30,10 líquidos). É esse o custo de esperar pelo Kit em vez de vender a série já produzida, e é a conta que se compara com o que o Kit valer depois.
 
 Degraus 5 a 8 não entram aqui: são LTV ao longo de semanas, não ticket de checkout.
 
@@ -196,12 +218,13 @@ Duas leituras que mudam a decisão:
 1. **Os 7 pontos percentuais de taxa compram três coisas:** o funil nativo que nos poupa uma a duas semanas de desenvolvimento, o IVA europeu que hoje é uma exposição por resolver (o Ash é residente na Suíça, portanto fora da UE, e vender digital a consumidores da UE cria obrigação de IVA que a Hotmart absorve como MoR), e um canal de afiliados. Se o IVA estiver mesmo por regularizar, isto sozinho paga a diferença. **Confirmar com o Juliano e o Roger antes de qualquer conclusão financeira.**
 2. **Os afiliados só existem em PT e ES.** Em EN e FR a Hotmart cobra o triplo e não entrega distribuição.
 
-**Recomendação: dividir por mercado.**
-- **PT e ES na Hotmart.** Esteira completa, afiliados ligados, é o teste barato de "isto vende com tráfego de outra gente".
-- **EN e FR continuam no Stripe**, que já está construído e é três vezes mais barato, até termos tráfego pago a funcionar.
-- O código passa a escolher o checkout pelo idioma. Isso é uma linha de configuração, não uma migração.
+**Recomendação do documento: dividir por mercado.** PT e ES na Hotmart com afiliados ligados, EN e FR no Stripe que já está construído e é três vezes mais barato.
 
-Se preferires plataforma única para simplificar a operação, é uma escolha defensável e a esteira acima não muda: muda só quem processa.
+**Decisão: Hotmart em tudo.** Custa cerca de €3,50 a mais por venda em EN e FR e compra plataforma única. Duas coisas ficam melhores do que na versão dividida: o IVA europeu fica coberto nos quatro idiomas em vez de dois (o Ash é residente na Suíça, portanto EN e FR a consumidores da UE eram exactamente a parte exposta), e o funil existe uma vez só, em vez de haver regras de bump, OTO e downsell duplicadas entre painel e código.
+
+O que se perde é a comparação: com dois processadores dava para ver lado a lado o que a Hotmart custa em conversão. Fica por medir.
+
+O caminho de volta está no código e é uma variável: `VITE_HOTMART_LOCALES=pt,es` devolve EN e FR ao Stripe, que continua construído e a funcionar, sem lógica nova.
 
 ---
 
@@ -227,22 +250,30 @@ O erro a não repetir é o de Junho a Agosto: construir a esteira toda antes de 
 
 | # | O quê | Depende de | Custo |
 |---|---|---|---|
-| 0 | **Decidir: Hotmart em tudo, ou só PT/ES** | Ash | decisão |
-| 1 | Criar produto e ofertas na Hotmart, uma por tipo de sono | 0 | 1 hora, painel |
+| 0 | ~~Decidir mercados, OTO e recorrência~~ | | **FEITO, 8 Ago** |
+| 1 | **Criar conta, produto e as 4 ofertas na Hotmart** | **Ash, só ele tem a conta** | 1 hora, painel |
 | 2 | Configurar Order Bump (Recovery Pack) | 1 | 15 min, painel |
-| 3 | Webhook de entrega de acesso | 1 | 1 a 2 dias, Diego |
-| 4 | Funil de Vendas: OTO série + downsell avulso | 1, 3 | meio dia, painel + página |
-| 5 | Religar tráfego, orçamento pequeno, ângulo 3AM | 1 a 4 | **decisão do Ash** |
-| 6 | Afiliados PT/ES | 5 com números | painel |
-| 7 | Degraus 5, 6 e 7 (cross-sell, Reset Season, backend) | dados do 5 | semanas |
+| 3 | Colar os códigos de oferta em `.env` e rebuild | 1, 2 | 10 min |
+| 4 | Webhook de entrega de acesso | 1 | 1 a 2 dias, Diego |
+| 5 | Produzir o 3AM Relapse Kit | nada, corre em paralelo | 2 a 3 semanas |
+| 6 | Funil de Vendas: OTO Kit + downsell avulso | 1, 4, 5 | meio dia, painel |
+| 7 | Religar tráfego, orçamento pequeno, ângulo 3AM | 1 a 4 | **decisão do Ash** |
+| 8 | Afiliados, na prática PT e ES | 7 com números | painel |
+| 9 | Degraus 5, 6 e 7 (cross-sell, Reset Season, backend) | dados do 7 | semanas |
 
-**Os degraus 1 a 4 são configuração e um dia de código.** Tudo a partir do 6 só faz sentido com números reais. Nenhum destes passos torna o passo 5 dispensável: enquanto o tráfego estiver desligado, a esteira é uma hipótese bem desenhada e nada mais.
+**Os passos 1 a 4 são uma hora de painel e um a dois dias de código, e nada disso arranca sem o passo 1.** Enquanto a conta Hotmart não existir, a esteira está desenhada e não está ligada. O passo 5 é o único que corre em paralelo, porque não depende da conta.
+
+Nenhum destes passos torna o passo 7 dispensável: enquanto o tráfego estiver desligado desde 8 de Junho, a esteira é uma hipótese bem desenhada e nada mais.
 
 ---
 
 ## 7. Já ficou no código
 
-`src/lib/offers.ts` passa a ser o sítio único onde a esteira vive: os oito degraus como dados, com preço, código de oferta Hotmart e a que degrau pertencem. O `/plan` já sabe montar o link de checkout da Hotmart com `off`, `sck` e email pré-preenchido, e escolhe entre Stripe e Hotmart por configuração. Sem códigos de oferta configurados, o comportamento é exactamente o de hoje: Stripe, nada muda.
+`src/lib/offers.ts` passa a ser o sítio único onde a esteira vive: os degraus como dados, com preço, código de oferta Hotmart e se o entregável existe mesmo hoje. O `/plan` já sabe montar o link de checkout da Hotmart com `off`, `sck` e email pré-preenchido, e escolhe entre Stripe e Hotmart por configuração. Sem códigos de oferta configurados, o comportamento é exactamente o de hoje: Stripe, nada muda.
+
+As decisões de 8 de Agosto já estão lá: o degrau 3 é o Kit a €47 marcado como `shippable: false`, e o filtro de idioma fica vazio, o que significa Hotmart em todos os mercados.
+
+`.env.hotmart.example` lista as variáveis a preencher, uma a uma, com a explicação do que criar na Hotmart para cada. É o ficheiro a abrir ao lado do painel.
 
 Trocar preço ou oferta é editar um ficheiro, não caçar constantes por cinco páginas.
 
