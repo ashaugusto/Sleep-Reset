@@ -35,7 +35,9 @@ export async function getStripeSync(): Promise<StripeSync> {
 export async function initStripeSync(databaseUrl: string): Promise<void> {
   await runMigrations({ databaseUrl });
   const stripeSync = await getStripeSync();
-  const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(",")[0]}`;
+  // APP_URL is the canonical public origin. REPLIT_DOMAINS is gone since the move
+  // off Replit, and interpolating it undefined registered https://undefined/... in Stripe.
+  const webhookBaseUrl = (process.env.APP_URL || "https://sleepwired.com").replace(/\/$/, "");
   await stripeSync.findOrCreateManagedWebhook(`${webhookBaseUrl}/api/stripe/webhook`);
   stripeSync.syncBackfill().catch((err) => console.error("Stripe backfill error:", err));
 }
