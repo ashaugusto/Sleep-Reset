@@ -74,6 +74,13 @@ const ALLOWED_EVENTS = new Set([
   "quiz_start", "quiz_questions_done", "quiz_complete",
   "quiz_result_view", "quiz_to_checkout",
   "homepage_from_quiz",
+  // Entry quiz (Aug, quiz became the root page). Without these the whole funnel
+  // reports nothing: the page fires them and the endpoint answered 400.
+  // quiz_q{n}_done is the drop-off curve, one row per question answered.
+  "quiz_view", "quiz_submit", "quiz_submit_fail",
+  "quiz_q1_done", "quiz_q2_done", "quiz_q3_done", "quiz_q4_done", "quiz_q5_done",
+  "quiz_capture_skip", "quiz_result_to_offer",
+  "quiz_result_ep2_play", "quiz_result_ep3_play", "quiz_result_ep4_play",
 ]);
 async function handleEvent(req: Request, res: Response) {
   const { event, ad_id, hero_variant, client_id } = req.body as {

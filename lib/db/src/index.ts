@@ -10,11 +10,25 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// DO managed PG uses self-signed CA chain; pg-connection-string v3 now treats
-// sslmode=require as verify-full by default, breaking the connection. Accept
-// self-signed here (we trust DO's managed cluster).
+// DO managed PG uses a self-signed CA chain, and pg-connection-string now treats
+// sslmode=require as verify-full, which rejects it: "self-signed certificate in
+// certificate chain". Passing `ssl` alongside `connectionString` does NOT fix it:
+// pg does `Object.assign({}, config, parse(connectionString))`, so whatever the
+// URL says about SSL wins over the explicit option. So strip sslmode out of the
+// URL first, then set ssl ourselves. We trust DO's managed cluster.
+function connectionConfig(url: string) {
+  try {
+    const u = new URL(url);
+    u.searchParams.delete("sslmode");
+    u.searchParams.delete("ssl");
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: connectionConfig(process.env.DATABASE_URL),
   ssl: { rejectUnauthorized: false },
 });
 export const db = drizzle(pool, { schema });
