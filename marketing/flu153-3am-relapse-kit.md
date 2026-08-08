@@ -68,7 +68,7 @@ PT, ES e FR seguem o mesmo bloco, traduzidos, no mesmo ficheiro. O PT é do Bras
 ## O que falta para o degrau 3 estar a vender
 
 1. **Criar a oferta na Hotmart** e pôr o código em `VITE_HOTMART_OFF_OTO1`. Enquanto essa variável estiver vazia, `offerCode("oto1")` devolve `""` e quem chama cai no Stripe ou salta o degrau. Ninguém aterra numa página partida. (FLU-143)
-2. **Configurar a entrega.** Os ficheiros são estáticos em `sleepwired.com/audio/kit-*.mp3` e `sleepwired.com/kit/first-90-seconds.pdf`, servidos pelo Caddy, tal como os áudios das noites. É o mesmo modelo de entrega que já está em produção para o produto principal.
+2. **Configurar a entrega.** Já está servida: os seis ficheiros estão em produção em `sleepwired.com/audio/kit-*.mp3` e `sleepwired.com/kit/first-90-seconds.{pdf,png}`, com o mesmo tamanho byte a byte do repositório, servidos pelo Caddy a partir de `dist/public` como os áudios das noites. Basta apontar a entrega da Hotmart para esses URLs.
 3. **Página de entrega dentro da app**, se quisermos que o Kit apareça ao lado do Recovery Pack para quem já comprou, em vez de viver só no email da Hotmart. Não é preciso para vender, é preciso para o cliente reencontrar o Kit três semanas depois, que é justamente quando ele precisa. Fica como issue separada.
 
 ---
