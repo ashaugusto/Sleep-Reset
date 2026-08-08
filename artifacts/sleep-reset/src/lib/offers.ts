@@ -46,10 +46,12 @@ export interface Offer {
 export const OFFERS: Record<Rung, Offer> = {
   front: { rung: "front", price: PRICE_TODAY, anchor: PRICE_ANCHOR, shippable: true },
   bump: { rung: "bump", price: BUMP_PRICE, shippable: true },
-  // The Kit has to be written before it can be sold, so the post-purchase step
-  // has no offer to show until it exists. Anything reading this ladder must
-  // check `shippable` and skip the rung, not fall through to a broken page.
-  oto1: { rung: "oto1", price: 47, shippable: false },
+  // The Kit exists as of FLU-153: the 20 minute protocol and the three trigger
+  // versions are in public/audio/kit-*.mp3, the one page card is in
+  // public/kit/, and the page copy is in every locale under `oto1`. What is
+  // still missing is the offer code, and that is what `offerCode` returns "" for
+  // until Hotmart has it, so nobody reaches a broken page in the meantime.
+  oto1: { rung: "oto1", price: 47, shippable: true },
   downsell: { rung: "downsell", price: 9, shippable: true },
   seat: { rung: "seat", price: 17, shippable: true },
   season: { rung: "season", price: 39, shippable: false },

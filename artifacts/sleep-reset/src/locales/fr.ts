@@ -327,6 +327,41 @@ const fr: Dict = {
     ],
     backToResult: "Revenir à mon résultat",
   },
+
+  oto1: {
+    eyebrow: "À ajouter avant d'entrer",
+    title: "La nuit où ça revient",
+    body: [
+      "Vous venez d'acheter sept nuits. Et la question est déjà là : et la première nuit où l'insomnie revient ? Parce qu'elle revient, une fois, le plus souvent quelques semaines plus tard, et c'est cette nuit qui décide si vous gardez la méthode ou si vous l'abandonnez sans rien dire.",
+      "Le 3AM Relapse Kit, c'est ce que vous lancez cette nuit-là. Un protocole de vingt minutes à écouter dans le noir, une carte pour les quatre-vingt-dix premières secondes, et trois versions courtes pour les trois choses qui déclenchent la rechute. Rien à lire et rien à décider à trois heures du matin.",
+    ],
+    includedLabel: "Ce qu'il contient",
+    included: [
+      {
+        title: "Le protocole de 20 minutes",
+        body: "Audio guidé pour le milieu de la nuit, silences compris, pour être accompagné pendant que vous le faites au lieu de retenir une liste à l'avance.",
+      },
+      {
+        title: "La carte des 90 premières secondes",
+        body: "Une page. Imprimée pour le tiroir de la table de nuit et enregistrée sur le téléphone. Quoi faire avant de décider quoi que ce soit sur la nuit.",
+      },
+      {
+        title: "Trois versions par déclencheur",
+        body: "Quatre à cinq minutes chacune, pour les rechutes qui arrivent vraiment : un réveil en anxiété, la nuit après avoir bu, et un horaire qui a bougé.",
+      },
+      {
+        title: "À vous, définitivement",
+        body: "Le même accès à vie que le protocole. Payé une fois, sans abonnement, toutes les mises à jour incluses.",
+      },
+    ],
+    notLabel: "Ce que ce n'est pas",
+    not: "Ce n'est ni un deuxième programme ni de la théorie en plus. C'est la seule nuit que les sept nuits ne couvrent pas, réglée à l'avance. Éducation et accompagnement, pas de soins médicaux.",
+    priceLine: "Un paiement unique de {price}, ajouté à la commande que vous venez de passer.",
+    cta: "Oui, j'ajoute le Relapse Kit",
+    decline: "Non merci, emmenez-moi à mon protocole",
+    micro: "Un clic. Votre carte n'est pas redemandée.",
+    guarantee: "Couvert par la même garantie de 60 jours que le protocole.",
+  },
 };
 
 export default fr;

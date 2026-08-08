@@ -47,6 +47,35 @@ export type ResultCopy = {
   planLede: string;
 };
 
+/** ── The one click upsell, shown once, right after the front offer clears. ──
+ *  The page itself is hosted by the checkout, so this copy gets pasted into a
+ *  panel rather than rendered by us. It lives here anyway, for the reason the
+ *  rest of the file exists: one wording, four languages, and a type error the
+ *  day a language is missing a line. Deliverables it describes are real files:
+ *  public/audio/kit-*.mp3 and public/kit/first-90-seconds.pdf. */
+export type Oto1Copy = {
+  eyebrow: string;
+  title: string;
+  /** Two paragraphs: the fear they have at this exact second, then the answer. */
+  body: [string, string];
+  includedLabel: string;
+  included: [
+    { title: string; body: string },
+    { title: string; body: string },
+    { title: string; body: string },
+    { title: string; body: string },
+  ];
+  notLabel: string;
+  not: string;
+  /** "One payment of {price}." */
+  priceLine: string;
+  cta: string;
+  /** The refusal has to be a real, findable link, or the page is a dark pattern. */
+  decline: string;
+  micro: string;
+  guarantee: string;
+};
+
 export type Dict = {
   code: string;
   /** Native name, shown in the switcher. */
@@ -150,4 +179,6 @@ export type Dict = {
     ];
     backToResult: string;
   };
+
+  oto1: Oto1Copy;
 };

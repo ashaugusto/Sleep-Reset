@@ -323,6 +323,41 @@ const es: Dict = {
     ],
     backToResult: "Volver a mi resultado",
   },
+
+  oto1: {
+    eyebrow: "Añádalo antes de entrar",
+    title: "La noche en que vuelve",
+    body: [
+      "Acaba de comprar siete noches. Y ya tiene la pregunta en la cabeza: qué pasa la primera noche en que el insomnio vuelva. Porque vuelve, una vez, casi siempre unas semanas después, y esa es la noche que decide si mantiene el método o deja de usarlo sin decir nada.",
+      "El 3AM Relapse Kit es lo que pone en marcha esa noche. Un protocolo de veinte minutos para escuchar a oscuras, una tarjeta para los primeros noventa segundos y tres versiones cortas para las tres cosas que suelen provocar la recaída. Nada que leer y nada que resolver a las tres de la mañana.",
+    ],
+    includedLabel: "Qué incluye",
+    included: [
+      {
+        title: "El protocolo de 20 minutos",
+        body: "Audio guiado para la mitad de la noche, con los silencios dentro, para que le vayan diciendo qué hacer mientras lo hace, en vez de recordar una lista.",
+      },
+      {
+        title: "La tarjeta de los primeros 90 segundos",
+        body: "Una página. Impresa para el cajón de la mesilla y guardada en el móvil. Qué hacer antes de decidir nada sobre la noche.",
+      },
+      {
+        title: "Tres versiones por detonante",
+        body: "De cuatro a cinco minutos cada una, para las recaídas que ocurren de verdad: despertar con ansiedad, la noche después de beber y un horario que cambió.",
+      },
+      {
+        title: "Suyo para siempre",
+        body: "El mismo acceso de por vida que el protocolo. Se paga una vez, sin suscripción, y todas las actualizaciones van incluidas.",
+      },
+    ],
+    notLabel: "Qué no es",
+    not: "No es un segundo curso ni más teoría. Es la única noche que las siete noches no cubren, resuelta de antemano. Educación y acompañamiento, no atención médica.",
+    priceLine: "Un pago único de {price}, sumado al pedido que acaba de hacer.",
+    cta: "Sí, quiero añadir el Relapse Kit",
+    decline: "No, gracias. Llévenme a mi protocolo",
+    micro: "Un clic. No se vuelve a pedir la tarjeta.",
+    guarantee: "Cubierto por la misma garantía de 60 días que el protocolo.",
+  },
 };
 
 export default es;

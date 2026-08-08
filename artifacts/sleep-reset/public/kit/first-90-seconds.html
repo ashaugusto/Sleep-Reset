@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The first 90 seconds · 3AM Relapse Kit</title>
+<meta name="description" content="What to do in the first 90 seconds after you wake at 3AM. One page, no screen required.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/* ─── The card ────────────────────────────────────────────────────────────────
+   One page, two lives. On a phone at three in the morning it has to be dark,
+   low contrast and readable with one eye open. On paper it has to be ink on
+   white, or nobody prints it twice. Same markup, one print media block, so the
+   text can never drift between the two versions.
+
+   Nothing here is a screen you interact with. The whole point of the card is
+   that it works when the phone stays face down. */
+
+:root {
+  --ink: #06080b;
+  --raised: #0c1016;
+  --text: #ece7de;
+  --text-2: #a5a096;
+  --text-3: #6e6a62;
+  --brass: #c8a24c;
+  --line: rgba(236, 231, 222, 0.12);
+  --display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --ui: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; background: var(--ink); }
+
+body {
+  font-family: var(--ui);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+}
+
+.card {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 40px 34px 34px;
+}
+
+header { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0 0 10px;
+}
+
+h1 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1.12;
+  margin: 0 0 8px;
+}
+
+.lede { color: var(--text-2); font-size: 14px; margin: 0; max-width: 34rem; }
+
+h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 17px;
+  margin: 28px 0 12px;
+}
+
+ol.steps { list-style: none; counter-reset: step; margin: 18px 0 0; padding: 0; }
+
+ol.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 16px 46px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+ol.steps li:last-child { border-bottom: 0; }
+
+ol.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(200, 162, 76, 0.42);
+  border-radius: 50%;
+  color: var(--brass);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-title { font-weight: 600; font-size: 16px; margin: 0 0 3px; }
+.step-body { color: var(--text-2); font-size: 14px; margin: 0; }
+
+/* Both grids collapse on their own width rather than on a breakpoint, because
+   this file is also rendered headless at odd viewport sizes to make the phone
+   image, and a media query would not fire there. */
+.fork {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.fork div {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.fork .label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0 0 6px;
+}
+
+.fork p { margin: 0; font-size: 14px; color: var(--text-2); }
+.fork strong { color: var(--text); font-weight: 600; }
+
+ul.plain { margin: 0; padding: 0; list-style: none; }
+
+ul.plain li {
+  position: relative;
+  padding-left: 18px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+ul.plain li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 7px;
+  height: 1px;
+  background: var(--brass);
+}
+
+ul.plain strong { color: var(--text); font-weight: 600; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 26px; }
+
+.quote {
+  font-family: var(--display);
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--text);
+  border-left: 2px solid rgba(200, 162, 76, 0.42);
+  padding-left: 16px;
+  margin: 22px 0 0;
+}
+
+footer {
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--text-3);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+footer p { margin: 0; }
+
+@media (max-width: 640px) {
+  .card { padding: 30px 22px 26px; }
+  h1 { font-size: 28px; }
+  .two { gap: 14px; }
+}
+
+/* The phone image is rendered from this same file, in a headless window 1170 px
+   wide, zoomed three times: the card then lays out as a 390 px phone and comes
+   out at retina density. Nobody browses at this exact width, and the render in
+   build_card.sh is pinned to it. */
+@media screen and (min-width: 1160px) and (max-width: 1180px) {
+  html { zoom: 3; }
+  body { width: 390px; }
+  .card { padding: 30px 22px 26px; }
+  h1 { font-size: 28px; }
+  .two { gap: 14px; }
+}
+
+/* Ink on paper. A5 so it fits a bedside drawer, and so two of them fit on one
+   A4 sheet if that is all the printer has. */
+@page { size: A5; margin: 9mm; }
+
+@media print {
+  html, body { background: #fff; }
+  body { color: #14171c; line-height: 1.3; }
+  .card { max-width: none; padding: 0; }
+  .eyebrow, .fork .label, ol.steps li::before { color: #8a6a1d; }
+  .lede, .step-body, .fork p, ul.plain li { color: #4a4f57; }
+  .step-title, .fork strong, ul.plain strong, .quote { color: #14171c; }
+  .eyebrow { font-size: 6.4pt; margin-bottom: 4pt; }
+  h1 { font-size: 17pt; margin-bottom: 3pt; }
+  h2 { font-size: 9.6pt; margin: 9pt 0 4pt; }
+  .lede, .step-body, .fork p, ul.plain li { font-size: 7.5pt; }
+  .step-title { font-size: 8.3pt; margin-bottom: 1pt; }
+  .quote { font-size: 9pt; margin-top: 8pt; padding-left: 8pt; }
+  ol.steps { margin-top: 6pt; }
+  ol.steps li { padding: 0 0 4.5pt 24pt; margin-bottom: 4.5pt; }
+  ol.steps li::before { width: 15pt; height: 15pt; font-size: 7.5pt; border-color: #b99a52; top: -1pt; }
+  .fork div { background: #f7f5f1; border-color: #dcd7cd; padding: 5.5pt 7pt; }
+  .fork .label { margin-bottom: 2.5pt; }
+  .fork, .two { gap: 7pt; }
+  .quote { border-left-color: #b99a52; }
+  header { border-color: #dcd7cd; padding-bottom: 6pt; }
+  ol.steps li, footer { border-color: #e5e1d9; }
+  footer { margin-top: 8pt; padding-top: 5pt; font-size: 6.2pt; color: #7b7f87; }
+  ul.plain li { margin-bottom: 2.5pt; padding-left: 12pt; }
+  ul.plain li::before { top: 5pt; width: 5pt; }
+}
+</style>
+</head>
+<body>
+<main class="card">
+
+  <header>
+    <p class="eyebrow">3AM Relapse Kit</p>
+    <h1>The first 90 seconds</h1>
+    <p class="lede">You are awake and it is the middle of the night. Do these five things before you decide anything about the night. Nothing here needs a screen.</p>
+  </header>
+
+  <ol class="steps">
+    <li>
+      <p class="step-title">Do not look at the clock</p>
+      <p class="step-body">Not once. The number changes nothing you are about to do, and it is what starts the arithmetic that wakes you up properly.</p>
+    </li>
+    <li>
+      <p class="step-title">Let the jaw come apart</p>
+      <p class="step-body">Teeth not touching, tongue away from the roof of the mouth. Shoulders down, hands open.</p>
+    </li>
+    <li>
+      <p class="step-title">Breathe out longer than you breathe in</p>
+      <p class="step-body">In through the nose for four, hold for seven, out through the mouth for eight. Three rounds. The long exhale is the part that lowers the alarm.</p>
+    </li>
+    <li>
+      <p class="step-title">Say the line</p>
+      <p class="step-body">I am not trying to sleep. I am resting until it comes back. Trying is the pressure that keeps you awake.</p>
+    </li>
+    <li>
+      <p class="step-title">Then check one thing: heavy or wired</p>
+      <p class="step-body">Not whether you are asleep. Only how the body feels.</p>
+    </li>
+  </ol>
+
+  <div class="fork">
+    <div>
+      <p class="label">Heavy</p>
+      <p><strong>Stay in bed.</strong> Eyes want to stay closed, limbs feel far away, thoughts have gone loose. Let the night happen without supervision.</p>
+    </div>
+    <div>
+      <p class="label">Wired</p>
+      <p><strong>Get up after about 20 minutes.</strong> Chest fast, mind in full sentences, lying at attention. Leaving the bed is what stops the bed from becoming the place where you lie awake.</p>
+    </div>
+  </div>
+
+  <div class="two">
+    <section>
+      <h2>If you get up</h2>
+      <ul class="plain">
+        <li><strong>Low light only.</strong> No overhead light, no bright screen.</li>
+        <li><strong>A chair, not the bed and not the sofa.</strong> Something over your shoulders.</li>
+        <li><strong>Write the loop out on paper.</strong> Then one line: the smallest thing you will do about it tomorrow.</li>
+        <li><strong>Read something boring.</strong> On paper if you have it. Not news, not messages.</li>
+        <li><strong>Go back when your eyes close on their own,</strong> not when you feel you have waited long enough.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Tomorrow, which matters more</h2>
+      <ul class="plain">
+        <li><strong>Normal wake time.</strong> Not later, not on the weekend either.</li>
+        <li><strong>Ten minutes of outdoor light</strong> in the first half hour up.</li>
+        <li><strong>No nap,</strong> or twenty minutes before 3pm at the most.</li>
+        <li><strong>Caffeine as usual in the morning,</strong> none after midday.</li>
+        <li><strong>Same bedtime tonight,</strong> or later. Going to bed early to catch up is what turns one bad night into a bad week.</li>
+      </ul>
+    </section>
+  </div>
+
+  <p class="quote">One night awake does not undo the week. What repeats the pattern is the morning after, not the night itself.</p>
+
+  <footer>
+    <p>Education and coaching, not medical care. If the waking comes with pain, breathing trouble or low mood lasting weeks, speak to a doctor.</p>
+    <p>sleepwired.com</p>
+  </footer>
+
+</main>
+</body>
+</html>

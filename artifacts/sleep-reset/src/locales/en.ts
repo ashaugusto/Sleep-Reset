@@ -328,6 +328,41 @@ const en: Dict = {
     ],
     backToResult: "Back to my result",
   },
+
+  oto1: {
+    eyebrow: "Add before you go in",
+    title: "The night it comes back",
+    body: [
+      "You just bought seven nights. Here is the question you are already asking: what about the first night it comes back? Because it does come back, once, usually a few weeks in, and that is the night that decides whether you keep the method or quietly stop using it.",
+      "The 3AM Relapse Kit is what you run on that night. A twenty minute protocol you play in the dark, a card for the first ninety seconds, and three short versions for the three things that usually set it off. Nothing to read and nothing to work out at three in the morning.",
+    ],
+    includedLabel: "What is in it",
+    included: [
+      {
+        title: "The 20 minute protocol",
+        body: "Guided audio for the middle of the night, with the silences left in, so you are being talked through it while you do it instead of remembering a list.",
+      },
+      {
+        title: "The first 90 seconds card",
+        body: "One page. Printed for the bedside drawer and saved on your phone. What to do before you decide anything about the night.",
+      },
+      {
+        title: "Three trigger versions",
+        body: "Four to five minutes each, for the three relapses that actually happen: an anxious wake, a night after drinking, and a schedule that moved.",
+      },
+      {
+        title: "Yours for good",
+        body: "The same lifetime access as the protocol. Paid once, no subscription, every update included.",
+      },
+    ],
+    notLabel: "What this is not",
+    not: "It is not a second course and it is not more theory. It is the one night the seven nights do not cover, worked out in advance. Education and coaching, not medical care.",
+    priceLine: "One payment of {price}, added to the order you just made.",
+    cta: "Yes, add the Relapse Kit",
+    decline: "No thanks, take me to my protocol",
+    micro: "One click. Your card is not asked for again.",
+    guarantee: "Covered by the same 60 day guarantee as the protocol.",
+  },
 };
 
 export default en;

@@ -323,6 +323,41 @@ const pt: Dict = {
     ],
     backToResult: "Voltar ao meu resultado",
   },
+
+  oto1: {
+    eyebrow: "Adicione antes de entrar",
+    title: "A noite em que ela volta",
+    body: [
+      "Você acabou de comprar sete noites. E já está com a pergunta na cabeça: e na primeira noite em que a insônia voltar? Porque ela volta, uma vez, quase sempre algumas semanas depois, e é essa noite que decide se você mantém o método ou para de usar sem dizer nada.",
+      "O 3AM Relapse Kit é o que você usa nessa noite. Um protocolo de vinte minutos para ouvir no escuro, um cartão para os primeiros noventa segundos e três versões curtas para as três coisas que costumam causar a recaída. Nada para ler e nada para resolver às três da manhã.",
+    ],
+    includedLabel: "O que vem dentro",
+    included: [
+      {
+        title: "O protocolo de 20 minutos",
+        body: "Áudio guiado para o meio da noite, com os silêncios mantidos, para você ser conduzido enquanto faz, em vez de decorar uma lista antes.",
+      },
+      {
+        title: "O cartão dos primeiros 90 segundos",
+        body: "Uma página. Impressa para a gaveta do criado-mudo e salva no celular. O que fazer antes de decidir qualquer coisa sobre a noite.",
+      },
+      {
+        title: "Três versões por gatilho",
+        body: "Quatro a cinco minutos cada, para as recaídas que acontecem de verdade: acordar em ansiedade, a noite depois de beber e uma mudança de horário.",
+      },
+      {
+        title: "Seu para sempre",
+        body: "O mesmo acesso vitalício do protocolo. Pago uma vez, sem assinatura, com todas as atualizações incluídas.",
+      },
+    ],
+    notLabel: "O que isto não é",
+    not: "Não é um segundo curso nem mais teoria. É a única noite que as sete noites não cobrem, resolvida com antecedência. Educação e acompanhamento, não atendimento médico.",
+    priceLine: "Um pagamento único de {price}, somado ao pedido que você acabou de fazer.",
+    cta: "Sim, quero adicionar o Relapse Kit",
+    decline: "Não, obrigado. Quero ir para o meu protocolo",
+    micro: "Um clique. O cartão não é pedido de novo.",
+    guarantee: "Coberto pela mesma garantia de 60 dias do protocolo.",
+  },
 };
 
 export default pt;
