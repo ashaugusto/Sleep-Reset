@@ -9,6 +9,7 @@ import {
   type Profile,
 } from "@/lib/quiz-data";
 import { useI18n, fill, money } from "@/lib/i18n";
+import { providerFor, hotmartCheckoutUrl } from "@/lib/offers";
 import { FunnelHeader } from "@/components/funnel-chrome";
 import { getParam, getCookie, logEvent, heroVariant, haptic } from "@/lib/funnel-track";
 import "@/styles/funnel.css";
@@ -46,6 +47,14 @@ export default function Plan() {
   const [showSticky, setShowSticky] = useState(false);
   const offerRef = useRef<HTMLDivElement | null>(null);
   const inFlight = useRef(false);
+
+  // ── Who takes the money ──
+  // Stripe everywhere until a Hotmart product code is configured, and then only
+  // for the languages Hotmart is worth its 9.9% in. When it is Hotmart, the
+  // Recovery Pack is an order bump inside their checkout, so the checkbox on
+  // this page comes off: offering it twice would charge for it twice.
+  const provider = providerFor(locale);
+  const nativeBump = provider === "hotmart";
 
   // ── Which type are we selling to ──
   // ?type= comes from the result page, so the page renders instantly. The
@@ -92,6 +101,29 @@ export default function Plan() {
     try {
       gtm.initiateCheckout("", null);
     } catch {}
+
+    // Hotmart is a hosted checkout: no session to create, we just hand the
+    // visitor over with the offer that matches their type. sck is the only
+    // field Hotmart gives back untouched on the webhook, so attribution rides
+    // in there. If the offer is not configured yet the URL comes back empty
+    // and we fall through to Stripe rather than send anyone to a dead page.
+    if (nativeBump) {
+      const url = hotmartCheckoutUrl("front", {
+        profile: type,
+        tracking: {
+          t: type,
+          h: heroVariant() || "plan",
+          qp: getParam("qp"),
+          c: getParam("utm_content"),
+          s: getParam("utm_source"),
+        },
+      });
+      if (url) {
+        window.location.href = url;
+        return;
+      }
+    }
+
     try {
       const res = await fetch("/api/checkout/express", {
         method: "POST",
@@ -125,7 +157,7 @@ export default function Plan() {
       setBusy(false);
       inFlight.current = false;
     }
-  }, [bump, type, locale, t]);
+  }, [bump, type, locale, t, nativeBump]);
 
   if (!type) {
     return (
@@ -191,7 +223,8 @@ export default function Plan() {
           </div>
 
           {/* ── Order bump ── */}
-          <div className="fnl-bump mt-8" data-on={bump}>
+          {/* Hidden on Hotmart, where the same pack is a native bump one step later. */}
+          <div className="fnl-bump mt-8" data-on={bump} hidden={nativeBump}>
             <span className="fnl-label">{t.plan.bump.label}</span>
             <label className="fnl-check mt-3">
               <input
