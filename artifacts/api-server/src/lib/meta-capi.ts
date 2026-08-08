@@ -1,10 +1,22 @@
 import { createHash } from "node:crypto";
 import { logger } from "./logger";
 
-const PIXEL_ID = process.env.META_PIXEL_ID || "1277058757910786";
+const DEFAULT_PIXEL_ID = "1277058757910786"; // the pixel index.html fires into
+const PIXEL_ID = process.env.META_PIXEL_ID || DEFAULT_PIXEL_ID;
 const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const TEST_EVENT_CODE = process.env.META_TEST_EVENT_CODE;
 const GRAPH_VERSION = "v21.0";
+
+// Say it once at boot. Between 30 Jul and 08 Aug the token was expired and the
+// only trace was one warn line per dropped event, buried in per-request noise.
+if (!ACCESS_TOKEN) {
+  logger.warn(
+    "[meta-capi] no META_ACCESS_TOKEN at boot — every server-side event will be dropped until one is set. " +
+      "Issue a System User token in Business Manager, then: node scripts/meta-capi-verify.mjs",
+  );
+} else if (!process.env.META_PIXEL_ID) {
+  logger.warn({ pixelId: PIXEL_ID }, "[meta-capi] no META_PIXEL_ID set, falling back to the hardcoded pixel");
+}
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -110,7 +122,14 @@ export async function sendCapiEvent(input: CapiEventInput): Promise<{ ok: boolea
     });
     const responseBody: unknown = await res.json().catch(() => ({}));
     if (!res.ok) {
-      logger.error({ status: res.status, body: responseBody, eventName: input.eventName, eventId: input.eventId }, "[meta-capi] event failed");
+      const code = (responseBody as { error?: { code?: number } })?.error?.code;
+      // 190 is the token itself, not the payload: expired, revoked, or wrong pixel owner.
+      // Worth its own line, because retrying will never fix it.
+      const message =
+        code === 190
+          ? "[meta-capi] token rejected — re-issue META_ACCESS_TOKEN, every event is dropped until then"
+          : "[meta-capi] event failed";
+      logger.error({ status: res.status, body: responseBody, eventName: input.eventName, eventId: input.eventId }, message);
       return { ok: false, status: res.status, body: responseBody };
     }
     logger.info({ eventName: input.eventName, eventId: input.eventId, body: responseBody }, "[meta-capi] event sent");
