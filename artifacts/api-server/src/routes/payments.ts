@@ -191,9 +191,16 @@ router.post("/checkout/express", async (req: Request, res: Response) => {
     return;
   }
 
-  const { fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, hero_variant, bump } = req.body as {
+  const {
+    fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, hero_variant, bump,
+    source, quiz_profile, profile_type, locale, cancel_path,
+  } = req.body as {
     fbp?: string; fbc?: string; utm_source?: string; utm_medium?: string;
     utm_campaign?: string; utm_content?: string; hero_variant?: string; bump?: boolean;
+    // Sent by /plan: which quiz profile and type this sale came from, the
+    // language the offer was read in, and where to land a cancelled checkout.
+    source?: string; quiz_profile?: string; profile_type?: string;
+    locale?: string; cancel_path?: string;
   };
 
   const stripe = getStripeClient();
@@ -208,6 +215,14 @@ router.post("/checkout/express", async (req: Request, res: Response) => {
   const baseUrl = `${appUrl}${basePath}`;
   const heroVariantClean = (hero_variant ?? "watch").toString().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32) || "watch";
 
+  // Cancel destination. Client-supplied, so it is whitelisted to a same-site
+  // absolute path: an open redirect on a Stripe cancel_url is a phishing hop
+  // straight off a page the visitor already trusts.
+  const cancelPath =
+    typeof cancel_path === "string" && /^\/[A-Za-z0-9\-._~/?&=%+]*$/.test(cancel_path) && !cancel_path.startsWith("//")
+      ? cancel_path.slice(0, 512)
+      : "/";
+
   // Order bump: the Recovery Pack (€19) added as a 2nd line item if the buyer checked it.
   // The account-claim flow (routes/auth.ts) grants premium access off metadata.bump_recovery_pack.
   const bumpPriceId = process.env.STRIPE_PRICE_PREMIUM;
@@ -221,11 +236,14 @@ router.post("/checkout/express", async (req: Request, res: Response) => {
     mode: "payment",
     customer_creation: "always",
     success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/watch`,
+    cancel_url: `${appUrl}${cancelPath}`,
     metadata: {
-      source: "watch_express",
+      source: (source ?? "watch_express").toString().replace(/[^a-z0-9_-]/gi, "").slice(0, 32) || "watch_express",
       hero_variant: heroVariantClean,
       bump_recovery_pack: wantsBump ? "1" : "",
+      quiz_profile: (quiz_profile ?? "").slice(0, 64),
+      profile_type: (profile_type ?? "").replace(/[^a-z]/g, "").slice(0, 16),
+      locale: (locale ?? "").replace(/[^a-z]/g, "").slice(0, 8),
       fbp: (fbp ?? "").slice(0, 200),
       fbc: (fbc ?? "").slice(0, 200),
       utm_source: (utm_source ?? "").slice(0, 100),

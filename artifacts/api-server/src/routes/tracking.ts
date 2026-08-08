@@ -79,8 +79,13 @@ const ALLOWED_EVENTS = new Set([
   // quiz_q{n}_done is the drop-off curve, one row per question answered.
   "quiz_view", "quiz_submit", "quiz_submit_fail",
   "quiz_q1_done", "quiz_q2_done", "quiz_q3_done", "quiz_q4_done", "quiz_q5_done",
-  "quiz_capture_skip", "quiz_result_to_offer",
+  "quiz_capture_skip", "quiz_result_to_offer", "quiz_result_expand",
   "quiz_result_ep2_play", "quiz_result_ep3_play", "quiz_result_ep4_play",
+  // Offer page (/plan), the step the result now hands off to instead of /watch.
+  // Same lesson as above: an event the page fires and the endpoint rejects is a
+  // stage of the funnel that silently reports zero.
+  "plan_view", "plan_bump_on", "plan_bump_off",
+  "plan_checkout", "plan_checkout_bump",
 ]);
 async function handleEvent(req: Request, res: Response) {
   const { event, ad_id, hero_variant, client_id } = req.body as {

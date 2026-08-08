@@ -1,81 +1,45 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowRight, Check, ChevronDown, Lock } from "lucide-react";
 import { gtm } from "@/lib/gtm";
-import { RESULTS, RESULT_BADGE, CAPTURE, type Profile, type ResultBlock } from "@/lib/quiz-data";
+import { TYPE_TO_HERO, TYPE_TO_EPISODE, type Profile } from "@/lib/quiz-data";
+import { useI18n, fill, withLocale, type Dict } from "@/lib/i18n";
+import { FunnelHeader } from "@/components/funnel-chrome";
+import { clientId, getCookie, logEvent } from "@/lib/funnel-track";
 import "@/styles/funnel.css";
 
 // ─── Result page ─────────────────────────────────────────────────────────────
-// The piece the funnel never had: the old quiz dumped people on the homepage
-// with no read-out at all. Order here is deliberate: diagnosis first, email
-// second, episode third. The address is only asked for after value landed, and
-// skipping it never blocks the way to the offer.
+// Step 2 of 3. The order on this page is the whole point and it was wrong
+// before: the visitor got two dense paragraphs and no obvious next step, then a
+// button that dropped them onto the old WIRED page, which reads as a different
+// site and loses the thread.
 //
-// From here the visitor moves to /watch, which carries the full series and
-// checkout. Quiz opens, video closes. Shared look: styles/funnel.css.
+// Now: the read-out first (three labelled lines anyone can absorb in five
+// seconds), then the single next step, then everything optional. The long form
+// is still here, folded, for the reader who wants it. The button goes to /plan,
+// which is step 3 and carries the offer in this same design system.
+//
+// The email is asked for after value landed, and skipping it never blocks the
+// way forward. The hero promised "no email to see your result" and gating the
+// next step would break that promise with the sceptic, who is the buyer.
 
-const TYPE_TO_HERO: Record<Profile, string> = {
-  onset: "hyperarousal",
-  maintenance: "wake3am",
-  mixed: "default",
-  circadian: "melatonin",
-};
-
-const EP_RUNTIME: Record<number, string> = { 2: "1m 54s", 3: "2m 02s", 4: "1m 33s" };
-
-function clientId(): string {
-  try { return localStorage.getItem("sw_cid") || ""; } catch { return ""; }
-}
-function getCookie(name: string): string {
-  try {
-    const m = document.cookie.match(new RegExp("(?:^|;\\s*)" + name + "=([^;]+)"));
-    return m ? m[1] : "";
-  } catch { return ""; }
-}
-function logEvent(event: string) {
-  try {
-    void fetch("/api/sw/e", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event,
-        ad_id: new URLSearchParams(window.location.search).get("utm_content") || "",
-        client_id: clientId(),
-      }),
-      keepalive: true,
-    }).catch(() => {});
-  } catch {}
-}
-
-/** Offer URL keeping the ad's UTMs, the matched hero and the profile id. */
-function offerUrl(profileId: string, type: Profile): string {
-  const out = new URLSearchParams(window.location.search);
+/** Step 3 keeps the ad's UTMs, the matched hero, the profile and the language. */
+function planUrl(profileId: string, type: Profile): string {
+  const out = withLocale(new URLSearchParams(window.location.search));
   out.delete("id");
   out.set("h", TYPE_TO_HERO[type] || "default");
   out.set("qp", profileId);
-  return "/watch?" + out.toString();
-}
-
-function Crescent() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M13.2 9.9A5.7 5.7 0 0 1 6.1 2.8a5.9 5.9 0 1 0 7.1 7.1Z"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  out.set("type", type);
+  return "/plan?" + out.toString();
 }
 
 export default function QuizResult() {
+  const { t } = useI18n();
   const [profileId, setProfileId] = useState("");
   const [type, setType] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const episodeRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("id");
@@ -95,17 +59,17 @@ export default function QuizResult() {
   const goToOffer = useCallback(() => {
     if (!type) return;
     logEvent("quiz_result_to_offer");
-    window.location.href = offerUrl(profileId, type);
+    window.location.href = planUrl(profileId, type);
   }, [profileId, type]);
 
   async function capture() {
     setErr("");
     const clean = email.trim().toLowerCase();
-    if (!/^.+@.+\..+$/.test(clean)) { setErr("Please enter a valid email."); return; }
+    if (!/^.+@.+\..+$/.test(clean)) { setErr(t.result.capture.invalidEmail); return; }
     setSending(true);
     try {
       // Shared event id so the browser pixel and server CAPI dedup into one Lead.
-      const eventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const eventId = `lead_${clientId()}_${Math.random().toString(36).slice(2, 10)}`;
       const res = await fetch("/api/quiz/capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,7 +83,7 @@ export default function QuizResult() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErr(data?.error || "Could not save your email. Try again.");
+        setErr(data?.error || t.result.capture.saveError);
         setSending(false);
         return;
       }
@@ -127,21 +91,14 @@ export default function QuizResult() {
       logEvent("quiz_complete");
       setSent(true);
     } catch {
-      setErr("Network error. Please try again.");
+      setErr(t.result.capture.networkError);
       setSending(false);
     }
   }
 
   const shell = (children: React.ReactNode) => (
     <div className="fnl">
-      <header className="fnl-head">
-        <div className="fnl-wrap fnl-head-row">
-          <span className="fnl-mark"><Crescent /> Sleep Wired</span>
-        </div>
-        <div className="fnl-progress">
-          <span className="fnl-tick" data-on="true" />
-        </div>
-      </header>
+      <FunnelHeader ticks={3} on={2} />
       <main className="fnl-wrap fnl-main">{children}</main>
     </div>
   );
@@ -149,107 +106,148 @@ export default function QuizResult() {
   if (!type) {
     return shell(
       <div className="flex-1 flex flex-col justify-center">
-        <span className="fnl-label mb-4">Analysis</span>
+        <span className="fnl-label mb-4">{t.quiz.analysisLabel}</span>
         <p className="fnl-step-row" data-done="false">
-          <span className="fnl-dot" /> <span>Opening your result</span>
+          <span className="fnl-dot" /> <span>{t.result.loading}</span>
         </p>
       </div>,
     );
   }
 
-  const r: ResultBlock = RESULTS[type];
+  const r = t.result.types[type];
+  const ep = TYPE_TO_EPISODE[type];
 
   return shell(
     <>
       {/* ── Diagnosis ── */}
-      <span className="fnl-eyebrow mb-5">{RESULT_BADGE}</span>
+      <span className="fnl-eyebrow mb-5">{t.result.badge}</span>
       <h1 className="fnl-display mb-4">{r.title}</h1>
-      <p className="fnl-lede mb-7" style={{ color: "var(--text)" }}>{r.subtitle}</p>
+      <p className="fnl-lede mb-8" style={{ color: "var(--text)" }}>{r.subtitle}</p>
 
-      <div className="mb-8">
-        {r.body.map((p, i) => (
-          <p key={i} className="fnl-body">{p}</p>
-        ))}
+      {/* ── The read-out ──
+          Three labelled lines. This is the part that has to be understood
+          without reading anything else on the page. */}
+      <span className="fnl-label">{t.result.readoutLabel}</span>
+      <dl className="fnl-readout mt-3 mb-8">
+        <div>
+          <dt>{t.result.haveLabel}</dt>
+          <dd>{r.have}</dd>
+        </div>
+        <div>
+          <dt>{t.result.nightLabel}</dt>
+          <dd>{r.night}</dd>
+        </div>
+        <div>
+          <dt>{t.result.firstLabel}</dt>
+          <dd>{r.first}</dd>
+        </div>
+      </dl>
+
+      {/* The one line we want carried forward. */}
+      <p className="fnl-pull mb-7">{r.bridge}</p>
+
+      {/* ── The next step, and there is only one ── */}
+      <button type="button" onClick={goToOffer} className="fnl-cta">
+        {t.result.cta} <ArrowRight className="w-[18px] h-[18px]" />
+      </button>
+      <p className="fnl-micro mt-3 text-center">{t.result.ctaMicro}</p>
+
+      {/* ── Email: optional, and clearly optional ── */}
+      <div className="mt-10">
+        {sent ? (
+          <div className="fnl-panel flex items-start gap-3">
+            <span
+              className="grid place-items-center w-7 h-7 rounded-full shrink-0"
+              style={{ background: "var(--brass)" }}
+            >
+              <Check className="w-4 h-4" strokeWidth={2.75} style={{ color: "#0b0906" }} />
+            </span>
+            <div>
+              <p className="text-[1rem] font-semibold leading-snug">{t.result.capture.sentTitle}</p>
+              <p className="fnl-helper mt-1">{t.result.capture.sentBody}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="fnl-panel">
+            <h2 className="text-[1.0625rem] font-semibold leading-snug mb-1.5">
+              {t.result.capture.headline}
+            </h2>
+            <p className="fnl-helper mb-4">
+              {fill(t.result.capture.sub, { type: r.label })}
+            </p>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              aria-label="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void capture(); }}
+              placeholder={t.result.capture.placeholder}
+              className="fnl-input"
+            />
+            {err && (
+              <p className="mt-2 text-[0.875rem] font-medium" style={{ color: "#e0796b" }}>{err}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => void capture()}
+              disabled={sending}
+              className="fnl-cta mt-3"
+            >
+              {sending
+                ? t.result.capture.sending
+                : (<>{t.result.capture.button} <ArrowRight className="w-[18px] h-[18px]" /></>)}
+            </button>
+            <p className="fnl-micro mt-3 flex items-start gap-1.5">
+              <Lock className="w-3 h-3 mt-[3px] shrink-0" /> {t.result.capture.micro}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* The one line we want remembered going into the ask. */}
-      <p className="fnl-pull mb-9">{r.bridge}</p>
-
-      {/* ── Email: asked only now, and never as a wall ── */}
-      {sent ? (
-        <div className="fnl-panel flex items-start gap-3">
-          <span
-            className="grid place-items-center w-7 h-7 rounded-full shrink-0"
-            style={{ background: "var(--brass)" }}
-          >
-            <Check className="w-4 h-4" strokeWidth={2.75} style={{ color: "#0b0906" }} />
-          </span>
-          <div>
-            <p className="text-[1rem] font-semibold leading-snug">Your plan is on its way.</p>
-            <p className="fnl-helper mt-1">Check your inbox in the next few minutes.</p>
-          </div>
+      {/* ── The long version, folded ──
+          Kept whole for the reader who wants the mechanism, out of the way for
+          the one who already got what they came for. */}
+      <details
+        className="fnl-disclosure mt-10"
+        onToggle={(e) => {
+          if ((e.currentTarget as HTMLDetailsElement).open) logEvent("quiz_result_expand");
+        }}
+      >
+        <summary>
+          {t.result.fullReadLabel}
+          <ChevronDown className="w-4 h-4" />
+        </summary>
+        <div className="fnl-disclosure-body">
+          {r.body.map((p, i) => (
+            <p key={i} className="fnl-body">{p}</p>
+          ))}
         </div>
-      ) : (
-        <div className="fnl-panel">
-          <h2 className="text-[1.0625rem] font-semibold leading-snug mb-1.5">{CAPTURE.headline}</h2>
-          <p className="fnl-helper mb-4">{CAPTURE.sub.replace("{TYPE}", r.label)}</p>
-          <input
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            aria-label="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") void capture(); }}
-            placeholder="you@example.com"
-            className="fnl-input"
-          />
-          {err && <p className="mt-2 text-[0.875rem] font-medium" style={{ color: "#e0796b" }}>{err}</p>}
-          <button
-            type="button"
-            onClick={() => void capture()}
-            disabled={sending}
-            className="fnl-cta mt-3"
-          >
-            {sending ? "Sending" : (<>{CAPTURE.button} <ArrowRight className="w-[18px] h-[18px]" /></>)}
-          </button>
-          <p className="fnl-micro mt-3 flex items-start gap-1.5">
-            <Lock className="w-3 h-3 mt-[3px] shrink-0" /> {CAPTURE.micro}
-          </p>
-          <hr className="fnl-rule my-4" />
-          <button
-            type="button"
-            onClick={() => {
-              logEvent("quiz_capture_skip");
-              episodeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-            className="fnl-ghost"
-          >
-            {CAPTURE.skip} <ChevronDown className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      </details>
 
-      {/* ── The episode that explains this type, then the offer ── */}
-      <div ref={episodeRef} className="mt-12 scroll-mt-16">
-        <span className="fnl-label">Watch next · Episode {r.episode.n} · {EP_RUNTIME[r.episode.n]}</span>
-        <h2 className="fnl-h2 mt-2 mb-5">{r.episode.title}</h2>
+      {/* ── The episode that explains this type ── */}
+      <div className="mt-10">
+        <span className="fnl-label">
+          {fill(t.result.watchNext, { n: ep.n, time: ep.runtime })}
+        </span>
+        <h2 className="fnl-h2 mt-2 mb-5">{r.episodeTitle}</h2>
 
         <div className="fnl-video">
           <video
-            src={r.episode.src}
-            poster={r.episode.poster}
+            src={ep.src}
+            poster={ep.poster}
             controls
             playsInline
             preload="none"
-            onPlay={() => logEvent(`quiz_result_ep${r.episode.n}_play`)}
+            onPlay={() => logEvent(`quiz_result_ep${ep.n}_play`)}
           />
         </div>
 
         <button type="button" onClick={goToOffer} className="fnl-cta mt-7">
-          See the protocol for your type <ArrowRight className="w-[18px] h-[18px]" />
+          {t.result.cta} <ArrowRight className="w-[18px] h-[18px]" />
         </button>
-        <p className="fnl-micro mt-3 text-center">60-day refund · Instant access</p>
+        <p className="fnl-micro mt-3 text-center">{t.result.ctaMicro}</p>
       </div>
     </>,
   );

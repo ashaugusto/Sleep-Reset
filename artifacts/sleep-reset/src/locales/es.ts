@@ -1,0 +1,328 @@
+import type { Dict } from "./types";
+
+// ─── Español ─────────────────────────────────────────────────────────────────
+// Traducido a mano desde en.ts. Se usa el usted, no el tú: quien lee es un
+// desconocido con un problema médico que tiene que creernos.
+// Sin raya larga y sin emoji, igual que en el original.
+
+const es: Dict = {
+  code: "es",
+  name: "Español",
+  htmlLang: "es",
+  money: "{n} €",
+
+  quiz: {
+    eyebrow: "Test de sueño de 60 segundos",
+    headline: "¿Por qué su cerebro le despierta a las 3 de la mañana?",
+    sub: "Cinco preguntas. Sesenta segundos. Al final tiene su tipo de insomnio y el mecanismo exacto que lo produce.",
+    cta: "Ver mi tipo de sueño",
+    microcopy: "No hace falta ningún correo para ver su resultado.",
+    promises: [
+      "Cuál de los cuatro tipos de insomnio es el suyo",
+      "El mecanismo que le mantiene despierto a su hora",
+      "Lo primero que hay que cambiar, esta misma noche",
+    ],
+    stepLabel: "{n} / {total}",
+    building: "Construyendo su resultado",
+    back: "Atrás",
+    noEmailNote: "Ningún correo para ver su resultado",
+    analysisLabel: "Análisis",
+    analyzing: [
+      "Leyendo sus respuestas",
+      "Comparándolas con los cuatro tipos de insomnio",
+      "Su resultado está listo",
+    ],
+    privacy: "Sus respuestas son privadas. Nunca las vendemos ni las compartimos.",
+    failTitle: "No hemos podido construir su resultado.",
+    failBody: "Sus respuestas están guardadas. Un toque y lo intentamos otra vez.",
+    retry: "Intentar de nuevo",
+
+    questions: {
+      main_problem: {
+        prompt: "¿Cuál es su noche?",
+        helper: "Elija la que le arruina más noches.",
+        choices: {
+          wake_3am: {
+            label: "Me duermo bien y luego estoy despierto a las 3",
+            feedback: "Es la respuesta más frecuente de este test.",
+          },
+          cant_fall_asleep: {
+            label: "Paso horas tumbado antes de dormirme",
+            feedback: "Su cerebro no quiere entregar el turno. Hay un motivo.",
+          },
+          both: {
+            label: "Las dos. Me cuesta dormirme y luego me despierto",
+            feedback: "Dos problemas y un solo mecanismo debajo. Llegaremos a él.",
+          },
+          light_all_night: {
+            label: "Duermo, pero ligero y roto toda la noche",
+            feedback: "Un sueño que nunca baja. Otra avería, la misma causa.",
+          },
+          irregular_schedule: {
+            label: "Mi horario es un caos: turnos, viajes, noches tardías",
+            feedback: "Su reloj interno se reescribe cada semana.",
+          },
+        },
+      },
+      night_mind: {
+        prompt: "Cuando está despierto de noche, ¿qué hace su cerebro?",
+        helper: "Sea honesto. Todo el mundo se reconoce en alguna.",
+        choices: {
+          racing: {
+            label: "Se dispara. Trabajo, dinero, conversaciones en bucle",
+            feedback: "No son pensamientos. Es un cerebro que se quedó de guardia.",
+          },
+          alert: {
+            label: "Despierto y alerta, como si fuera mediodía",
+            feedback: "Estar alerta a las 3 es una hormona haciendo mal su trabajo.",
+          },
+          clock_math: {
+            label: "Miro el reloj y calculo las horas que me quedan",
+            feedback: "Esa cuenta es la forma más rápida de seguir despierto.",
+          },
+          sleep_anxiety: {
+            label: "Me preocupa no estar durmiendo",
+            feedback: "Esforzarse más en dormir es justo lo que le mantiene despierto.",
+          },
+        },
+      },
+      severity: {
+        prompt: "¿Con qué frecuencia le pasa?",
+        helper: "A ojo. Nadie está contando.",
+        choices: {
+          nightly_chronic: {
+            label: "Casi todas las noches, y desde hace años",
+            feedback: "Años, no semanas. Esto ya es insomnio crónico.",
+          },
+          most_nights: {
+            label: "Casi todas las noches de los últimos meses",
+            feedback: "Pasados tres meses, deja de ser una mala racha.",
+          },
+          few_nights: {
+            label: "Algunas noches por semana, a rachas",
+            feedback: "A rachas sigue siendo todas las semanas. Cuenta.",
+          },
+          waves: {
+            label: "Viene por olas. Semanas buenas y semanas terribles",
+            feedback: "Las olas casi siempre siguen a algo. Lo encontraremos.",
+          },
+        },
+      },
+      tried: {
+        prompt: "¿Qué ha probado ya?",
+        helper: "Elija lo más lejos que haya llegado.",
+        choices: {
+          supplements: {
+            label: "Melatonina, infusiones, magnesio",
+            feedback: "La melatonina mueve la hora. No frena la hiperactivación.",
+          },
+          apps: {
+            label: "Apps de sueño, meditación, ruido blanco",
+            feedback: "Las apps calman la habitación. El problema no es la habitación.",
+          },
+          hygiene: {
+            label: "Higiene del sueño: cuarto oscuro, sin pantallas, sin café",
+            feedback: "La higiene del sueño previene el insomnio. No lo trata.",
+          },
+          prescription: {
+            label: "Somníferos con receta",
+            feedback: "Llegó hasta donde llega la medicina. Y sigue aquí.",
+          },
+          nothing: {
+            label: "Sinceramente, nada serio todavía",
+            feedback: "Entonces empieza antes de que se acumulen los años.",
+          },
+        },
+      },
+      day_impact: {
+        prompt: "¿Qué le cuesta el día siguiente?",
+        helper: "La parte que arreglaría primero.",
+        choices: {
+          no_energy: {
+            label: "La energía. A las 10 ya estoy vacío",
+            feedback: "El café deja de funcionar sobre la tercera mala semana.",
+          },
+          brain_fog: {
+            label: "La concentración. Leo cuatro veces la misma línea",
+            feedback: "Esa niebla es su cerebro haciendo mantenimiento en pleno día.",
+          },
+          bad_mood: {
+            label: "La paciencia. Salto con la gente que quiero",
+            feedback: "Los de alrededor lo notan antes que usted.",
+          },
+          dread: {
+            label: "El temor. Desde la cena ya temo la hora de acostarme",
+            feedback: "Temer la cama es el bucle alimentándose solo.",
+          },
+        },
+      },
+    },
+  },
+
+  result: {
+    badge: "Su resultado",
+    loading: "Abriendo su resultado",
+    readoutLabel: "La versión corta",
+    haveLabel: "Lo que tiene",
+    nightLabel: "Lo que pasa de noche",
+    firstLabel: "Lo primero que tiene que cambiar",
+    fullReadLabel: "La versión larga",
+    watchNext: "A continuación · Episodio {n} · {time}",
+    cta: "Ver mi plan de 7 noches",
+    ctaMicro: "Pago único · Devolución 60 días · Acceso inmediato",
+
+    capture: {
+      headline: "¿A dónde le enviamos su plan?",
+      sub: "Su análisis completo de {type} y la Noche 1 del protocolo. Un correo. Nada más.",
+      button: "Envíenme mi plan",
+      sending: "Enviando",
+      micro: "Sin spam. Un recordatorio como mucho. Baja en un clic.",
+      placeholder: "usted@ejemplo.com",
+      sentTitle: "Su plan va de camino.",
+      sentBody: "Mire su bandeja de entrada en los próximos minutos.",
+      invalidEmail: "Introduzca un correo válido.",
+      saveError: "No se pudo guardar su correo. Inténtelo otra vez.",
+      networkError: "Error de red. Inténtelo de nuevo.",
+    },
+
+    types: {
+      maintenance: {
+        title: "Usted es un Tipo Mantenimiento.",
+        subtitle: "No le cuesta dormirse. Le cuesta seguir dormido, y ese es otro problema, con otra solución.",
+        body: [
+          "Esto es lo que le ocurre hacia las 3 de la mañana. El cortisol, la hormona que le saca de la cama por la mañana, no se enciende a la hora del despertador. Empieza a subir en la segunda mitad de la noche, horas antes de que le haga falta. En la mayoría de la gente ese pulso pasa por debajo del sueño y nadie lo nota. En usted aterriza como una alarma. Ojos abiertos. Del todo alerta. A la peor hora posible.",
+          "Esa es la primera mitad. La segunda es lo que su cerebro ha aprendido a hacer con ella. Después de suficientes malas noches, despertarse deja de ser neutro y pasa a ser una amenaza, así que en cuanto está despierto su cerebro mira el reloj, hace la cuenta y se prepara para mañana. Eso es hiperactivación, y por eso esforzarse lo empeora. También por eso la melatonina, las apps y la higiene del sueño no le hicieron nada: están hechas para ayudarle a dormirse. Eso ya lo hace bien. Nadie le dio nunca nada para la mitad de las 3 de la mañana.",
+        ],
+        bridge: "Su plan apunta al despertar nocturno, no a la hora de acostarse.",
+        label: "Tipo Mantenimiento",
+        have: "Insomnio de mantenimiento. Empieza bien la noche y la pierde en la segunda mitad.",
+        night: "Una subida de cortisol llega horas antes de tiempo y aterriza encima de su sueño en vez de pasar por debajo.",
+        first: "Deje de trabajar la hora de acostarse. Lo que hay que reeducar es el despertar de las 3.",
+        episodeTitle: "Por qué exactamente a las 3:07",
+        planLede: "Cada noche del protocolo trabaja la segunda mitad de su noche. Es la mitad para la que no estaba hecho nada de lo que ha probado.",
+      },
+      onset: {
+        title: "Usted es un Tipo Conciliación.",
+        subtitle: "Su cuerpo está listo para dormir. Su cerebro se niega a entregar el turno.",
+        body: [
+          "Dormirse no es una decisión, es un relevo. Su sistema nervioso tiene que salir del modo alerta antes de que el sueño pueda empezar. El suyo no sale. En cuanto se apaga la luz y se acaban las distracciones, todo lo que el día dejó a medias toma la palabra: el trabajo, el dinero, la conversación que repasó a las seis de la tarde. Su cuerpo está agotado y su cerebro va a velocidad de mediodía. Es el estado de agotado pero acelerado, y es una condición física medible, no un rasgo de carácter.",
+          "Lo que atrapa a la gente viene después. Cada hora que pasa despierto en la cama le enseña a su cerebro que la cama es el sitio donde uno se queda pensando. Haga eso unos cientos de noches y el dormitorio mismo se convierte en el disparador. Le entra sueño en el sofá y se despeja en el segundo en que se tumba. Por eso no sirve que le digan que se relaje, y por eso el esfuerzo se vuelve en contra. El sueño es lo único que se aleja cuanto más se persigue. Hay que abordarlo de lado.",
+        ],
+        bridge: "Su plan trabaja el relevo, no la fuerza de voluntad.",
+        label: "Tipo Conciliación",
+        have: "Insomnio de conciliación. El cuerpo está listo, el sistema nervioso no entrega el turno.",
+        night: "El modo alerta no baja nunca: en cuanto la habitación se queda en silencio, todo lo pendiente toma la palabra.",
+        first: "Deje de perseguir el sueño. El relevo se aborda de lado, nunca de frente.",
+        episodeTitle: "El mecanismo",
+        planLede: "Cada noche del protocolo trabaja el relevo, eso que un cuerpo hace solo y el suyo ha dejado de hacer a la orden.",
+      },
+      circadian: {
+        title: "Usted es un Tipo Circadiano.",
+        subtitle: "Su sueño no está roto. Lo está programando algo que no es su reloj interno.",
+        body: [
+          "Tiene un reloj interno que decide cuándo le entra sueño, y funciona con luz y rutina, no con lo cansado que esté. Los turnos, los viajes y las noches tardías reescriben ese reloj más rápido de lo que puede ajustarse. Así que deja de llegar a la misma hora cada noche. Usted se acuesta cuando lo dice la agenda y su cuerpo todavía no ha llegado, o pasó por ahí tres horas antes y se fue.",
+          "Es el tipo que recibe los peores consejos, porque casi todos los productos de sueño dan por hecho un horario normal y le dicen que mantenga una hora fija de acostarse. Usted no puede. Lo que sí puede es anclar el reloj por el otro extremo: la hora de levantarse, la primera luz del día, la primera hora después. Esas son las señales que su cuerpo lee de verdad, y funcionan incluso cuando sus noches no se repiten.",
+        ],
+        bridge: "Su plan ancla las mañanas, porque sus noches se mueven.",
+        label: "Tipo Circadiano",
+        have: "Desajuste circadiano. El sueño en sí está bien. Lo que no está bien es el horario.",
+        night: "Turnos, viajes y luz reescriben su reloj interno más rápido de lo que este puede fijarse en una hora.",
+        first: "Deje de corregir la hora de acostarse. El reloj se ancla por la mañana.",
+        episodeTitle: "Por qué no funcionó nada",
+        planLede: "Cada noche del protocolo ancla el reloj por la mañana, porque sus noches se niegan a repetirse.",
+      },
+      mixed: {
+        title: "Usted es un Tipo Mixto.",
+        subtitle: "Dos problemas en la superficie. Un solo mecanismo debajo.",
+        body: [
+          "Le cuesta entrar en el sueño y le cuesta mantenerse, lo que parecen dos averías separadas pero normalmente no lo son. Es un sistema nervioso que nunca sale del todo del modo alerta. Le impide dormirse al principio de la noche y le despierta en el primer punto natural de subida unas horas después. La misma guardia, dos turnos.",
+          "El Mixto es el tipo que hace que la gente abandone, porque arreglar una mitad parece empeorar la otra. Por fin se duerme más rápido y aun así está en pie a las 3. Eso no es un fracaso, es que el orden está mal. Cuando la activación de fondo baja, las dos mitades se mueven juntas, pero hay que hacerlo en secuencia, una antes de la otra, y esa es la parte que nadie le cuenta.",
+        ],
+        bridge: "Su plan avanza en orden, porque las dos mitades están conectadas.",
+        label: "Tipo Mixto",
+        have: "Insomnio mixto. Cuesta entrar en el sueño y cuesta mantenerse.",
+        night: "Un solo sistema nervioso en alerta haciendo dos turnos: el principio de la noche y la primera vez que sube.",
+        first: "Deje de tratar las dos mitades por separado. El orden decide si alguna de las dos se mueve.",
+        episodeTitle: "El mecanismo",
+        planLede: "El protocolo trata sus dos mitades en secuencia, primero la activación, porque es ese orden el que hace que se muevan las dos.",
+      },
+    },
+  },
+
+  plan: {
+    eyebrow: "Su protocolo",
+    title: "Siete noches, construidas alrededor de su {label}.",
+    keyNight: "Para un {label}, la Noche {n} es la que lleva el cambio.",
+    nightsLabel: "Qué hacen las siete noches",
+    nights: [
+      {
+        title: "El punto de partida",
+        body: "Mide la noche que tiene de verdad, no la que recuerda. Diez minutos, una sola vez.",
+      },
+      {
+        title: "Quitar el esfuerzo",
+        body: "La primera regla que baja la presión por dormir, que es justo la presión que le mantiene despierto.",
+      },
+      {
+        title: "Una bajada que funciona en frío",
+        body: "Una secuencia de doce minutos que funciona se sienta usted tranquilo o no al empezarla.",
+      },
+      {
+        title: "La respuesta de las 3",
+        body: "Qué hacer exactamente cuando está despierto a oscuras, incluido cuándo salir de la cama y cuándo no.",
+      },
+      {
+        title: "Anclar el reloj",
+        body: "La hora de levantarse y la primera hora de luz que sostienen el resto de la semana.",
+      },
+      {
+        title: "Los pensamientos",
+        body: "Qué hacer con el bucle nocturno, sin discutir con él y sin esperar a que pase.",
+      },
+      {
+        title: "Conservarlo",
+        body: "Cómo el protocolo se reduce a tres hábitos que mantiene sin pensar en ellos.",
+      },
+    ],
+    includedLabel: "Qué recibe",
+    included: [
+      "El protocolo de 7 noches, una sesión por noche",
+      "El audio guiado de cada sesión",
+      "El diario de sueño y las curvas que muestran si se movió",
+      "Acceso de por vida, con todas las actualizaciones futuras",
+    ],
+    bump: {
+      label: "Complemento",
+      title: "El Pack Recuperación",
+      body: "Qué hacer después de una mala noche, una noche de viaje y una noche de turno, para que una noche rota no reinicie todo el proceso.",
+      check: "Sí, añadir el Pack Recuperación por {price}",
+      note: "Normalmente se vende por {price} al terminar. Añádalo aquí y va en el mismo pago.",
+    },
+    offerLabel: "La oferta",
+    priceLine: "Un pago único de {price}. Sin suscripción, sin cargos recurrentes.",
+    anchorLine: "Precio de beta abierta. Sube a {price} en el lanzamiento público.",
+    guarantee: "Haga las siete noches. Si su sueño no ha cambiado, se le devuelve todo. 60 días.",
+    cta: "Empezar esta noche por {price}",
+    ctaBusy: "Abriendo el pago",
+    ctaMicro: "Pago seguro con Stripe. No hace falta cuenta para empezar.",
+    checkoutError: "El pago no se abrió. Inténtelo de nuevo.",
+    faqLabel: "Antes de decidir",
+    faq: [
+      {
+        q: "¿Esto es higiene del sueño otra vez?",
+        a: "No. La higiene del sueño previene el insomnio, no lo trata, y por eso a usted no le hizo nada. Esto es el protocolo conductual que se usa contra el insomnio crónico, reducido a siete noches que hace en casa.",
+      },
+      {
+        q: "¿Y si a mí no me funciona?",
+        a: "Entonces habrá hecho las siete noches y se le devuelve el dinero, hasta 60 días. La devolución no depende de que nos pongamos de acuerdo en el porqué.",
+      },
+      {
+        q: "¿Necesito una cuenta?",
+        a: "Para comprar no. Después del pago elige una contraseña en una sola pantalla y el protocolo se abre en el mismo dispositivo.",
+      },
+    ],
+    backToResult: "Volver a mi resultado",
+  },
+};
+
+export default es;

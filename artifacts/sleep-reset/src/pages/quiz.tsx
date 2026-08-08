@@ -1,78 +1,32 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { INTRO, QUESTIONS, ANALYZING_LINES, type Choice } from "@/lib/quiz-data";
+import { QUESTIONS, ANALYZE_LINE_MS, type Choice } from "@/lib/quiz-data";
+import { useI18n, fill, withLocale, type Dict } from "@/lib/i18n";
+import { FunnelHeader } from "@/components/funnel-chrome";
+import { clientId, getParam, getCookie, logEvent, haptic } from "@/lib/funnel-track";
 import "@/styles/funnel.css";
 
 // ─── The entry quiz ──────────────────────────────────────────────────────────
 // This is the root page: paid traffic lands here. One question per screen, one
 // tap to answer, no scroll, and no email until the result page.
-// Copy lives in lib/quiz-data.ts, spec in marketing/flu143-enquete-perguntas.md.
-// The look lives in styles/funnel.css and is shared with /quiz/result.
+//
+// Structure (question order, answer slugs) lives in lib/quiz-data.ts because
+// the API scores from it. Words live in src/locales/*. The look lives in
+// styles/funnel.css and is shared with /quiz/result and /plan.
 //
 // Flow: intro → 5 questions → analysis → POST /api/quiz/submit → /quiz/result.
-// The WIRED sales page it replaced is untouched and still served at /watch.
 
 const STORAGE_KEY = "sw_quiz_v2";
 const FEEDBACK_MS = 1100;
-const ANALYZE_LINE_MS = 800;
 const KEYS = "ABCDE";
-
-// ─── Tracking ────────────────────────────────────────────────────────────────
-function clientId(): string {
-  try {
-    let id = localStorage.getItem("sw_cid");
-    if (!id) {
-      id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
-      localStorage.setItem("sw_cid", id);
-    }
-    return id;
-  } catch { return String(Date.now()); }
-}
-function getUtm(name: string): string {
-  try { return new URLSearchParams(window.location.search).get(name) || ""; } catch { return ""; }
-}
-function getCookie(name: string): string {
-  try {
-    const m = document.cookie.match(new RegExp("(?:^|;\\s*)" + name + "=([^;]+)"));
-    return m ? m[1] : "";
-  } catch { return ""; }
-}
-function logEvent(event: string) {
-  try {
-    void fetch("/api/sw/e", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, ad_id: getUtm("utm_content"), client_id: clientId() }),
-      keepalive: true,
-    }).catch(() => {});
-  } catch {}
-}
-// Light haptic on tap. Makes it feel like an app, not a form. No-op on iOS.
-function haptic() {
-  try { navigator.vibrate?.(8); } catch {}
-}
 
 type Answers = Record<string, string>;
 type Screen = { kind: "intro" } | { kind: "question"; index: number } | { kind: "analyzing" };
 
-/** Wordmark. Drawn here rather than pulled from an icon set: a hairline
- *  crescent at 16px sits with the letterspaced type, a filled icon doesn't. */
-function Crescent() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M13.2 9.9A5.7 5.7 0 0 1 6.1 2.8a5.9 5.9 0 1 0 7.1 7.1Z"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export default function Quiz() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const [screen, setScreen] = useState<Screen>({ kind: "intro" });
   const [answers, setAnswers] = useState<Answers>({});
   const [feedback, setFeedback] = useState("");
@@ -98,7 +52,7 @@ export default function Quiz() {
     } catch {}
     // The ad's hook (?h=) rides along to the offer page for message-match.
     try {
-      const h = new URLSearchParams(window.location.search).get("h");
+      const h = getParam("h");
       if (h) sessionStorage.setItem("sw_hero_variant", h);
     } catch {}
     return () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); };
@@ -113,12 +67,12 @@ export default function Quiz() {
   // ── Analysis screen: reveal one line at a time ──
   useEffect(() => {
     if (screen.kind !== "analyzing") return;
-    const t = setInterval(
-      () => setAnalyzeStep((i) => Math.min(i + 1, ANALYZING_LINES.length - 1)),
+    const t2 = setInterval(
+      () => setAnalyzeStep((i) => Math.min(i + 1, t.quiz.analyzing.length - 1)),
       ANALYZE_LINE_MS,
     );
-    return () => clearInterval(t);
-  }, [screen.kind]);
+    return () => clearInterval(t2);
+  }, [screen.kind, t]);
 
   const submit = useCallback(async (finalAnswers: Answers) => {
     setFailed(false);
@@ -129,11 +83,11 @@ export default function Quiz() {
         body: JSON.stringify({
           session_id: clientId(),
           answers: finalAnswers,
-          ad_id: getUtm("utm_content"),
-          utm_source: getUtm("utm_source"),
-          utm_medium: getUtm("utm_medium"),
-          utm_campaign: getUtm("utm_campaign"),
-          utm_term: getUtm("utm_term"),
+          ad_id: getParam("utm_content"),
+          utm_source: getParam("utm_source"),
+          utm_medium: getParam("utm_medium"),
+          utm_campaign: getParam("utm_campaign"),
+          utm_term: getParam("utm_term"),
           hero_variant: (() => { try { return sessionStorage.getItem("sw_hero_variant") || ""; } catch { return ""; } })(),
           fbp: getCookie("_fbp"),
           fbc: getCookie("_fbc"),
@@ -144,11 +98,11 @@ export default function Quiz() {
       logEvent("quiz_submit");
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
       // Let the three analysis lines finish before the result appears.
-      const params = new URLSearchParams(window.location.search);
+      const params = withLocale(new URLSearchParams(window.location.search));
       params.set("id", data.profile_id);
       setTimeout(
         () => setLocation("/quiz/result?" + params.toString()),
-        ANALYZING_LINES.length * ANALYZE_LINE_MS,
+        3 * ANALYZE_LINE_MS,
       );
     } catch {
       logEvent("quiz_submit_fail");
@@ -161,7 +115,7 @@ export default function Quiz() {
     haptic();
     const next: Answers = { ...answers, [question.key]: choice.key, ...(choice.derives ?? {}) };
     setAnswers(next);
-    setFeedback(choice.feedback);
+    setFeedback(t.quiz.questions[question.key].choices[choice.key].feedback);
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     advanceTimer.current = setTimeout(() => goForward(index, next), FEEDBACK_MS);
   }
@@ -196,39 +150,27 @@ export default function Quiz() {
 
   return (
     <div className="fnl">
-      {/* Header: wordmark, position, ticks. Sticky, so the answer area never
-          moves under the thumb. */}
-      <header className="fnl-head">
-        <div className="fnl-wrap fnl-head-row">
-          <span className="fnl-mark"><Crescent /> Sleep Wired</span>
-          <span className="fnl-step">
-            {screen.kind === "question" && `${qIndex + 1} / ${QUESTIONS.length}`}
-            {screen.kind === "analyzing" && "Building your result"}
-          </span>
-        </div>
-        {/* Ticks only once the quiz is running. On the intro they would read
-            as a broken rule, so the header closes with a plain hairline. */}
-        {screen.kind === "intro" ? (
-          <div className="fnl-progress"><span className="fnl-tick fnl-tick--full" /></div>
-        ) : (
-          <div className="fnl-progress">
-            {QUESTIONS.map((q, i) => (
-              <span
-                key={q.key}
-                className="fnl-tick"
-                data-on={screen.kind === "analyzing" || i <= qIndex}
-              />
-            ))}
-          </div>
-        )}
-      </header>
+      {/* Header: wordmark, language, position, ticks. Sticky, so the answer
+          area never moves under the thumb. */}
+      <FunnelHeader
+        ticks={QUESTIONS.length}
+        on={screen.kind === "analyzing" ? QUESTIONS.length : qIndex + 1}
+        right={
+          screen.kind === "question"
+            ? fill(t.quiz.stepLabel, { n: qIndex + 1, total: QUESTIONS.length })
+            : screen.kind === "analyzing"
+              ? t.quiz.building
+              : undefined
+        }
+      />
 
       <main className="fnl-wrap fnl-main">
-        {screen.kind === "intro" && <Intro onStart={start} />}
+        {screen.kind === "intro" && <Intro t={t} onStart={start} />}
 
         {screen.kind === "question" && (
           <QuestionScreen
             key={qIndex}
+            t={t}
             index={qIndex}
             answers={answers}
             feedback={feedback}
@@ -238,7 +180,7 @@ export default function Quiz() {
         )}
 
         {screen.kind === "analyzing" && (
-          <Analyzing step={analyzeStep} failed={failed} onRetry={() => void submit(answers)} />
+          <Analyzing t={t} step={analyzeStep} failed={failed} onRetry={() => void submit(answers)} />
         )}
       </main>
     </div>
@@ -246,17 +188,17 @@ export default function Quiz() {
 }
 
 // ─── Intro ───────────────────────────────────────────────────────────────────
-function Intro({ onStart }: { onStart: () => void }) {
+function Intro({ t, onStart }: { t: Dict; onStart: () => void }) {
   return (
     <div className="flex-1 flex flex-col pt-5">
-      <span className="fnl-eyebrow mb-5">{INTRO.eyebrow}</span>
-      <h1 className="fnl-display mb-4">{INTRO.headline}</h1>
-      <p className="fnl-lede">{INTRO.sub}</p>
+      <span className="fnl-eyebrow mb-5">{t.quiz.eyebrow}</span>
+      <h1 className="fnl-display mb-4">{t.quiz.headline}</h1>
+      <p className="fnl-lede">{t.quiz.sub}</p>
 
       {/* The contract. It sets expectations and, just as usefully, it gives the
           first screen something to hold instead of half a page of air. */}
       <ol className="fnl-promises">
-        {INTRO.promises.map((line, i) => (
+        {t.quiz.promises.map((line, i) => (
           <li key={line}>
             <span className="fnl-num">{String(i + 1).padStart(2, "0")}</span>
             <span>{line}</span>
@@ -266,9 +208,9 @@ function Intro({ onStart }: { onStart: () => void }) {
 
       <div className="mt-auto pt-7">
         <button type="button" onClick={onStart} className="fnl-cta">
-          {INTRO.cta} <ArrowRight className="w-[18px] h-[18px]" />
+          {t.quiz.cta} <ArrowRight className="w-[18px] h-[18px]" />
         </button>
-        <p className="fnl-micro mt-4 text-center">{INTRO.microcopy}</p>
+        <p className="fnl-micro mt-4 text-center">{t.quiz.microcopy}</p>
       </div>
     </div>
   );
@@ -276,8 +218,9 @@ function Intro({ onStart }: { onStart: () => void }) {
 
 // ─── One question ────────────────────────────────────────────────────────────
 function QuestionScreen({
-  index, answers, feedback, onChoose, onBack,
+  t, index, answers, feedback, onChoose, onBack,
 }: {
+  t: Dict;
   index: number;
   answers: Answers;
   feedback: string;
@@ -285,12 +228,13 @@ function QuestionScreen({
   onBack: () => void;
 }) {
   const q = QUESTIONS[index];
+  const copy = t.quiz.questions[q.key];
   const picked = answers[q.key];
 
   return (
     <div className="flex-1 flex flex-col fnl-enter">
-      <h2 className="fnl-h2 mb-2">{q.prompt}</h2>
-      {q.helper && <p className="fnl-helper mb-6">{q.helper}</p>}
+      <h2 className="fnl-h2 mb-2">{copy.prompt}</h2>
+      {copy.helper && <p className="fnl-helper mb-6">{copy.helper}</p>}
 
       <div className="fnl-choices">
         {q.choices.map((c, i) => (
@@ -302,46 +246,53 @@ function QuestionScreen({
             className="fnl-choice"
           >
             <span className="fnl-key" aria-hidden="true">{KEYS[i]}</span>
-            <span className="fnl-choice-label">{c.label}</span>
+            <span className="fnl-choice-label">{copy.choices[c.key].label}</span>
           </button>
         ))}
       </div>
 
       {/* Micro-feedback: information, not praise. */}
       <div className="fnl-feedback" data-on={!!feedback} aria-live="polite">
-        <span>{feedback || " "}</span>
+        <span>{feedback || " "}</span>
       </div>
 
       {/* The promise from the intro, repeated on every question. It's the
           objection that makes people abandon a quiz, and it costs one line. */}
       <div className="mt-auto pt-5 flex items-center justify-between gap-4">
         <button type="button" onClick={onBack} className="fnl-ghost">
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> {t.quiz.back}
         </button>
-        <span className="fnl-micro">No email to see your result</span>
+        <span className="fnl-micro">{t.quiz.noEmailNote}</span>
       </div>
     </div>
   );
 }
 
 // ─── Analysis ────────────────────────────────────────────────────────────────
-function Analyzing({ step, failed, onRetry }: { step: number; failed: boolean; onRetry: () => void }) {
+function Analyzing({
+  t, step, failed, onRetry,
+}: {
+  t: Dict;
+  step: number;
+  failed: boolean;
+  onRetry: () => void;
+}) {
   if (failed) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <h2 className="fnl-h2 mb-2">We couldn't build your result.</h2>
-        <p className="fnl-helper mb-8">Your answers are saved. One tap and we'll try again.</p>
+        <h2 className="fnl-h2 mb-2">{t.quiz.failTitle}</h2>
+        <p className="fnl-helper mb-8">{t.quiz.failBody}</p>
         <button type="button" onClick={onRetry} className="fnl-cta max-w-[15rem]">
-          Try again
+          {t.quiz.retry}
         </button>
       </div>
     );
   }
   return (
     <div className="flex-1 flex flex-col justify-center">
-      <span className="fnl-label mb-6">Analysis</span>
+      <span className="fnl-label mb-6">{t.quiz.analysisLabel}</span>
       <ul className="fnl-steps">
-        {ANALYZING_LINES.map((line, i) =>
+        {t.quiz.analyzing.map((line, i) =>
           i > step ? null : (
             <li key={line} className="fnl-step-row" data-done={i < step}>
               <span className="fnl-dot" />
@@ -351,7 +302,7 @@ function Analyzing({ step, failed, onRetry }: { step: number; failed: boolean; o
         )}
       </ul>
       <hr className="fnl-rule mt-10 mb-4" />
-      <p className="fnl-micro">Your answers stay private. We never sell or share them.</p>
+      <p className="fnl-micro">{t.quiz.privacy}</p>
     </div>
   );
 }

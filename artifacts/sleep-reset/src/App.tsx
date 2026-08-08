@@ -9,10 +9,15 @@ import { AppLayout } from "@/components/layout";
 
 // Pages — the quiz is the root (paid-traffic entry), so it stays in the main
 // bundle; everything else is code-split to keep root TTI low.
-// The WIRED sales page it replaced is intact and still served at /watch — it's
-// now the closer the quiz result hands off to, not the entry point.
+//
+// The paid path is three pages in one design system: /  →  /quiz/result  →
+// /plan. The WIRED sales page is intact and still served at /watch, but it is
+// no longer part of that path: the result used to hand off to it, which put a
+// page written for a cold visitor in front of someone who had just been
+// diagnosed. /plan replaced it as the closer.
 import Quiz from "@/pages/quiz";
 const Watch = lazy(() => import("@/pages/watch"));
+const Plan = lazy(() => import("@/pages/plan"));
 const Landing = lazy(() => import("@/pages/landing"));
 const SignIn = lazy(() => import("@/pages/sign-in"));
 const SignUp = lazy(() => import("@/pages/sign-up"));
@@ -94,6 +99,7 @@ function Router() {
       <Route path="/start" component={Landing} />
       <Route path="/quiz" component={Quiz} />
       <Route path="/quiz/result" component={QuizResult} />
+      <Route path="/plan" component={Plan} />
       <Route path="/solution">
         <Redirect to="/" />
       </Route>
