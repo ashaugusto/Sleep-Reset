@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, ArrowRight, Check, Lock, Moon } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { INTRO, QUESTIONS, ANALYZING_LINES, type Choice } from "@/lib/quiz-data";
+import "@/styles/funnel.css";
 
 // ─── The entry quiz ──────────────────────────────────────────────────────────
 // This is the root page: paid traffic lands here. One question per screen, one
 // tap to answer, no scroll, and no email until the result page.
-// Copy lives in lib/quiz-data.ts — spec: marketing/flu143-enquete-perguntas.md
+// Copy lives in lib/quiz-data.ts, spec in marketing/flu143-enquete-perguntas.md.
+// The look lives in styles/funnel.css and is shared with /quiz/result.
 //
 // Flow: intro → 5 questions → analysis → POST /api/quiz/submit → /quiz/result.
 // The WIRED sales page it replaced is untouched and still served at /watch.
@@ -14,6 +16,7 @@ import { INTRO, QUESTIONS, ANALYZING_LINES, type Choice } from "@/lib/quiz-data"
 const STORAGE_KEY = "sw_quiz_v2";
 const FEEDBACK_MS = 1100;
 const ANALYZE_LINE_MS = 800;
+const KEYS = "ABCDE";
 
 // ─── Tracking ────────────────────────────────────────────────────────────────
 function clientId(): string {
@@ -45,13 +48,28 @@ function logEvent(event: string) {
     }).catch(() => {});
   } catch {}
 }
-// Light haptic on tap — makes it feel like an app, not a form. No-op on iOS.
+// Light haptic on tap. Makes it feel like an app, not a form. No-op on iOS.
 function haptic() {
   try { navigator.vibrate?.(8); } catch {}
 }
 
 type Answers = Record<string, string>;
 type Screen = { kind: "intro" } | { kind: "question"; index: number } | { kind: "analyzing" };
+
+/** Wordmark. Drawn here rather than pulled from an icon set: a hairline
+ *  crescent at 16px sits with the letterspaced type, a filled icon doesn't. */
+function Crescent() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M13.2 9.9A5.7 5.7 0 0 1 6.1 2.8a5.9 5.9 0 1 0 7.1 7.1Z"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function Quiz() {
   const [, setLocation] = useLocation();
@@ -63,10 +81,9 @@ export default function Quiz() {
   const started = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Mount: restore progress, fire pageview, force light theme ──
+  // ── Mount: restore progress, fire pageview ──
   useEffect(() => {
     logEvent("quiz_view");
-    document.documentElement.classList.remove("dark");
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -176,36 +193,37 @@ export default function Quiz() {
   }
 
   const qIndex = screen.kind === "question" ? screen.index : -1;
-  const progress = screen.kind === "intro" ? 0
-    : screen.kind === "analyzing" ? 100
-    : ((qIndex + 1) / QUESTIONS.length) * 100;
 
   return (
-    <div
-      className="min-h-[100dvh] flex flex-col"
-      style={{ background: "#FAFAF7", color: "#1F2937", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
-    >
-      {/* Header — brand + counter. Fixed, so the answer area never jumps. */}
-      <header className="sticky top-0 z-20 bg-[#FAFAF7]/95 backdrop-blur-sm">
-        <div className="max-w-[460px] mx-auto w-full px-5 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Moon className="w-[18px] h-[18px] text-[#0E2541]" />
-            <span className="font-bold text-[13px] text-[#0E2541] tracking-tight">Sleep Wired</span>
-          </div>
-          <span className="text-[12px] font-medium text-[#6B7280] tabular-nums">
-            {screen.kind === "question" && `Question ${qIndex + 1} of ${QUESTIONS.length}`}
+    <div className="fnl">
+      {/* Header: wordmark, position, ticks. Sticky, so the answer area never
+          moves under the thumb. */}
+      <header className="fnl-head">
+        <div className="fnl-wrap fnl-head-row">
+          <span className="fnl-mark"><Crescent /> Sleep Wired</span>
+          <span className="fnl-step">
+            {screen.kind === "question" && `${qIndex + 1} / ${QUESTIONS.length}`}
             {screen.kind === "analyzing" && "Building your result"}
           </span>
         </div>
-        <div className="h-[3px] bg-[#EDEDE8]">
-          <div
-            className="h-[3px] bg-[#C9A14A] transition-[width] duration-500 ease-out"
-            style={{ width: progress + "%" }}
-          />
-        </div>
+        {/* Ticks only once the quiz is running. On the intro they would read
+            as a broken rule, so the header closes with a plain hairline. */}
+        {screen.kind === "intro" ? (
+          <div className="fnl-progress"><span className="fnl-tick fnl-tick--full" /></div>
+        ) : (
+          <div className="fnl-progress">
+            {QUESTIONS.map((q, i) => (
+              <span
+                key={q.key}
+                className="fnl-tick"
+                data-on={screen.kind === "analyzing" || i <= qIndex}
+              />
+            ))}
+          </div>
+        )}
       </header>
 
-      <main className="flex-1 flex flex-col w-full max-w-[460px] mx-auto px-5 pt-7 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <main className="fnl-wrap fnl-main">
         {screen.kind === "intro" && <Intro onStart={start} />}
 
         {screen.kind === "question" && (
@@ -230,26 +248,28 @@ export default function Quiz() {
 // ─── Intro ───────────────────────────────────────────────────────────────────
 function Intro({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex-1 flex flex-col justify-center">
-      <span className="inline-flex self-start items-center bg-white border border-[#E5E7EB] text-[#0E2541] text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full mb-6">
-        {INTRO.eyebrow}
-      </span>
-      <h1
-        className="text-[2.05rem] leading-[1.1] text-[#0E2541] mb-4"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
-      >
-        {INTRO.headline}
-      </h1>
-      <p className="text-[16px] leading-[1.6] text-[#4B5563] mb-8">{INTRO.sub}</p>
+    <div className="flex-1 flex flex-col pt-5">
+      <span className="fnl-eyebrow mb-5">{INTRO.eyebrow}</span>
+      <h1 className="fnl-display mb-4">{INTRO.headline}</h1>
+      <p className="fnl-lede">{INTRO.sub}</p>
 
-      <button
-        type="button"
-        onClick={onStart}
-        className="w-full bg-[#0E2541] active:scale-[0.985] transition-transform text-white font-extrabold text-[17px] min-h-[58px] rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(14,37,65,0.22)]"
-      >
-        {INTRO.cta} <ArrowRight className="w-5 h-5" />
-      </button>
-      <p className="mt-4 text-center text-[13px] text-[#6B7280]">{INTRO.microcopy}</p>
+      {/* The contract. It sets expectations and, just as usefully, it gives the
+          first screen something to hold instead of half a page of air. */}
+      <ol className="fnl-promises">
+        {INTRO.promises.map((line, i) => (
+          <li key={line}>
+            <span className="fnl-num">{String(i + 1).padStart(2, "0")}</span>
+            <span>{line}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-auto pt-7">
+        <button type="button" onClick={onStart} className="fnl-cta">
+          {INTRO.cta} <ArrowRight className="w-[18px] h-[18px]" />
+        </button>
+        <p className="fnl-micro mt-4 text-center">{INTRO.microcopy}</p>
+      </div>
     </div>
   );
 }
@@ -268,67 +288,37 @@ function QuestionScreen({
   const picked = answers[q.key];
 
   return (
-    <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
-      <h2
-        className="text-[1.6rem] leading-[1.18] text-[#0E2541] mb-2"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
-      >
-        {q.prompt}
-      </h2>
-      {q.helper && <p className="text-[14px] text-[#6B7280] mb-5">{q.helper}</p>}
+    <div className="flex-1 flex flex-col fnl-enter">
+      <h2 className="fnl-h2 mb-2">{q.prompt}</h2>
+      {q.helper && <p className="fnl-helper mb-6">{q.helper}</p>}
 
-      <div className="space-y-2.5">
-        {q.choices.map((c) => {
-          const selected = picked === c.key;
-          return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => onChoose(q, c, index)}
-              aria-pressed={selected}
-              className={
-                "w-full text-left px-4 min-h-[60px] py-3 rounded-2xl border-2 flex items-center gap-3 " +
-                "transition-all duration-150 active:scale-[0.985] " +
-                (selected
-                  ? "border-[#0E2541] bg-[#0E2541] text-white shadow-[0_6px_18px_rgba(14,37,65,0.18)]"
-                  : "border-[#E7E7E2] bg-white text-[#1F2937]")
-              }
-            >
-              <span className="text-[21px] leading-none shrink-0" aria-hidden="true">{c.emoji}</span>
-              <span className="font-medium text-[15.5px] leading-[1.3] flex-1">{c.label}</span>
-              <span
-                className={
-                  "w-6 h-6 rounded-full shrink-0 flex items-center justify-center border-2 transition-colors " +
-                  (selected ? "bg-[#C9A14A] border-[#C9A14A]" : "border-[#E0E0DA]")
-                }
-              >
-                {selected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3.5} />}
-              </span>
-            </button>
-          );
-        })}
+      <div className="fnl-choices">
+        {q.choices.map((c, i) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => onChoose(q, c, index)}
+            aria-pressed={picked === c.key}
+            className="fnl-choice"
+          >
+            <span className="fnl-key" aria-hidden="true">{KEYS[i]}</span>
+            <span className="fnl-choice-label">{c.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Micro-feedback — information, not praise. Reserved height so nothing
-          shifts when it appears. */}
-      <div className="mt-4 min-h-[52px]" aria-live="polite">
-        <div
-          className="flex items-start gap-2.5 rounded-xl px-3.5 py-3 transition-opacity duration-200"
-          style={{ background: "rgba(14,37,65,0.06)", opacity: feedback ? 1 : 0 }}
-        >
-          <span className="w-2 h-2 rounded-full bg-[#C9A14A] shrink-0 mt-[6px]" />
-          <span className="text-[14px] leading-[1.4] text-[#0E2541] font-medium">{feedback || " "}</span>
-        </div>
+      {/* Micro-feedback: information, not praise. */}
+      <div className="fnl-feedback" data-on={!!feedback} aria-live="polite">
+        <span>{feedback || " "}</span>
       </div>
 
-      <div className="mt-auto pt-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-[14px] text-[#6B7280] flex items-center gap-1.5 py-2"
-        >
+      {/* The promise from the intro, repeated on every question. It's the
+          objection that makes people abandon a quiz, and it costs one line. */}
+      <div className="mt-auto pt-5 flex items-center justify-between gap-4">
+        <button type="button" onClick={onBack} className="fnl-ghost">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
+        <span className="fnl-micro">No email to see your result</span>
       </div>
     </div>
   );
@@ -339,45 +329,29 @@ function Analyzing({ step, failed, onRetry }: { step: number; failed: boolean; o
   if (failed) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <p className="text-[16px] text-[#1F2937] mb-1 font-semibold">We couldn't build your result.</p>
-        <p className="text-[14px] text-[#6B7280] mb-6">Your answers are saved. One tap and we'll try again.</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="bg-[#0E2541] text-white font-bold text-[16px] px-7 min-h-[52px] rounded-2xl"
-        >
+        <h2 className="fnl-h2 mb-2">We couldn't build your result.</h2>
+        <p className="fnl-helper mb-8">Your answers are saved. One tap and we'll try again.</p>
+        <button type="button" onClick={onRetry} className="fnl-cta max-w-[15rem]">
           Try again
         </button>
       </div>
     );
   }
   return (
-    <div className="flex-1 flex flex-col items-center justify-center">
-      <div className="w-11 h-11 rounded-full border-4 border-[#E5E7EB] border-t-[#C9A14A] animate-spin mb-8" />
-      <ul className="space-y-3 w-full max-w-[300px]">
-        {ANALYZING_LINES.map((line, i) => {
-          if (i > step) return null;
-          const done = i < step;
-          return (
-            <li key={line} className="flex items-center gap-2.5 animate-in fade-in duration-300">
-              <span
-                className={
-                  "w-[18px] h-[18px] rounded-full shrink-0 flex items-center justify-center " +
-                  (done ? "bg-[#C9A14A]" : "border-2 border-[#D7D7D0]")
-                }
-              >
-                {done && <Check className="w-3 h-3 text-white" strokeWidth={3.5} />}
-              </span>
-              <span className={"text-[15px] " + (done ? "text-[#9CA3AF]" : "text-[#0E2541] font-semibold")}>
-                {line}
-              </span>
+    <div className="flex-1 flex flex-col justify-center">
+      <span className="fnl-label mb-6">Analysis</span>
+      <ul className="fnl-steps">
+        {ANALYZING_LINES.map((line, i) =>
+          i > step ? null : (
+            <li key={line} className="fnl-step-row" data-done={i < step}>
+              <span className="fnl-dot" />
+              <span>{line}</span>
             </li>
-          );
-        })}
+          ),
+        )}
       </ul>
-      <p className="mt-10 text-[12px] text-[#6B7280] flex items-center gap-1.5">
-        <Lock className="w-3 h-3" /> Your answers stay private
-      </p>
+      <hr className="fnl-rule mt-10 mb-4" />
+      <p className="fnl-micro">Your answers stay private. We never sell or share them.</p>
     </div>
   );
 }

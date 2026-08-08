@@ -61,7 +61,7 @@ const EPISODES: Episode[] = [
   {
     n: 1,
     title: "The 3AM Loop",
-    synopsis: "Coffee does nothing. Your brain is buffering by 10am. And at 10pm the dread creeps in — because you know what's coming.",
+    synopsis: "Coffee does nothing. Your brain is buffering by 10am. And at 10pm the dread creeps in, because you know what's coming.",
     duration: "1m 46s",
     thumb: "/images/watch/ep1.jpg?v=2",
     src: "/videos/eps/ep1.mp4",
@@ -78,7 +78,7 @@ const EPISODES: Episode[] = [
   {
     n: 3,
     title: "The Mechanism",
-    synopsis: "Your brain learned that night time is dangerous. It's called hyperarousal — and the harder you try to sleep, the worse it gets.",
+    synopsis: "Your brain learned that night time is dangerous. It's called hyperarousal, and the harder you try to sleep, the worse it gets.",
     duration: "2m 02s",
     thumb: "/images/watch/ep3.jpg?v=2",
     src: "/videos/eps/ep3.mp4",
@@ -86,7 +86,7 @@ const EPISODES: Episode[] = [
   {
     n: 4,
     title: "Why Exactly 3:07 AM",
-    synopsis: "There's a reason millions of people wake at the same hour every night. It's a hormone pulse — and in your brain it lands like an alarm.",
+    synopsis: "There's a reason millions of people wake at the same hour every night. It's a hormone pulse, and in your brain it lands like an alarm.",
     duration: "1m 33s",
     thumb: "/images/watch/ep4.jpg?v=2",
     src: "/videos/eps/ep4.mp4",
@@ -94,7 +94,7 @@ const EPISODES: Episode[] = [
   {
     n: 5,
     title: "The Way Back",
-    synopsis: "The most proven insomnia treatment on Earth — recommended first-line by the NHS and Mayo Clinic. So why has nobody given it to you?",
+    synopsis: "The most proven insomnia treatment on Earth, recommended first-line by the NHS and Mayo Clinic. So why has nobody given it to you?",
     duration: "2m 22s",
     thumb: "/images/watch/ep5.jpg?v=2",
     src: "/videos/eps/ep5.mp4",
@@ -127,22 +127,22 @@ const REVIEWS: { initial: string; name: string; meta: string; nights: string; ba
   { initial: "L", name: "Laura", meta: "Switzerland · 35", nights: "Waking up actually rested", badge: "Verified Sleep Wired customer",
     quote: "I invested €27 as a last attempt before going back to heavy sleep medication. It doesn't promise miracles, but it gave me something no gadget ever had: a clear night-by-night plan. The price is nothing next to waking up actually rested." },
   { initial: "M", name: "Michael", meta: "Ireland · 41", nights: "Bad nights no longer the default", badge: "Verified Sleep Wired customer",
-    quote: "I paid in the middle of the night after lying awake for hours, again — exhausted all day but wired at night. What helped wasn't a magic trick, it was structure. In seven nights I went from 'no idea what I'm doing' to a routine that calmed my brain before it could spiral. I still have bad nights, but they stopped being the default." },
+    quote: "I paid in the middle of the night after lying awake for hours, again. Exhausted all day but wired at night. What helped wasn't a magic trick, it was structure. In seven nights I went from 'no idea what I'm doing' to a routine that calmed my brain before it could spiral. I still have bad nights, but they stopped being the default." },
   { initial: "A", name: "Ana", meta: "Portugal · 33", nights: "Sunday nights no longer dreaded", badge: "Verified Sleep Wired customer",
-    quote: "I bought it on a Monday after another brutal Sunday night. My problem was never falling asleep once — it was the loop: worrying about the week, replaying conversations, checking the clock every 15 minutes. The sessions taught me how to close my Sundays differently — the evening routine, the sleep window, what to do when anxiety kicks in. Sunday nights aren't something I dread anymore." },
+    quote: "I bought it on a Monday after another brutal Sunday night. My problem was never falling asleep once. It was the loop: worrying about the week, replaying conversations, checking the clock every 15 minutes. The sessions taught me how to close my Sundays differently: the evening routine, the sleep window, what to do when anxiety kicks in. Sunday nights aren't something I dread anymore." },
   { initial: "K", name: "Katrin", meta: "Finland · 37", nights: "Sleep is finally predictable", badge: "Verified Sleep Wired customer",
-    quote: "I paid pretty sceptical — I'd already spent money on apps and supplements that changed nothing. The difference here was a clear plan: when to go to bed, when to get up, and what to do when my mind starts racing. My sleep isn't perfect, but now it's predictable." },
+    quote: "I paid pretty sceptical. I'd already spent money on apps and supplements that changed nothing. The difference here was a clear plan: when to go to bed, when to get up, and what to do when my mind starts racing. My sleep isn't perfect, but now it's predictable." },
   { initial: "O", name: "Omer", meta: "Turkey · 29", nights: "Sleep stopped feeling random", badge: "Verified Sleep Wired customer",
-    quote: "I paid at 6am, right after a nearly sleepless night. For months I'd tried to fix my sleep with willpower alone. The protocol showed me it wasn't about trying harder, but changing specific behaviours — what time I get out of bed, how I handle waking at 3am, what I do with my phone. It didn't make me a 'perfect sleeper', but it finally stopped feeling random." },
+    quote: "I paid at 6am, right after a nearly sleepless night. For months I'd tried to fix my sleep with willpower alone. The protocol showed me it wasn't about trying harder, but changing specific behaviours: what time I get out of bed, how I handle waking at 3am, what I do with my phone. It didn't make me a 'perfect sleeper', but it finally stopped feeling random." },
   { initial: "S", name: "Stefanie", meta: "Germany · 34", nights: "'Tired but wired' faded", badge: "Verified Sleep Wired customer",
-    quote: "I treated the €27 as a test, with almost zero expectations. The 'guided nights' format made it easy — I just hit play and followed along. After the first week, that constant 'tired but wired' feeling at night started to fade." },
-  { initial: "V", name: "Vilas", meta: "Estonia · 39", nights: "Refund honored — kept the tools", badge: "Verified Sleep Wired customer",
-    quote: "I bought the program and later asked for a refund because I was going through a rough personal patch — and the refund was no hassle. Even so, the first sessions made one thing clear: my problem wasn't lack of discipline, it was habits I'd never connected to my sleep. Even without finishing the 7 nights, I walked away with tools I hadn't seen in any app." },
+    quote: "I treated the €27 as a test, with almost zero expectations. The 'guided nights' format made it easy. I just hit play and followed along. After the first week, that constant 'tired but wired' feeling at night started to fade." },
+  { initial: "V", name: "Vilas", meta: "Estonia · 39", nights: "Refund honored, kept the tools", badge: "Verified Sleep Wired customer",
+    quote: "I bought the program and later asked for a refund because I was going through a rough personal patch, and the refund was no hassle. Even so, the first sessions made one thing clear: my problem wasn't lack of discipline, it was habits I'd never connected to my sleep. Even without finishing the 7 nights, I walked away with tools I hadn't seen in any app." },
   // Original beta testers — free early access, disclosed.
   { initial: "B", name: "Bruno", meta: "Dublin · 34", nights: "Out by Night 4", badge: "Beta tester · received free access for honest feedback",
-    quote: "It used to take me ~90 minutes to fall asleep — I'd accepted that was just my brain. By Night 4–5 I was out in about 15 minutes and staying asleep until my alarm. Waking up without feeling wrecked is something I hadn't felt in years." },
+    quote: "It used to take me ~90 minutes to fall asleep. I'd accepted that was just my brain. By Night 4 or 5 I was out in about 15 minutes and staying asleep until my alarm. Waking up without feeling wrecked is something I hadn't felt in years." },
   { initial: "C", name: "Caio", meta: "Curitiba · 38", nights: "Switched off by Night 3", badge: "Beta tester · received free access for honest feedback",
-    quote: "I'd lie down and my mind wouldn't stop — work, bills, conversations. Meditation, sleep podcasts, nothing stuck. By Night 3 I could actually switch off in under 30 minutes, and my sleep got noticeably deeper." },
+    quote: "I'd lie down and my mind wouldn't stop: work, bills, conversations. Meditation, sleep podcasts, nothing stuck. By Night 3 I could actually switch off in under 30 minutes, and my sleep got noticeably deeper." },
   { initial: "G", name: "Gustavo", meta: "Genève · 41", nights: "Calmer by Night 5", badge: "Beta tester · received free access for honest feedback",
     quote: "I was on the melatonin + app combo; helped one night, back to racing thoughts the next. A few nights in, the racing started to dial down, and by Night 5 I could go to bed without that 'tonight I won't sleep' panic." },
   { initial: "M", name: "Markus", meta: "Berlin · 36", nights: "Relaxed by Night 4", badge: "Beta tester · received free access for honest feedback",
@@ -152,15 +152,15 @@ const REVIEWS: { initial: string; name: string; meta: string; nights: string; ba
 const FAQS: [string, string][] = [
   [
     "What is WIRED?",
-    "WIRED is a 5-episode mini-series that explains, night by night, why your brain won't shut down — and the 7-night clinical protocol (CBT-I) that retrains it. You watch the episodes free, right here. The full program is the season finale: your own 7 nights.",
+    "WIRED is a 5-episode mini-series that explains, night by night, why your brain won't shut down, and the 7-night clinical protocol (CBT-I) that retrains it. You watch the episodes free, right here. The full program is the season finale: your own 7 nights.",
   ],
   [
     "How much does it cost?",
-    `One payment of ${CURRENCY}${PRICE_TODAY}. No subscription, no recurring charges. Lifetime access, every future update included, and a 60-day money-back guarantee — finish the 7 nights, and if your sleep hasn't changed, you get every cent back.`,
+    `One payment of ${CURRENCY}${PRICE_TODAY}. No subscription, no recurring charges. Lifetime access, every future update included, and a 60-day money-back guarantee. Finish the 7 nights, and if your sleep hasn't changed, you get every cent back.`,
   ],
   [
     "Is this meditation or another sleep app?",
-    "No. It's CBT-I — Cognitive Behavioral Therapy for Insomnia — the method the NHS, Mayo Clinic and the American Academy of Sleep Medicine recommend before any sleeping pill. Structured, self-guided, done lying in your own bed.",
+    "No. It's CBT-I, Cognitive Behavioral Therapy for Insomnia, the method the NHS, Mayo Clinic and the American Academy of Sleep Medicine recommend before any sleeping pill. Structured, self-guided, done lying in your own bed.",
   ],
   [
     "What if it doesn't work for me?",
@@ -411,8 +411,8 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
           <span className="ml-2 border border-[#9b9b9b] rounded px-1 py-px text-[0.6rem] align-middle">HD</span>
         </p>
         <p className="hidden sm:block text-white text-[1.1vw] min-[1400px]:text-base leading-snug max-w-[34rem] [text-shadow:1px_1px_3px_rgba(0,0,0,0.7)]">
-          Why your brain won't shut down at night — and the CBT-I protocol that retrains it.
-          <strong className="font-semibold"> Not a series you binge. A 7-night protocol you finish</strong> — from the very bed you can't sleep in. No pills. No meditation.
+          Why your brain won't shut down at night, and the CBT-I protocol that retrains it.
+          <strong className="font-semibold"> Not a series you binge. A 7-night protocol you finish</strong>, from the very bed you can't sleep in. No pills. No meditation.
         </p>
         {/* Offer line — the one purchase signal that lives above the fold on every device */}
         <p className="text-[#f5f5f5] text-[0.82rem] sm:text-sm font-semibold mt-2.5 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
@@ -421,7 +421,7 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
           {bump && <span className="text-[#f0c14b]"> · incl. Recovery Pack</span>}
         </p>
         <p className="text-[#f0c14b] text-[0.68rem] sm:text-[0.72rem] font-bold tracking-wide mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
-          Open-beta price — rises to {CURRENCY}{anchorPrice(bump)} at public launch
+          Open-beta price. Rises to {CURRENCY}{anchorPrice(bump)} at public launch
         </p>
 
         <div className="flex items-center gap-3 mt-4 sm:mt-6">
@@ -654,7 +654,7 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
           <X className="w-8 h-8" />
         </button>
         <span className="text-[#b3b3b3] text-sm font-medium tracking-wide">
-          WIRED &nbsp;·&nbsp; E{ep.n} — {ep.title}
+          WIRED &nbsp;·&nbsp; E{ep.n} · {ep.title}
         </span>
         <span className="w-8" />
       </div>
@@ -673,13 +673,13 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
             style={{ background: "rgba(10,10,12,0.94)", animation: "swFadeIn 0.4s ease" }}
           >
             <p className="text-[#E50914] text-[0.72rem] font-bold tracking-[0.25em] uppercase mb-3">
-              You just watched E{ep.n} — {ep.title}
+              You just watched E{ep.n} · {ep.title}
             </p>
             <h3 className="text-white font-extrabold text-2xl sm:text-4xl max-w-xl leading-tight">
               The finale isn't another episode. It's your first full night of sleep.
             </h3>
             <p className="text-[#d2d2d2] text-sm sm:text-base mt-3 max-w-md">
-              Start the 7-night protocol tonight — <span className="text-[#9b9b9b] line-through">{CURRENCY}{anchorPrice(bump)}</span>{" "}
+              Start the 7-night protocol tonight for <span className="text-[#9b9b9b] line-through">{CURRENCY}{anchorPrice(bump)}</span>{" "}
               <span className="text-[#46d369] font-bold">{CURRENCY}{todayPrice(bump)}</span> during open beta · 60-day money-back guarantee.
             </p>
             <button
@@ -687,7 +687,7 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
               onClick={() => { logEvent(`watch_endcard_cta_ep${ep.n}`); startCheckout(); }}
               className="mt-6 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-8 py-3.5 rounded-[4px] transition-colors"
             >
-              <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{todayPrice(bump)}
+              <Play className="w-5 h-5 fill-white" /> Start your 7 nights for {CURRENCY}{todayPrice(bump)}
             </button>
 
             {nextEp ? (
@@ -777,7 +777,7 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
                 onClick={() => startCheckout()}
                 className="flex items-center gap-2 bg-[#E50914] text-white font-bold rounded-[4px] px-6 py-2 text-sm sm:text-base hover:bg-[#f6121d] transition-colors"
               >
-                Start your 7 nights — {CURRENCY}{todayPrice(bump)}
+                Start your 7 nights for {CURRENCY}{todayPrice(bump)}
               </button>
               <span className="w-9 h-9 rounded-full border-2 border-[#5b5b5b] text-white flex items-center justify-center hover:border-white transition-colors cursor-pointer" title="My List">
                 <Plus className="w-5 h-5" />
@@ -799,14 +799,14 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
             </p>
             <p className="text-white text-[0.95rem] leading-relaxed">
               You're exhausted. You did everything right. And at 3:07 AM your eyes still snap open.
-              WIRED breaks down — in five short episodes — the hyperarousal loop keeping your brain on guard duty,
+              WIRED breaks down, in five short episodes, the hyperarousal loop keeping your brain on guard duty,
               and walks you into the 7-night clinical protocol (CBT-I) that shuts it down.
               The season finale isn't on a screen: it's your first full night of sleep.
             </p>
           </div>
           <div className="text-[0.8rem] space-y-2">
             <p><span className="text-[#777]">Genre:</span> <span className="text-[#d2d2d2]">Docuseries, Sleep Science</span></p>
-            <p><span className="text-[#777]">Based on:</span> <span className="text-[#d2d2d2]">CBT-I — recommended by NHS, Mayo Clinic &amp; AASM</span></p>
+            <p><span className="text-[#777]">Based on:</span> <span className="text-[#d2d2d2]">CBT-I · recommended by NHS, Mayo Clinic &amp; AASM</span></p>
             <p><span className="text-[#777]">This show is:</span> <span className="text-[#d2d2d2]">Practical, Science-backed, Watched in bed</span></p>
           </div>
         </div>
@@ -876,7 +876,7 @@ function Faq() {
           onClick={() => startCheckout()}
           className="inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-lg sm:text-2xl px-8 py-3.5 rounded-[4px] transition-colors"
         >
-          Start your 7 nights — {CURRENCY}{todayPrice(bump)} <ChevronRight className="w-6 h-6" />
+          Start your 7 nights for {CURRENCY}{todayPrice(bump)} <ChevronRight className="w-6 h-6" />
         </button>
         <p className="text-[#999] text-xs mt-3">One payment · lifetime access · 60-day guarantee</p>
       </div>
@@ -894,7 +894,7 @@ function AuthorityBand() {
     <section className="px-[4%] mt-12 sm:mt-[4vw]">
       <div className="max-w-[1100px] mx-auto rounded-md bg-[#181818] border border-[#262626] px-6 sm:px-9 py-7">
         <p className="text-center text-[#8c8c8c] text-[0.7rem] font-bold uppercase tracking-[0.22em] mb-5">
-          The method behind WIRED — CBT-I — is recommended first-line by
+          The method behind WIRED, CBT-I, is recommended first-line by
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
           {ORGS.map((o) => (
@@ -909,7 +909,7 @@ function AuthorityBand() {
         </div>
         <p className="text-center text-[#6f6f6f] text-[0.68rem] leading-relaxed mt-6 max-w-2xl mx-auto">
           Cognitive Behavioral Therapy for Insomnia (CBT-I) is recommended as the first-line treatment for
-          chronic insomnia by these organizations. They recommend the <em>method</em> — they are not
+          chronic insomnia by these organizations. They recommend the <em>method</em>. They are not
           affiliated with, and do not endorse, Sleep Wired. WIRED is a self-guided educational program built on CBT-I,
           not a medical service.
         </p>
@@ -966,7 +966,7 @@ function LeadGateModal({ open, onClose }: { open: boolean; onClose: () => void }
           <p className="text-[#b3b3b3] text-sm mt-2.5 leading-snug">
             Drop your email and we'll hold your <span className="text-[#9b9b9b] line-through">{CURRENCY}{PRICE_ANCHOR}</span>{" "}
             <span className="text-[#46d369] font-semibold">{CURRENCY}{PRICE_TODAY}</span> access and send you back to finish anytime.
-            No spam — just your link and a nudge if you don't complete.
+            No spam. Just your link and a nudge if you don't complete.
           </p>
           <form onSubmit={submit} className="mt-5 space-y-3">
             <input
@@ -984,7 +984,7 @@ function LeadGateModal({ open, onClose }: { open: boolean; onClose: () => void }
               disabled={loading}
               className="w-full inline-flex items-center justify-center gap-2 bg-[#E50914] hover:bg-[#f6121d] disabled:opacity-60 text-white font-bold text-base px-6 py-3.5 rounded-[4px] transition-colors"
             >
-              {loading ? "Taking you to checkout…" : <>Hold my spot — {CURRENCY}{PRICE_TODAY} <ChevronRight className="w-5 h-5" /></>}
+              {loading ? "Taking you to checkout…" : <>Hold my spot for {CURRENCY}{PRICE_TODAY} <ChevronRight className="w-5 h-5" /></>}
             </button>
           </form>
           <button
@@ -1119,7 +1119,7 @@ export default function Watch() {
               onClick={() => startCheckout()}
               className="bg-[#E50914] hover:bg-[#f6121d] text-white text-[0.78rem] font-bold px-3.5 py-1.5 rounded-[4px] transition-colors"
             >
-              Start — {CURRENCY}{todayPrice(bump)}
+              Start for {CURRENCY}{todayPrice(bump)}
             </button>
           </div>
         </div>
@@ -1130,7 +1130,7 @@ export default function Watch() {
 
       {/* ── Rows ── */}
       <main className="relative z-10 -mt-[6vw] pb-4">
-        <Row title="WIRED — Limited Series · watch free">
+        <Row title="WIRED · Limited Series · watch free">
           {EPISODES.map((ep) => <EpCard key={ep.n} ep={ep} onOpen={openEp} />)}
         </Row>
 
@@ -1147,24 +1147,24 @@ export default function Watch() {
         <section className="px-[4%] mt-12 sm:mt-[4vw]">
           <div className="max-w-[1100px]">
             <p className="text-[#E50914] text-[0.72rem] font-bold tracking-[0.25em] uppercase mb-3">
-              The finale isn't on a screen — it's your first full night's sleep
+              The finale isn't on a screen. It's your first full night's sleep
             </p>
             <h2 className="text-white font-extrabold leading-[1.05] text-2xl sm:text-4xl max-w-3xl">
               You've watched enough. This is the one you actually finish.
             </h2>
             <p className="text-[#b3b3b3] text-sm sm:text-base mt-3 max-w-2xl">
-              WIRED isn't a series you binge. It's the CBT-I protocol sleep clinics use — rebuilt as 7 guided
+              WIRED isn't a series you binge. It's the CBT-I protocol sleep clinics use, rebuilt as 7 guided
               nights you complete in your own bed. Here's everything you get for {CURRENCY}{PRICE_TODAY}:
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-7">
               {[
-                { Icon: ListChecks, title: "The 7-night protocol", desc: "4 phases — Audit · Compress · Reset · Rewire. Self-guided, done lying in bed." },
-                { Icon: Calculator, title: "Your sleep-window calculator", desc: "Your exact CBT-I sleep window — the calculation clinics charge €300 to run." },
-                { Icon: Headphones, title: "Guided audio sessions", desc: "One short session each night. Press play, lie back — the protocol runs itself." },
+                { Icon: ListChecks, title: "The 7-night protocol", desc: "4 phases: Audit · Compress · Reset · Rewire. Self-guided, done lying in bed." },
+                { Icon: Calculator, title: "Your sleep-window calculator", desc: "Your exact CBT-I sleep window, the calculation clinics charge €300 to run." },
+                { Icon: Headphones, title: "Guided audio sessions", desc: "One short session each night. Press play, lie back. The protocol runs itself." },
                 { Icon: FileText, title: "The brain-dump workbook", desc: "Empty the racing thoughts onto the page so your mind stops replaying them at 3am." },
-                { Icon: Sunrise, title: "The morning protocol", desc: "The first 30 minutes that decide tonight's sleep — light, water, movement, no phone." },
-                { Icon: InfinityIcon, title: "Lifetime access", desc: "Buy once. Every future session, workbook and calculator update — yours forever." },
+                { Icon: Sunrise, title: "The morning protocol", desc: "The first 30 minutes that decide tonight's sleep: light, water, movement, no phone." },
+                { Icon: InfinityIcon, title: "Lifetime access", desc: "Buy once. Every future session, workbook and calculator update, yours forever." },
               ].map(({ Icon, title, desc }) => (
                 <div key={title} className="bg-[#181818] rounded-md p-5 flex flex-col gap-2">
                   <Icon className="w-6 h-6 text-[#E50914]" />
@@ -1204,12 +1204,12 @@ export default function Watch() {
                 <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="text-[#f0c14b] text-[0.6rem] font-bold uppercase tracking-[0.18em]">Add-on · one click</span>
                   <span className="text-white text-[0.98rem] font-bold">
-                    Yes — add the Recovery Pack for {CURRENCY}{BUMP_PRICE}
+                    Yes, add the Recovery Pack for {CURRENCY}{BUMP_PRICE}
                   </span>
                 </span>
                 <span className="block text-[#c9c9c9] text-[0.83rem] leading-snug mt-1">
-                  7 guided sessions for the nights the old pattern tries to come back — jet lag, illness, 3 AM anxiety, Sunday-night dread, shift work. Relapse insurance for your sleep.
-                  <span className="text-[#9b9b9b]"> Normally sold for {CURRENCY}{BUMP_PRICE} after you finish — grab it now in the same checkout.</span>
+                  7 guided sessions for the nights the old pattern tries to come back: jet lag, illness, 3 AM anxiety, Sunday-night dread, shift work. Relapse insurance for your sleep.
+                  <span className="text-[#9b9b9b]"> Normally sold for {CURRENCY}{BUMP_PRICE} after you finish. Grab it now in the same checkout.</span>
                 </span>
               </span>
             </button>
@@ -1230,8 +1230,8 @@ export default function Watch() {
                 </p>
                 <p className="text-[#d2d2d2] text-sm mt-1">
                   {bump
-                    ? <>7-night protocol <span className="text-white font-semibold">+ Recovery Pack</span> — {CURRENCY}{PRICE_TODAY} + {CURRENCY}{BUMP_PRICE}. One payment, lifetime access to both. 60-day money-back guarantee on the whole order.</>
-                    : <>Locked at {CURRENCY}{PRICE_TODAY} during open beta — rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.</>}
+                    ? <>7-night protocol <span className="text-white font-semibold">+ Recovery Pack</span> for {CURRENCY}{PRICE_TODAY} + {CURRENCY}{BUMP_PRICE}. One payment, lifetime access to both. 60-day money-back guarantee on the whole order.</>
+                    : <>Locked at {CURRENCY}{PRICE_TODAY} during open beta. Rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.</>}
                 </p>
               </div>
               <button
@@ -1239,7 +1239,7 @@ export default function Watch() {
                 onClick={() => startCheckout(bump)}
                 className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3.5 rounded-[4px] transition-colors"
               >
-                <Play className="w-5 h-5 fill-white" /> Start Night 1 — {CURRENCY}{todayPrice(bump)}
+                <Play className="w-5 h-5 fill-white" /> Start Night 1 for {CURRENCY}{todayPrice(bump)}
               </button>
             </div>
           </div>
@@ -1281,7 +1281,7 @@ export default function Watch() {
             onClick={() => startCheckout()}
             className="flex items-center justify-center gap-2 bg-[#E50914] text-white font-bold text-base py-3 rounded-[4px] w-full"
           >
-            <Play className="w-5 h-5 fill-white" /> Start your 7 nights — {CURRENCY}{todayPrice(bump)}
+            <Play className="w-5 h-5 fill-white" /> Start your 7 nights for {CURRENCY}{todayPrice(bump)}
           </button>
         </div>
       )}

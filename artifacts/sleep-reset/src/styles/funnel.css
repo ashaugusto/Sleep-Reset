@@ -1,0 +1,495 @@
+/* ============================================================================
+   Sleep Wired — funnel surface
+   The visual system for the quiz and the result page: the two screens paid
+   traffic sees before the WIRED page closes.
+
+   Written as a real stylesheet, not utility soup, because these two pages have
+   one identity and it has to hold across every element. Three rules run through
+   all of it:
+
+     1. Depth comes from hairlines and one ambient light source, never from
+        stacked drop shadows.
+     2. Nothing is decorated that isn't also information. No emoji, no badges
+        that say nothing, no icon where a number reads faster.
+     3. The palette is nocturnal on purpose. The visitor is reading this at
+        night about a problem they have at night, and the page hands off to a
+        black cinematic sales page. A white quiz in the middle breaks both.
+   ========================================================================= */
+
+.fnl {
+  /* ── Ink ──────────────────────────────────────────────────────────────── */
+  --ink:        #06080b;
+  --ink-raised: #0c1016;
+  --surface:    rgba(236, 231, 222, 0.035);
+  --surface-hi: rgba(236, 231, 222, 0.065);
+
+  /* Hairlines carry the whole structure, so they get three steps. */
+  --line:     rgba(236, 231, 222, 0.10);
+  --line-mid: rgba(236, 231, 222, 0.16);
+  --line-hi:  rgba(236, 231, 222, 0.26);
+
+  /* ── Type colour ──────────────────────────────────────────────────────── */
+  --text:   #ece7de;              /* warm white, never pure #fff on dark */
+  --text-2: #a5a096;
+  --text-3: #6e6a62;
+
+  /* ── Brass ────────────────────────────────────────────────────────────── */
+  --brass:      #c8a24c;
+  --brass-hi:   #e0c483;
+  --brass-soft: rgba(200, 162, 76, 0.16);
+  --brass-line: rgba(200, 162, 76, 0.42);
+
+  --display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --ui: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --measure: 30rem;
+
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--ui);
+  font-feature-settings: 'cv05' 1, 'ss03' 1, 'tnum' 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* The one light source: a cold moon-glow off the top edge. It gives the page
+   a direction so the hairlines below read as edges rather than as borders. */
+.fnl::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 62vh;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 100% at 50% -22%, rgba(96, 122, 168, 0.20) 0%, rgba(96, 122, 168, 0.05) 42%, transparent 72%);
+}
+
+/* Grain. 2.5% opacity, invisible as texture, but it kills the flat plastic
+   look that a solid dark fill has on OLED phones. */
+.fnl::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.028;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.fnl > * { position: relative; z-index: 1; }
+
+/* ── Shell ─────────────────────────────────────────────────────────────── */
+.fnl-wrap {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+.fnl-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2rem;
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.fnl-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--ink) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(14px);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+}
+
+.fnl-head-row {
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.fnl-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.fnl-mark svg { color: var(--brass); }
+
+.fnl-step {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Segmented progress. One tick per question, so the visitor can count what's
+   left instead of guessing at a percentage. */
+.fnl-progress {
+  display: flex;
+  gap: 3px;
+  padding-bottom: 1px;
+}
+.fnl-tick {
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+  transition: background 0.45s var(--ease);
+}
+.fnl-tick[data-on='true'] { background: var(--brass); }
+.fnl-tick--full { height: 1px; }
+
+/* ── Type scale ────────────────────────────────────────────────────────── */
+.fnl-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.fnl-eyebrow::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  background: var(--brass-line);
+}
+
+.fnl-display,
+.fnl-h2 {
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.fnl-display {
+  font-size: clamp(2.05rem, 8.4vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.021em;
+}
+
+.fnl-h2 {
+  font-size: clamp(1.55rem, 6.4vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.017em;
+}
+
+.fnl-lede {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+
+.fnl-body {
+  font-size: 1.0125rem;
+  line-height: 1.68;
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+.fnl-body + .fnl-body { margin-top: 1.15rem; }
+
+.fnl-helper {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-3);
+}
+
+.fnl-micro {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+/* ── The contract on the intro screen ──────────────────────────────────── */
+.fnl-promises {
+  margin-top: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+.fnl-promises li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--text);
+  text-wrap: pretty;
+}
+.fnl-num {
+  flex: none;
+  width: 1.4rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--brass);
+}
+
+/* ── Answers ───────────────────────────────────────────────────────────── */
+.fnl-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fnl-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  min-height: 3.75rem;
+  padding: 0.75rem 1rem 0.75rem 0.75rem;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  transition:
+    border-color 0.2s var(--ease),
+    background 0.2s var(--ease),
+    transform 0.12s var(--ease);
+}
+
+@media (hover: hover) {
+  .fnl-choice:hover {
+    background: var(--surface-hi);
+    border-color: var(--line-mid);
+  }
+}
+.fnl-choice:active { transform: scale(0.988); }
+
+.fnl-choice:focus-visible {
+  outline: none;
+  border-color: var(--brass-line);
+  box-shadow: 0 0 0 3px var(--brass-soft);
+}
+
+.fnl-choice[aria-pressed='true'] {
+  background: var(--brass-soft);
+  border-color: var(--brass-line);
+}
+
+/* The index letter replaces the emoji the old build used. It does a job an
+   emoji can't: it tells the eye how many options there are and gives the
+   selected state somewhere solid to land. */
+.fnl-key {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line-mid);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  transition: all 0.2s var(--ease);
+}
+.fnl-choice[aria-pressed='true'] .fnl-key {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: #0b0906;
+}
+
+.fnl-choice-label {
+  flex: 1;
+  font-size: 0.96875rem;
+  font-weight: 450;
+  line-height: 1.35;
+  letter-spacing: -0.008em;
+}
+.fnl-choice[aria-pressed='true'] .fnl-choice-label { font-weight: 550; }
+
+/* ── Micro-feedback after a tap ────────────────────────────────────────── */
+/* Height is reserved so the layout never jumps when the line arrives. */
+.fnl-feedback {
+  min-height: 3.25rem;
+  margin-top: 1.125rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--brass-line);
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+}
+.fnl-feedback[data-on='true'] { opacity: 1; transform: none; }
+.fnl-feedback span {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.fnl-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 3.5rem;
+  padding-inline: 1.25rem;
+  border-radius: 12px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  color: #0b0906;
+  background: linear-gradient(180deg, #dcb768 0%, var(--brass) 62%, #b48c37 100%);
+  /* The 1px inner light is what makes it read as a physical key rather than
+     a coloured rectangle. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 14px 34px -14px rgba(200, 162, 76, 0.55);
+  transition: transform 0.12s var(--ease), filter 0.2s var(--ease);
+}
+@media (hover: hover) { .fnl-cta:hover { filter: brightness(1.06); } }
+.fnl-cta:active { transform: scale(0.988); }
+.fnl-cta:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 3px; }
+.fnl-cta:disabled { opacity: 0.55; }
+
+.fnl-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text-3);
+  transition: color 0.2s var(--ease);
+}
+@media (hover: hover) { .fnl-ghost:hover { color: var(--text-2); } }
+
+/* ── Panels ────────────────────────────────────────────────────────────── */
+.fnl-panel {
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.375rem;
+}
+
+/* The one sentence carried into the ask. Rule on the left, not a grey box. */
+.fnl-pull {
+  padding: 0.125rem 0 0.125rem 1.125rem;
+  border-left: 2px solid var(--brass);
+  font-family: var(--display);
+  font-size: 1.1875rem;
+  font-weight: 500;
+  line-height: 1.34;
+  letter-spacing: -0.012em;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.fnl-input {
+  width: 100%;
+  min-height: 3.25rem;
+  padding-inline: 1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line-mid);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.fnl-input::placeholder { color: var(--text-3); }
+.fnl-input:focus {
+  outline: none;
+  border-color: var(--brass-line);
+  box-shadow: 0 0 0 3px var(--brass-soft);
+}
+
+/* ── Rules ─────────────────────────────────────────────────────────────── */
+.fnl-rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--line-mid), transparent);
+  border: 0;
+}
+
+.fnl-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ── Analysis screen ───────────────────────────────────────────────────── */
+.fnl-steps { display: flex; flex-direction: column; gap: 0.875rem; width: 100%; }
+
+.fnl-step-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--text);
+  animation: fnl-rise 0.4s var(--ease) both;
+}
+.fnl-step-row[data-done='true'] { color: var(--text-3); }
+
+.fnl-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brass);
+}
+.fnl-step-row[data-done='false'] .fnl-dot { animation: fnl-pulse 1.4s ease-in-out infinite; }
+
+@keyframes fnl-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fnl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.7); }
+}
+
+/* Question transition. Short and lateral: it should feel like a card moving,
+   not like a page loading. */
+.fnl-enter { animation: fnl-slide 0.3s var(--ease) both; }
+@keyframes fnl-slide {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.fnl-video {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #000;
+  line-height: 0;
+}
+.fnl-video video { width: 100%; display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fnl *, .fnl *::before, .fnl *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
