@@ -7,9 +7,12 @@ import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { AppLayout } from "@/components/layout";
 
-// Pages — Watch is the root (paid-traffic entry), so it stays in the main
+// Pages — the quiz is the root (paid-traffic entry), so it stays in the main
 // bundle; everything else is code-split to keep root TTI low.
-import Watch from "@/pages/watch";
+// The WIRED sales page it replaced is intact and still served at /watch — it's
+// now the closer the quiz result hands off to, not the entry point.
+import Quiz from "@/pages/quiz";
+const Watch = lazy(() => import("@/pages/watch"));
 const Landing = lazy(() => import("@/pages/landing"));
 const SignIn = lazy(() => import("@/pages/sign-in"));
 const SignUp = lazy(() => import("@/pages/sign-up"));
@@ -23,7 +26,6 @@ const Welcome = lazy(() => import("@/pages/welcome"));
 const Upgrade = lazy(() => import("@/pages/upgrade"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const Terms = lazy(() => import("@/pages/terms"));
-const Quiz = lazy(() => import("@/pages/quiz"));
 const QuizResult = lazy(() => import("@/pages/quiz-result"));
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -48,8 +50,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function RootRedirect() {
   const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <Spinner />;
-  if (!isSignedIn) return <Watch />;
-  if (!user?.purchasedAt) return <Watch />;
+  if (!isSignedIn) return <Quiz />;
+  if (!user?.purchasedAt) return <Quiz />;
   if (!user?.onboardingComplete) return <Redirect to="/onboarding" />;
   return <Redirect to="/dashboard" />;
 }
@@ -85,7 +87,10 @@ function Router() {
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
+      {/* The previous homepage, kept whole. /wired is an alias so old links
+          and any ad still pointing at the series keep landing on it. */}
       <Route path="/watch" component={Watch} />
+      <Route path="/wired" component={Watch} />
       <Route path="/start" component={Landing} />
       <Route path="/quiz" component={Quiz} />
       <Route path="/quiz/result" component={QuizResult} />

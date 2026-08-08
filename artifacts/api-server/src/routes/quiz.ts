@@ -18,9 +18,11 @@ function asString(v: unknown): string {
 }
 
 function classifyType(a: Answers): "onset" | "maintenance" | "mixed" | "circadian" {
-  const shift = asString(a.shift_work);
-  if (shift === "yes") return "circadian";
   const main = asString(a.main_problem);
+  // Circadian used to come from a separate shift_work question. That question
+  // was folded into main_problem (one tap instead of two); the old key is still
+  // honoured so the historic profiles keep classifying the same way.
+  if (main === "irregular_schedule" || asString(a.shift_work) === "yes") return "circadian";
   if (main === "wake_3am") return "maintenance";
   if (main === "cant_fall_asleep") return "onset";
   if (main === "both" || main === "light_all_night") return "mixed";
@@ -43,7 +45,8 @@ function calcScore(a: Answers): number {
   else if (freq === "2_3_per_wk") score -= 10;
 
   const day = asString(a.day_impact);
-  if (day === "no_energy" || day === "anxious") score -= 15;
+  // "anxious" is the pre-Aug key for what is now "dread" — both still land here.
+  if (day === "no_energy" || day === "dread" || day === "anxious") score -= 15;
   else if (day === "brain_fog" || day === "bad_mood") score -= 10;
 
   const stress = asString(a.recent_stress);
