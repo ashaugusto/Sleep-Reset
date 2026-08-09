@@ -2,9 +2,11 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { Moon, Headphones, BarChart2 } from "lucide-react";
+import { Moon, Headphones, BarChart2, Library as LibraryIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { useEntitlements } from "@/hooks/use-entitlements";
+import { PACKS } from "@/lib/library";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -16,6 +18,13 @@ export default function Dashboard() {
       queryKey: getGetUserQueryKey(userId || ""),
     },
   });
+
+  // The add-ons a buyer owns had nowhere to be found from here: the Recovery
+  // Pack could only be played on the page that sells it, and the Kit nowhere at
+  // all. The tile below is the way in, and it only appears once there is
+  // something behind it.
+  const { owns } = useEntitlements();
+  const ownedPacks = PACKS.filter((p) => owns(p.rung));
 
   useEffect(() => {
     if (user && !user.onboardingComplete) {
@@ -116,6 +125,26 @@ export default function Dashboard() {
           </div>
           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-medium">Play</span>
         </div>
+
+        {ownedPacks.length > 0 && (
+          <div
+            className="col-span-2 bg-secondary/50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-secondary/80 transition-colors"
+            onClick={() => setLocation("/library")}
+          >
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center">
+                <LibraryIcon className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Your library</p>
+                <p className="text-xs text-muted-foreground">
+                  {ownedPacks.map((p) => p.title).join(" · ")}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-medium">Open</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -29,6 +29,7 @@ const Progress = lazy(() => import("@/pages/progress"));
 const Profile = lazy(() => import("@/pages/profile"));
 const Welcome = lazy(() => import("@/pages/welcome"));
 const Upgrade = lazy(() => import("@/pages/upgrade"));
+const Library = lazy(() => import("@/pages/library"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const Terms = lazy(() => import("@/pages/terms"));
 const QuizResult = lazy(() => import("@/pages/quiz-result"));
@@ -89,6 +90,12 @@ function Router() {
       </Route>
       <Route path="/upgrade">
         <AuthGuard><AppLayout><Upgrade /></AppLayout></AuthGuard>
+      </Route>
+      {/* Where everything bought on top of the seven nights is listened to.
+          Guarded like the rest of the member area: the Kit and the Recovery
+          Pack are granted to an account, not to a link. */}
+      <Route path="/library">
+        <AuthGuard><AppLayout><Library /></AppLayout></AuthGuard>
       </Route>
       {/* The upsell Hotmart's sales funnel redirects to after the payment
           clears. Public and unguarded on purpose: the buyer has paid but has

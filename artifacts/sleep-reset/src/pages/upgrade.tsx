@@ -7,16 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Headphones, Check, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { hotmartCheckoutUrl } from "@/lib/offers";
+import { RECOVERY_PACK, trackSrc } from "@/lib/library";
+import { useEntitlements } from "@/hooks/use-entitlements";
 
-const RECOVERY_PACK = [
-  { slug: "jet-lag", title: "Jet Lag Reset", desc: "Resolve time-zone shifts in 3 nights" },
-  { slug: "3am-anxiety", title: "3 AM Anxiety Attack", desc: "What to do when you wake up wired at 3 AM" },
-  { slug: "sunday-night", title: "Sunday Night Insomnia", desc: "Break the weekly conditioned-anxiety cycle" },
-  { slug: "shift-work", title: "Shift Work Adaptation", desc: "Sleep that fights modern shift patterns" },
-  { slug: "post-illness", title: "Post-Illness Recovery", desc: "Reset after fever, surgery or COVID" },
-  { slug: "post-vacation", title: "Post-Vacation Reset", desc: "3-night fix when you come back wrecked" },
-  { slug: "quick-reset", title: "Quick Reset (2-night)", desc: "The most aggressive CBT-I recompression" },
-];
+// The contents used to be listed here and nowhere else, which is why the pack
+// could only be played on the page that sells it. They now live in lib/library
+// with the Kit's, and /library plays both.
+const TRACKS = RECOVERY_PACK.tracks;
+
+/** The one session played on this page as the sample. */
+const PREVIEW = TRACKS.find((t) => t.slug === "recovery-3am-anxiety") ?? TRACKS[0];
 
 export default function Upgrade() {
   const [, setLocation] = useLocation();
@@ -29,7 +29,11 @@ export default function Upgrade() {
   const isOto = params.get("oto") === "1";
   const otoNext = params.get("next") || "/dashboard";
 
-  const alreadyOwns = !!user?.premiumPurchasedAt;
+  // Read off the purchases ledger rather than the user record. The flag on the
+  // user is a cache of the same calculation and is not on the generated client
+  // type, which is why this line used to be a type error.
+  const { owns } = useEntitlements();
+  const alreadyOwns = owns("bump");
 
   // Hotmart is the only checkout. Nothing is created server-side: the buyer is
   // handed to the hosted page for the Recovery Pack offer with their email
@@ -73,7 +77,7 @@ export default function Upgrade() {
       <Card className="p-5 bg-card border-card-border">
         <p className="text-xs uppercase tracking-wider text-muted-foreground mb-4">What's included</p>
         <div className="space-y-3">
-          {RECOVERY_PACK.map((a) => (
+          {TRACKS.map((a) => (
             <div key={a.slug} className="flex items-start gap-3">
               <Check className="w-4 h-4 text-primary flex-shrink-0 mt-1" />
               <div className="flex-1 min-w-0">
@@ -87,7 +91,7 @@ export default function Upgrade() {
 
       <Card className="p-5 bg-secondary/30 border-border/50 space-y-3">
         <p className="text-xs uppercase tracking-wider text-muted-foreground">Preview — 3 AM Anxiety Attack</p>
-        <audio controls preload="metadata" src="/audio/recovery-3am-anxiety.mp3" className="w-full h-9">
+        <audio controls preload="metadata" src={trackSrc(PREVIEW)} className="w-full h-9">
           Your browser does not support audio.
         </audio>
         <p className="text-[11px] text-muted-foreground">Full audio length ~2-3 min · all 7 sessions same format</p>
@@ -96,8 +100,11 @@ export default function Upgrade() {
       {alreadyOwns ? (
         <Card className="p-5 bg-primary/10 border-primary/20 text-center space-y-2">
           <p className="text-sm font-medium text-primary">You already own the Recovery Pack</p>
-          <p className="text-xs text-muted-foreground">All 7 sessions available below.</p>
-          <Button variant="outline" className="mt-2" onClick={() => setLocation("/dashboard")}>
+          <p className="text-xs text-muted-foreground">All 7 sessions are in your library.</p>
+          <Button className="mt-2 w-full" onClick={() => setLocation("/library")}>
+            Open my library
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={() => setLocation("/dashboard")}>
             Back to dashboard
           </Button>
         </Card>
@@ -136,19 +143,6 @@ export default function Upgrade() {
         </div>
       )}
 
-      {alreadyOwns && (
-        <Card className="p-5 bg-card border-card-border space-y-4">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Your Recovery Pack</p>
-          {RECOVERY_PACK.map((a) => (
-            <div key={a.slug} className="space-y-2">
-              <p className="text-sm font-medium">{a.title}</p>
-              <audio controls preload="metadata" src={`/audio/recovery-${a.slug}.mp3`} className="w-full h-9">
-                Your browser does not support audio.
-              </audio>
-            </div>
-          ))}
-        </Card>
-      )}
     </div>
   );
 }
