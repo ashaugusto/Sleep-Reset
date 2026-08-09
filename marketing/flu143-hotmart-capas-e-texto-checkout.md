@@ -262,3 +262,54 @@ O banner desenhado é 1440x480 (3:1) e o espaço do construtor está a mostrar u
 ### Vendas
 
 `payments/api/v1/sales/history` devolve zero. Nunca houve uma venda pela Hotmart, portanto nada do que se mexer agora parte uma compra existente.
+
+---
+
+## 7. Ligar as envs, 9 de Agosto às 14h
+
+Ash na FLU-143: *"pode fechar o que tiver aberto e pode ligar as envs"*. Feito o que se pode fazer sem entrar no painel, e fica escrito o que não se pode.
+
+### O que ficou escrito
+
+`artifacts/sleep-reset/.env` (build do browser):
+
+```
+VITE_CHECKOUT_PROVIDER=hotmart
+VITE_HOTMART_LOCALES=            (vazio = todos os idiomas)
+VITE_HOTMART_PRODUCT=S107083069O
+VITE_HOTMART_OFF_FRONT=x4qj5aft
+VITE_HOTMART_OFF_BUMP=o1knxjme
+```
+
+`.env` da raiz (o que o systemd entrega à API):
+
+```
+HOTMART_OFF_FRONT=x4qj5aft
+HOTMART_OFF_BUMP=o1knxjme
+HOTMART_HOTTOK=                  ainda por colar
+```
+
+As quatro ofertas por tipo de sono ficam vazias porque ainda não existem no painel: `offerCode()` cai na genérica quando faltam, portanto o site funciona à mesma. O OTO 1 fica vazio porque o produto 8279532 está em DRAFT, e um código de produto em rascunho não cobra.
+
+### O que trava o build
+
+`HOTMART_HOTTOK`. Com ele vazio, `hottokValid()` devolve `false`, o webhook responde 503 e não abre conta nenhuma. Do outro lado, `VITE_HOTMART_PRODUCT` preenchido tira o Stripe do caminho. As duas coisas juntas, sem o token, é cobrar o cartão e não entregar. Por isso os valores estão escritos e o build de produção não foi corrido.
+
+O token está no painel em Ferramentas → Webhook (API e notificações), no mesmo ecrã onde se regista `https://sleepwired.com/api/hotmart/webhook` para `PURCHASE_APPROVED`, `PURCHASE_COMPLETE`, `PURCHASE_REFUNDED` e `PURCHASE_CHARGEBACK`.
+
+### Verificado hoje, de fora do painel
+
+Lido do `__NUXT_DATA__` de `pay.hotmart.com/S107083069O`, sem sessão iniciada:
+
+| O que | Estado |
+|---|---|
+| `S107083069O` responde 200, com e sem `?off=x4qj5aft` | sim |
+| `warrantyDays` no checkout | **7** |
+| `authorName` / `authorEmail` | `Fluyon` / `info@fluyon.ch` |
+| Categoria | `Saúde e Sports` |
+| Blocos do construtor | lorem ipsum e `def.jpg` continuam lá |
+| `checkoutMode=10` | só com o parâmetro na URL é que o construtor aparece |
+
+**Correcção ao que a secção 6 diz sobre o order bump.** Fui procurar e não encontrei: não há `ORDER_BUMP`, nem o nome do Recovery Pack, nem `o1knxjme` no payload de nenhum dos dois modos, e o construtor traz `inCheckoutComponents: []`. Não prova que o bump não existe, prova que não se vê de fora. Confirma-se com uma olhadela ao painel ou com uma compra de teste, e não se deve dar por certo até lá.
+
+**O lorem não chega ao comprador hoje.** `hotmartCheckoutUrl()` em `src/lib/offers.ts` não mete `checkoutMode=10` na URL, portanto quem clica cai no checkout normal, que não mostra o construtor. O preço a pagar é que o banner e a copy da secção 5 também não aparecem. É uma escolha, não um acidente: enquanto o construtor tiver lorem, o checkout normal é o melhor dos dois.
