@@ -318,6 +318,83 @@ router.post("/auth/login", async (req, res) => {
   });
 });
 
+// ─── POST /api/auth/access-link ──────────────────────────────────────────────
+// "I bought this and I cannot get in."
+//
+// The Hotmart product's members-area button points at /sign-in, and /sign-in
+// asks for a password that most buyers do not have: the webhook creates the
+// account passwordless and only /sign-up ever sets one. Before this route the
+// only way back in was the magic link inside the post-purchase email, which the
+// Kit and the Recovery Pack do not send at all — they are add-ons to a sale
+// that already sent it. That left "contact support" as the members area.
+//
+// The answer is always the same, whatever the email turns out to be. Anything
+// else here — "no purchase found", a different status code, a slower reply —
+// turns this into a way to ask us which addresses bought.
+const linkAttempts = new Map<string, { count: number; resetAt: number }>();
+const LINK_LIMIT = 5;
+const LINK_WINDOW_MS = 15 * 60 * 1000;
+
+function overLinkLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = linkAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    linkAttempts.set(ip, { count: 1, resetAt: now + LINK_WINDOW_MS });
+    if (linkAttempts.size > 5000) {
+      for (const [key, value] of linkAttempts) if (now > value.resetAt) linkAttempts.delete(key);
+    }
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > LINK_LIMIT;
+}
+
+router.post("/auth/access-link", async (req, res) => {
+  const email = (req.body as { email?: string })?.email?.toLowerCase().trim() || "";
+  const dest = (req.body as { dest?: string })?.dest;
+  // Same body for the buyer, the typo and the sweep.
+  const answer = { ok: true as const };
+
+  if (!email || email.length > 254 || !email.includes("@")) {
+    res.status(400).json({ message: "A valid email is required" });
+    return;
+  }
+
+  const ip = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
+    || req.socket.remoteAddress
+    || "unknown";
+  if (overLinkLimit(ip)) {
+    res.json(answer);
+    return;
+  }
+
+  try {
+    const { leadsTable } = await import("@workspace/db");
+    const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.email, email)).limit(1);
+
+    // No lead row, or a lead that never bought, gets the same silence. The
+    // magic route refuses an unpurchased lead anyway, so sending would only
+    // mail somebody a link to a 403.
+    if (lead?.purchased) {
+      const { sendAccessLinkEmail } = await import("../emailService");
+      await sendAccessLinkEmail({
+        email: lead.email,
+        name: lead.name,
+        leadId: lead.id,
+        dest: dest === "/library" ? "/library" : "/dashboard",
+      });
+    } else {
+      console.log(`[auth/access-link] no purchased lead for ${email} — answered ok anyway`);
+    }
+  } catch (err) {
+    // A Resend outage is ours to see, not the buyer's to debug. They are told
+    // to check their inbox either way; support is the fallback on the page.
+    console.error("[auth/access-link] failed:", err);
+  }
+
+  res.json(answer);
+});
+
 // ─── GET /api/auth/magic ─────────────────────────────────────────────────────
 // Passwordless login from email. Buyer clicks link → if user exists, sign in;
 // if not, create passwordless account from lead data, sign in, redirect.
@@ -326,7 +403,9 @@ router.get("/auth/magic", async (req, res) => {
   const lead = (req.query.lead as string | undefined)?.trim();
   const dest = (req.query.dest as string | undefined) || "/dashboard";
   // Allowlist destinations to prevent open redirect
-  const SAFE_PREFIXES = ["/dashboard", "/sleep-log", "/night", "/progress", "/onboarding", "/profile"];
+  // /library is on this list because it is where a Kit buyer's audio lives, and
+  // the access link is the only thing that puts them in front of it.
+  const SAFE_PREFIXES = ["/dashboard", "/sleep-log", "/night", "/progress", "/onboarding", "/profile", "/library"];
   const safeDest = SAFE_PREFIXES.some((p) => dest.startsWith(p)) ? dest : "/dashboard";
 
   if (!lead || !/^[0-9a-f-]{36}$/i.test(lead)) {

@@ -4,16 +4,37 @@ import { Eye, EyeOff } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Sign-in styled to match the /watch Netflix homepage: dark billboard
-// backdrop, Bebas "W" wordmark, black card, red CTA. Auth logic unchanged.
+// backdrop, Bebas "W" wordmark, black card, red CTA.
+//
+// This page is also the members-area link on the Hotmart products, which makes
+// it the first thing a buyer sees. That buyer has no password: the webhook
+// creates the account passwordless and only /sign-up sets one. So the form
+// below is the second way in, not the first, and "send me a sign-in link" is
+// always on the page rather than hidden behind a failed attempt — telling
+// somebody their address has no password would also tell an enumerator which
+// addresses bought.
+//
+// `?dest=/library` sends them to the library instead of the dashboard once they
+// are in. That is the one the Kit's members-area link should carry: the Kit is
+// audio in the library, not a night on the dashboard.
+const SAFE_DESTS = ["/dashboard", "/library"] as const;
+
 export default function SignInPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+
+  const dest = (() => {
+    const raw = new URLSearchParams(window.location.search).get("dest") || "";
+    return (SAFE_DESTS as readonly string[]).includes(raw) ? raw : "/dashboard";
+  })();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [sendingLink, setSendingLink] = useState(false);
 
   // Bebas Neue for the wordmark — injected locally (same as /watch).
   useEffect(() => {
@@ -50,12 +71,34 @@ export default function SignInPage() {
       if (!data.onboardingComplete) {
         setLocation("/onboarding");
       } else {
-        setLocation("/dashboard");
+        setLocation(dest);
       }
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
     }
+  }
+
+  async function handleAccessLink() {
+    setError("");
+    if (!email.includes("@")) {
+      setError("Type the email you bought with first.");
+      return;
+    }
+    setSendingLink(true);
+    try {
+      await fetch("/api/auth/access-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, dest }),
+      });
+      // The API answers the same way for a buyer and for a stranger, so the
+      // page has to as well.
+      setLinkSent(true);
+    } catch {
+      setError("Network error. Please try again.");
+    }
+    setSendingLink(false);
   }
 
   return (
@@ -134,6 +177,29 @@ export default function SignInPage() {
               {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
+
+          {/* The way in for everyone who bought and never set a password. */}
+          <div className="mt-6 pt-6 border-t border-[#333]">
+            {linkSent ? (
+              <p className="text-sm text-[#b3b3b3] leading-relaxed">
+                If that email bought Sleep Wired, the sign-in link is on its way to it. It opens your account without a password.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-[#b3b3b3] leading-relaxed">
+                  Bought it and never set a password? Type your email above and we send you a link that opens your account.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAccessLink}
+                  disabled={sendingLink}
+                  className="mt-3 w-full border border-[#555] hover:border-white text-white font-semibold py-3 rounded transition-colors disabled:opacity-50"
+                >
+                  {sendingLink ? "Sending…" : "Email me a sign-in link"}
+                </button>
+              </>
+            )}
+          </div>
 
           <p className="text-[#b3b3b3] text-sm mt-8">
             New to Sleep Wired?{" "}

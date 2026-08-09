@@ -45,7 +45,7 @@ export function getRecoveryEmail(step: RecoveryStep, ctx: RecoveryContext): { su
         </p>
         ${ctaButton(link1, "Finish my setup — €27")}
         <p style="margin:28px 0 0;font-size:12px;color:#8b949e;line-height:1.5;">
-          60-night money-back. Keep everything if it doesn't work.
+          30-day money-back. Keep everything if it doesn't work.
         </p>
       `),
     };
@@ -70,7 +70,7 @@ export function getRecoveryEmail(step: RecoveryStep, ctx: RecoveryContext): { su
         </p>
         ${ctaButton(link2, "Start tonight — €27")}
         <p style="margin:28px 0 0;font-size:12px;color:#8b949e;line-height:1.5;">
-          60-night money-back. No questions. Keep the audio sessions, the calculator, and the workbook either way.
+          30-day money-back. No questions. Keep the audio sessions, the calculator, and the workbook either way.
         </p>
       `),
     };
@@ -85,7 +85,7 @@ export function getRecoveryEmail(step: RecoveryStep, ctx: RecoveryContext): { su
         Quick heads-up — the launch price (€27) ends June 30. After that the protocol moves to €97 permanently.
       </p>
       <p style="margin:0 0 16px;font-size:15px;color:#c9d1d9;line-height:1.6;">
-        Same product. Same 60-night money-back. Same 7 nights to learn how your brain actually shuts down at bedtime.
+        Same product. Same 30-day money-back. Same 7 nights to learn how your brain actually shuts down at bedtime.
       </p>
       <p style="margin:0 0 28px;font-size:15px;color:#c9d1d9;line-height:1.6;">
         If you want it at €27, this is the window. After that, I can't bring you back here at this price.

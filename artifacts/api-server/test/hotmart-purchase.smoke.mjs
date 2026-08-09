@@ -319,6 +319,56 @@ async function run() {
     body: JSON.stringify({ transaction: "HP10000001", email: "generic@example.com", password: "someoneelse" }),
   });
   check("a second sign-up cannot overwrite the password", again.status === 409, `status ${again.status}`);
+
+  // 7 — the way back in for a buyer who never set a password
+  //
+  // The Hotmart products point their members area at /sign-in, and the Kit
+  // buyer arriving there has no password: nothing in the purchase flow ever
+  // asks for one. /api/auth/access-link is what turns that dead end into an
+  // email, and the magic link it carries has to be allowed to land on the
+  // library, which is where the Kit's audio is.
+  console.log("\nthe way back in");
+  const kitUser = await userRow("kit@example.com");
+  check("the Kit buyer's account has no password", kitUser && kitUser.password_hash === null, `password_hash=${kitUser?.password_hash}`);
+
+  const asked = await fetch(`${BASE}/api/auth/access-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "kit@example.com", dest: "/library" }),
+  });
+  const askedBody = await asked.json();
+  check("the buyer can ask for an access link", asked.status === 200 && askedBody.ok === true, `status ${asked.status} ${JSON.stringify(askedBody)}`);
+
+  const stranger = await fetch(`${BASE}/api/auth/access-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "neverbought@example.com", dest: "/library" }),
+  });
+  const strangerBody = await stranger.json();
+  check(
+    "an address that never bought gets the same answer",
+    stranger.status === asked.status && JSON.stringify(strangerBody) === JSON.stringify(askedBody),
+    `status ${stranger.status} ${JSON.stringify(strangerBody)}`,
+  );
+
+  const { rows: kitLeadRows } = await pool.query("SELECT * FROM leads WHERE email = $1", ["kit@example.com"]);
+  const kitLead = kitLeadRows[0];
+  check("the Kit buyer has a purchased lead to build the link on", !!kitLead?.purchased, `lead=${JSON.stringify(kitLead ?? null)}`);
+
+  const landed = await fetch(`${BASE}/api/auth/magic?lead=${kitLead?.id}&dest=/library`, { redirect: "manual" });
+  check(
+    "the link signs them in and lands on the library",
+    landed.status === 302 && landed.headers.get("location") === "/library",
+    `status ${landed.status} location=${landed.headers.get("location")}`,
+  );
+  check("the link issues a session", !!landed.headers.get("set-cookie"));
+
+  const openRedirect = await fetch(`${BASE}/api/auth/magic?lead=${kitLead?.id}&dest=https://evil.example.com`, { redirect: "manual" });
+  check(
+    "a destination we did not allow falls back to the dashboard",
+    openRedirect.headers.get("location") === "/dashboard",
+    `location=${openRedirect.headers.get("location")}`,
+  );
 }
 
 const child = spawn("node", [serverEntry], { env, stdio: ["ignore", "pipe", "pipe"] });

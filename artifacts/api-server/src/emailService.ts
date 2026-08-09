@@ -329,6 +329,76 @@ export async function sendWelcomeEmail({
   }
 }
 
+// ─── Access link email (the way back in, asked for from /sign-in) ───────────
+// Every Hotmart buyer gets an account with no password: the webhook creates it
+// that way and the password only appears if they walk through /sign-up. So the
+// members-area link on the Hotmart product, which points at /sign-in, lands a
+// paying buyer on a form they cannot fill. This is the escape hatch: they type
+// the email they bought with and the magic link comes back to it.
+//
+// The link is the same one the post-purchase sequence carries — lead.id, a v4
+// UUID — so nothing new has to be stored or expired. `dest` is where they land
+// after it signs them in: the library for the Kit, the dashboard for everyone
+// else.
+export async function sendAccessLinkEmail({
+  email,
+  name,
+  leadId,
+  dest = "/dashboard",
+}: {
+  email: string;
+  name?: string | null;
+  leadId: string;
+  dest?: string;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set — skipping access-link email");
+    return false;
+  }
+  const firstName = (name?.split(" ")[0] || "").trim() || "there";
+  const params = new URLSearchParams({
+    lead: leadId,
+    dest,
+    utm_source: "email",
+    utm_medium: "access_link",
+    utm_campaign: "sign_in_help",
+  });
+  const magicUrl = `${APP_URL()}/api/auth/magic?${params.toString()}`;
+  const subject = "Your Sleep Wired access link";
+  const html = `<!DOCTYPE html><html><body style="font-family:Inter,Arial,sans-serif;background:#0d1117;color:#e6edf3;margin:0;padding:32px;">
+<div style="max-width:560px;margin:0 auto;background:#161b22;border:1px solid #30363d;border-radius:14px;padding:32px;">
+  <p style="font-size:18px;font-weight:600;margin:0 0 16px;">Hey ${firstName},</p>
+  <p style="font-size:15px;color:#c9d1d9;line-height:1.6;margin:0 0 20px;">
+    Here is the way in. This link signs you in without a password, and you can set one afterwards from your profile if you want one.
+  </p>
+  <p style="text-align:center;margin:24px 0;">
+    <a href="${magicUrl}" style="display:inline-block;background:#238636;color:#fff;padding:14px 28px;border-radius:8px;font-weight:700;text-decoration:none;">Open my account →</a>
+  </p>
+  <p style="font-size:13px;color:#8b949e;line-height:1.5;margin:20px 0 0;">
+    You are getting this because someone asked for an access link for this address. If that was not you, ignore this email and nothing changes.
+  </p>
+  <p style="font-size:11px;color:#6e7681;margin:28px 0 0;border-top:1px solid #30363d;padding-top:16px;">
+    Sleep Wired · support@sleepwired.com
+  </p>
+</div></body></html>`;
+  try {
+    const { data, error } = await resend.emails.send({ from: FROM, to: email, subject, html });
+    if (error) {
+      console.error(`[email] AccessLink send error for ${email}:`, error);
+      await logEmail({ email, leadId, emailType: "access_link", subject, success: false, error: JSON.stringify(error).slice(0, 500) });
+      return false;
+    }
+    console.log(`[email] AccessLink sent to ${email}`);
+    await logEmail({ email, leadId, emailType: "access_link", subject, resendId: data?.id ?? null, success: true });
+    return true;
+  } catch (err) {
+    console.error(`[email] AccessLink failed for ${email}:`, err);
+    await logEmail({ email, leadId, emailType: "access_link", subject, success: false, error: (err as Error).message?.slice(0, 500) });
+    return false;
+  }
+}
+
 // ─── Account pending email (paid but no account or incomplete onboarding) ───
 export async function sendAccountPendingEmail({
   email,
@@ -369,7 +439,7 @@ export async function sendAccountPendingEmail({
     You already paid €27. This is just the final access step. Any issues, reply to this email and we'll sort it out.
   </p>
   <p style="font-size:11px;color:#6e7681;margin:28px 0 0;border-top:1px solid #30363d;padding-top:16px;">
-    Sleep Wired · support@sleepwired.com · 60-night money-back guarantee
+    Sleep Wired · support@sleepwired.com · 30-day money-back guarantee
   </p>
 </div></body></html>`;
   try {
