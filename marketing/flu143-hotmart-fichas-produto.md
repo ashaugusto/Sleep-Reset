@@ -529,7 +529,7 @@ Vende-se como educação e treino, nunca como terapia, tratamento ou diagnóstic
 
 Estas quatro não são detalhes. Cada uma delas, se sair diferente do esperado, muda o que está escrito na página de vendas.
 
-1. **Garantia de 60 dias.** A página promete 60 dias em todos os idiomas (`guarantee` nos quatro `src/locales/*.ts`). Se o painel só oferecer 7, 15 ou 30 dias, há duas saídas: baixar a promessa na página, ou manter os 60 e honrar os dias que passarem da janela da Hotmart por reembolso manual. Recomendo o segundo enquanto o volume for pequeno, porque a garantia longa é parte do que faz esta oferta funcionar. **Confirma isto antes de publicar a primeira oferta.**
+1. ~~**Garantia de 60 dias.**~~ **Decidido pelo Ash a 9 de Agosto: 60 dias, e é a Hotmart que muda.** A página promete 60 dias nos quatro idiomas (`guarantee` nos `src/locales/*.ts`) e fica como está. O que falta é do lado do painel: os cinco produtos foram criados com garantia de 7 dias e têm de passar a 60, um a um. Enquanto isso não acontecer, a página promete uma coisa e o merchant of record cumpre outra, e quem decide o reembolso é a Hotmart. **É a única coisa que ainda contradiz a página de vendas.**
 2. **Limite de caracteres da descrição.** As descrições acima andam entre 700 e 1100 caracteres. Se o campo cortar, cortar a partir do fim, mantendo sempre a lista do que está incluído e a linha do disclaimer.
 3. **Condição do downsell.** Confirmar que dá para esconder o downsell de quem aceitou o order bump. Se não der, desligar o downsell. Pelo caminho da API isto é nosso e resolve-se em código: quem aceitou o bump não vê a página do downsell.
 4. **Restrições de conteúdo de saúde.** A Hotmart revê a página de vendas. A nossa não promete cura nem resultado médico e já traz o disclaimer, mas convém contar com uma ronda de revisão e não marcar tráfego para o dia seguinte à submissão. Com a volta à criação de produto no painel, **a revisão volta a existir e a conta de revisor da FLU-158 volta a ser precisa** — está feita. O disclaimer fica na mesma, por causa dos anúncios, que esses têm as suas próprias regras.
@@ -554,7 +554,17 @@ Criar os produtos na Hotmart é a parte que depende de ti. Do lado do código er
 
 Falta ainda **o HOTTOK no `.env` da raiz**, que só existe depois de criares o webhook no painel, e um teste de compra real por cada código de oferta. A mecânica em si já está verificada de ponta a ponta contra uma base de dados descartável: `node artifacts/api-server/test/hotmart-purchase.smoke.mjs`, 60 verificações, incluindo os cinco degraus, as quatro variantes da oferta de entrada, o reembolso e o chargeback.
 
-Enquanto `VITE_HOTMART_PRODUCT` estiver vazio, o site continua a cobrar pela Stripe e nada disto parte. Essa variável é o interruptor.
+Enquanto `VITE_HOTMART_PRODUCT` estiver vazio nada se pode comprar. A Stripe já não é alternativa: foi retirada a 9 de Agosto e a variável deixou de ser interruptor para passar a requisito.
+
+### O que se verificou em produção a 9 de Agosto, ao fim da tarde
+
+Duas coisas que não estavam certas no link e que só se veem carregando o checkout real.
+
+**O `checkoutMode=10` faltava mesmo.** Lendo o `__NUXT_DATA__` da mesma oferta das duas maneiras: sem o parâmetro, 373 entradas e nenhum `ORDER_BUMP_ITEM`; com o parâmetro, 486 entradas, modo `CUSTOM` e o Recovery Pack lá dentro com imagem, título e descrição. Ou seja, sem ele o comprador via o checkout normal e o bump de 19 EUR nunca lhe era oferecido. Corrigido no `offers.ts`: `hotmartCheckoutUrl` põe sempre `checkoutMode=10`.
+
+**Cada degrau é um produto e tem o seu próprio id.** O link do Recovery Pack estava a ser montado com o id do produto 1 e o código da oferta do degrau 2, e isso não vende nada: a Hotmart responde 307 para `/error?errorMessage=008`. Era o que o `/upgrade` fazia. O `offers.ts` passou a ter um id por degrau (`VITE_HOTMART_PRODUCT_BUMP` e companhia) e, sem ele, devolve `""` — a página diz que o pack não está à venda à parte em vez de mandar o comprador para o ecrã de erro da Hotmart.
+
+O que falta para o `/upgrade` voltar a vender: o id alfanumérico do produto 2, o que aparece em `pay.hotmart.com/<isto>`. O `8279460` é o número interno do painel e não serve no link.
 
 ---
 
@@ -571,13 +581,21 @@ VITE_HOTMART_OFF_FRONT_MAINTENANCE=<oferta Maintenance>
 VITE_HOTMART_OFF_FRONT_ONSET=<oferta Onset>
 VITE_HOTMART_OFF_FRONT_MIXED=<oferta Mixed>
 VITE_HOTMART_OFF_FRONT_CIRCADIAN=<oferta Circadian>
+VITE_HOTMART_PRODUCT_BUMP=<id do produto 2>
 VITE_HOTMART_OFF_BUMP=<oferta Bump>
+VITE_HOTMART_PRODUCT_OTO1=<id do produto 3>
 VITE_HOTMART_OFF_OTO1=<oferta OTO1>
+VITE_HOTMART_PRODUCT_DOWNSELL=<id do produto 4>
 VITE_HOTMART_OFF_DOWNSELL=<oferta Downsell>
+VITE_HOTMART_PRODUCT_SEAT=<id do produto 5>
 VITE_HOTMART_OFF_SEAT=<oferta Seat>
+VITE_HOTMART_PRODUCT_SEASON=
 VITE_HOTMART_OFF_SEASON=
+VITE_HOTMART_PRODUCT_BACKEND=
 VITE_HOTMART_OFF_BACKEND=
 ```
+
+O id do produto e o código da oferta são coisas diferentes e ambos são precisos. O id é o que está em `pay.hotmart.com/<isto>` e é alfanumérico (`S107083069O`), não o número que o painel mostra na lista de produtos. O produto 1 é o único que dispensa o seu `VITE_HOTMART_PRODUCT_*` próprio, porque é ele o `VITE_HOTMART_PRODUCT`.
 
 São variáveis de build. Mudar uma obriga a reconstruir e voltar a publicar, não basta reiniciar o servidor.
 

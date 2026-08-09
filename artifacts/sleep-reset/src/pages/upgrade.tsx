@@ -36,18 +36,23 @@ export default function Upgrade() {
   // prefilled, and the webhook grants the pack when the payment clears. The
   // email is what ties the sale back to this account, so an account with no
   // email on it cannot buy here — that is a data problem, not a payment one.
+  //
+  // Built once, on render, rather than on the click. The Recovery Pack is its
+  // own Hotmart product and its product id is not in the build yet, so this
+  // comes back empty — and an empty URL has to take the button off the page,
+  // not wait for somebody to press it and then apologise.
+  const checkoutUrl = hotmartCheckoutUrl("bump", {
+    email: user?.email ?? undefined,
+    tracking: { h: isOto ? "oto" : "upgrade" },
+  });
+
   const handleCheckout = () => {
-    setLoading(true);
-    const url = hotmartCheckoutUrl("bump", {
-      email: user?.email ?? undefined,
-      tracking: { h: isOto ? "oto" : "upgrade" },
-    });
-    if (!url) {
-      setLoading(false);
+    if (!checkoutUrl) {
       toast({ title: "Checkout is temporarily unavailable. Please try again shortly.", variant: "destructive" });
       return;
     }
-    window.location.href = url;
+    setLoading(true);
+    window.location.href = checkoutUrl;
   };
 
   return (
@@ -106,11 +111,18 @@ export default function Upgrade() {
             <p className="text-3xl font-serif">€19</p>
             <p className="text-xs text-muted-foreground">one-time · lifetime access</p>
           </div>
-          <Button className="w-full h-12 text-base" onClick={handleCheckout} disabled={loading}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isOto ? "Yes — add the Recovery Pack for €19" : "Unlock Recovery Pack — €19"}
-          </Button>
+          {checkoutUrl ? (
+            <Button className="w-full h-12 text-base" onClick={handleCheckout} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isOto ? "Yes — add the Recovery Pack for €19" : "Unlock Recovery Pack — €19"}
+            </Button>
+          ) : (
+            <p className="text-sm text-center text-muted-foreground border border-border/60 rounded-md p-3">
+              The Recovery Pack is sold at the checkout with the protocol. It is
+              not on sale separately right now — check back shortly.
+            </p>
+          )}
           <p className="text-[11px] text-muted-foreground text-center">
-            Same 60-night money-back guarantee. Reply to any email to refund.
+            Same 60-day money-back guarantee. Reply to any email to refund.
           </p>
           {isOto && (
             <button

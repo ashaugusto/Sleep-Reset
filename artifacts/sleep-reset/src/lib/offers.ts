@@ -79,6 +79,12 @@ export const OFFERS: Record<Rung, Offer> = {
 
 const ENV: Record<string, string> = {
   product: String(import.meta.env.VITE_HOTMART_PRODUCT || ""),
+  productBump: String(import.meta.env.VITE_HOTMART_PRODUCT_BUMP || ""),
+  productOto1: String(import.meta.env.VITE_HOTMART_PRODUCT_OTO1 || ""),
+  productDownsell: String(import.meta.env.VITE_HOTMART_PRODUCT_DOWNSELL || ""),
+  productSeat: String(import.meta.env.VITE_HOTMART_PRODUCT_SEAT || ""),
+  productSeason: String(import.meta.env.VITE_HOTMART_PRODUCT_SEASON || ""),
+  productBackend: String(import.meta.env.VITE_HOTMART_PRODUCT_BACKEND || ""),
   front: String(import.meta.env.VITE_HOTMART_OFF_FRONT || ""),
   frontMaintenance: String(import.meta.env.VITE_HOTMART_OFF_FRONT_MAINTENANCE || ""),
   frontOnset: String(import.meta.env.VITE_HOTMART_OFF_FRONT_ONSET || ""),
@@ -123,6 +129,28 @@ export function offerCode(rung: Rung, profile?: Profile | null): string {
   return ENV[rung] || "";
 }
 
+/**
+ * Which Hotmart product a rung is sold under.
+ *
+ * The ladder is not one product with seven offers. Product 1 is the protocol
+ * and carries the four sleep-type offers plus the generic one; the Recovery
+ * Pack, the Relapse Kit, the single protocol and the second seat are each a
+ * product of their own, because that is the only way one can be attached to
+ * another's checkout as an order bump.
+ *
+ * The distinction is not academic. `pay.hotmart.com/<product 1>?off=<the
+ * Recovery Pack's offer>` does not sell the Recovery Pack: Hotmart answers 307
+ * to `/error?errorMessage=008`, which is what the upgrade page was linking to
+ * for as long as it built its URL off the main product. A rung whose product is
+ * not in the build returns "" here, and "" is what stops a page from rendering
+ * a button at all.
+ */
+function productFor(rung: Rung): string {
+  if (rung === "front") return ENV.product;
+  const key = `product${rung.charAt(0).toUpperCase()}${rung.slice(1)}`;
+  return ENV[key] || "";
+}
+
 export interface CheckoutContext {
   profile?: Profile | null;
   email?: string;
@@ -144,16 +172,32 @@ function buildSck(ctx: CheckoutContext): string {
 }
 
 /**
+ * The checkout the buyer actually sees.
+ *
+ * Hotmart serves the same offer under four different pages and picks by this
+ * parameter: absent or `0` is the stock checkout, `2` the widget, and `10` the
+ * page built in the panel's checkout builder. Ours is `10`, and it is not a
+ * cosmetic choice: the order bump lives on that page and nowhere else. Reading
+ * the same offer's `__NUXT_DATA__` both ways, the stock page carries no
+ * `ORDER_BUMP_ITEM` at all, so a link without this parameter sells the front
+ * offer alone and never shows the Recovery Pack it was supposed to be attached
+ * to. It also loses the banner, the product copy and the exit popup.
+ */
+const CHECKOUT_MODE_CUSTOM = "10";
+
+/**
  * The hosted checkout URL, or "" when this rung has no offer configured yet.
  * An empty string is the caller's signal to keep the button off the page (or
  * to show the checkout error) rather than send somebody to a broken page.
  */
 export function hotmartCheckoutUrl(rung: Rung, ctx: CheckoutContext = {}): string {
   const off = offerCode(rung, ctx.profile);
-  if (!ENV.product || !off) return "";
+  const product = productFor(rung);
+  if (!product || !off) return "";
 
-  const url = new URL(`https://pay.hotmart.com/${ENV.product}`);
+  const url = new URL(`https://pay.hotmart.com/${product}`);
   url.searchParams.set("off", off);
+  url.searchParams.set("checkoutMode", CHECKOUT_MODE_CUSTOM);
   const sck = buildSck(ctx);
   if (sck) url.searchParams.set("sck", sck);
   if (ctx.email) url.searchParams.set("email", ctx.email);
