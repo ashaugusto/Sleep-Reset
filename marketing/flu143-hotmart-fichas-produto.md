@@ -45,6 +45,28 @@ Nomes dos produtos ficam **em inglês nos quatro mercados**. São nomes de marca
 
 **Tracking keys: desligadas.** A doc do webhook de compra 2.0.0 diz que `purchase.offer.metadata`, que é o objeto onde as tracking keys chegam, é "available only for subscription products". Numa oferta de pagamento único preenchem-se no painel e nunca aparecem no webhook. A atribuição faz-se pelos três campos que chegam sempre: `purchase.offer.code` (qual das cinco ofertas, ou seja o degrau e o tipo de sono), `purchase.origin.sck` (o que o site mete na URL, já implementado em `src/lib/offers.ts`) e `product.ucode` (identificador estável do produto). Se um dia houver produto de assinatura, as tracking keys voltam à mesa: dez por oferta, chave até 25 caracteres, valor até 100.
 
+### Onde fica a entrega fora da Hotmart
+
+Não é um campo na ficha de preço nem uma caixa "entrega externa". É um separador inteiro do cadastro, chamado **Área de membros**, e só aparece se o formato do produto for **Curso online**, Site de membros ou Serviço de assinatura. Em formato *ebook*, *arquivos* ou *e-book/PDF* o separador não existe, e é por isso que a opção parece não estar lá. É a primeira coisa a confirmar.
+
+**A criar o produto:** `app.hotmart.com` → Produtos → Meus produtos → **+ Criar produto** → Curso online → separador **Área de membros** → escolher **Usar área de membros externa** (as outras duas escolhas são "Adicionar o curso a um Club já existente" e "+ Criar Hotmart Club") → preencher **Link da área de membros** mais **login e senha** de uma conta de teste.
+
+**Com o produto já criado:** Produtos → Meus produtos → abrir o produto → bloco **Área de membros** → menu dos três pontos → **Trocar para área de membros externa** → mesma URL e credenciais → Salvar.
+
+Valores a colar:
+
+| Campo | Valor |
+|---|---|
+| Link da área de membros | `https://sleepwired.com/sign-in` |
+| Login de teste | conta real, criada à mão, com os cinco produtos libertados |
+| Senha de teste | a dessa conta |
+
+O login e a senha não são decorativos: quem revê o produto na Hotmart entra com eles e olha para o conteúdo antes de aprovar. Conta que não abre, ou que abre num dashboard vazio, é reprovação. Criar a conta de teste antes de submeter o primeiro produto.
+
+**Este campo não dá acesso a ninguém.** Só diz ao comprador para onde ir. Quem cria a conta do comprador é o webhook, noutro sítio do painel: Ferramentas → **Webhook (API e notificações)** → evento de compra aprovada a apontar para o nosso endpoint. Sem esse webhook, o comprador chega a uma página de login onde não tem conta.
+
+**Página de obrigado**, que é onde a compra da Hotmart cai: Produtos → o produto → Ferramentas → **Configurações de pagamento** → separador **Pós-venda**, com URL própria para cada um dos três estados (compra aprovada, aguardando pagamento, aguardando análise de crédito). Aviso: a `/welcome` que está na ficha de cada produto foi escrita para o Stripe e exige um `session_id` na URL; um comprador vindo da Hotmart cai lá e vê "No payment session found". Enquanto isso não for resolvido, a página de obrigado da Hotmart não pode ser `/welcome`.
+
 ---
 
 ## 2. Produto 1. A plataforma
@@ -66,7 +88,7 @@ Nomes dos produtos ficam **em inglês nos quatro mercados**. São nomes de marca
 | Página de vendas | `https://sleepwired.com/plan` |
 | Página de obrigado | `https://sleepwired.com/welcome` |
 | Email de suporte | `support@sleepwired.com` |
-| Entrega do conteúdo | Área de membros externa, provisionada por webhook. **Não** usar Hotmart Club |
+| Entrega do conteúdo | Separador **Área de membros** → **Usar área de membros externa**. **Não** usar Hotmart Club. Passo a passo na secção 1 |
 | Parcelamento | máximo permitido, juros a cargo do comprador, recebimento à vista |
 | Imagem do produto | 600x600 px, JPG ou PNG, até 2 MB |
 | Afiliação | ativar, ver secção 7 |
@@ -169,7 +191,7 @@ A `Generic` é a única estritamente obrigatória: é para quem chega ao checkou
 | Página de vendas | `https://sleepwired.com/plan#recovery-pack` |
 | Página de obrigado | `https://sleepwired.com/welcome` |
 | Email de suporte | `support@sleepwired.com` |
-| Entrega do conteúdo | Área de membros externa, o mesmo webhook do produto 1 |
+| Entrega do conteúdo | **Usar área de membros externa**, o mesmo webhook do produto 1. Ver secção 1 |
 | Parcelamento | máximo permitido |
 | Afiliação | desligada. Não se vende sozinho |
 
@@ -267,7 +289,7 @@ Este é o campo curto da configuração do order bump, não a descrição do pro
 | Página de vendas | `https://sleepwired.com/relapse-kit` **(página ainda não existe, ver secção 10)** |
 | Página de obrigado | `https://sleepwired.com/welcome` |
 | Email de suporte | `support@sleepwired.com` |
-| Entrega do conteúdo | Área de membros externa, o mesmo webhook |
+| Entrega do conteúdo | **Usar área de membros externa**, o mesmo webhook. Ver secção 1 |
 | Parcelamento | máximo permitido |
 | Afiliação | desligada. Só se vende dentro do funil |
 
@@ -345,7 +367,7 @@ Educación y entrenamiento, no atención médica.
 | Página de vendas | `https://sleepwired.com/relapse-kit?d=1` **(mesma página do OTO, ver secção 10)** |
 | Página de obrigado | `https://sleepwired.com/welcome` |
 | Email de suporte | `support@sleepwired.com` |
-| Entrega do conteúdo | Área de membros externa, uma faixa só |
+| Entrega do conteúdo | **Usar área de membros externa**, uma faixa só. Ver secção 1 |
 | Parcelamento | à vista |
 | Afiliação | desligada |
 
@@ -383,7 +405,7 @@ Education and coaching, not medical care.
 | Página de vendas | `https://sleepwired.com/dashboard` (é vendido de dentro da app, nas noites 5 a 7) |
 | Página de obrigado | `https://sleepwired.com/welcome` |
 | Email de suporte | `support@sleepwired.com` |
-| Entrega do conteúdo | Área de membros externa, segunda conta com onboarding próprio |
+| Entrega do conteúdo | **Usar área de membros externa**, segunda conta com onboarding próprio. Ver secção 1 |
 | Parcelamento | à vista |
 | Afiliação | desligada |
 
@@ -405,13 +427,19 @@ Education and coaching, not medical care.
 
 ## 7. Order bump, funil de vendas e afiliados
 
+**Estas três configuram-se no painel e só no painel.** A API pública da Hotmart é de leitura: dá para consultar produtos, ofertas, vendas, assinaturas e alunos da área de membros, e para criar cupões. Não cria ofertas, não gera links de pagamento e não tem compra com um clique por token. Não há caminho por script para nada desta secção, e não é preciso pedir credenciais de developer para a pôr de pé.
+
 ### 7.1 Order bump
+
+Caminho: Ferramentas → **Aparência da página de pagamento** → escolher o produto 1 → Editar → **Order Bump** → Selecionar produto → Salvar e publicar.
 
 No produto 1, em cada uma das cinco ofertas, adicionar o order bump apontado ao produto 2 (Recovery Pack), oferta `Bump`, 19,00 EUR. O título e o corpo de cada uma são os da tabela na secção 3.
 
-Ticket com o bump aceite: 46,00 EUR.
+O bump entra na mesma transação, sem redirecionamento e sem segundo formulário, e aceita até dez produtos. Ticket com o bump aceite: 46,00 EUR.
 
 ### 7.2 Funil de vendas
+
+Caminho: Ferramentas → **Funil de vendas** → Criar funil. É onde vive a compra com um clique: o comprador do produto 1 já deixou o cartão, e o funil cobra o produto 3 sem novo checkout. Gratuito, como o order bump.
 
 Um funil, com o produto 1 como produto de entrada:
 
@@ -478,12 +506,13 @@ Vende-se como educação e treino, nunca como terapia, tratamento ou diagnóstic
 
 ## 9. Coisas que tens de confirmar no painel e que eu não consigo daqui
 
-Estas quatro não são detalhes. Cada uma delas, se sair diferente do esperado, muda o que está escrito na página de vendas.
+Estas cinco não são detalhes. Cada uma delas, se sair diferente do esperado, muda o que está escrito na página de vendas.
 
 1. **Garantia de 60 dias.** A página promete 60 dias em todos os idiomas (`guarantee` nos quatro `src/locales/*.ts`). Se o painel só oferecer 7, 15 ou 30 dias, há duas saídas: baixar a promessa na página, ou manter os 60 e honrar os dias que passarem da janela da Hotmart por reembolso manual. Recomendo o segundo enquanto o volume for pequeno, porque a garantia longa é parte do que faz esta oferta funcionar. **Confirma isto antes de publicar a primeira oferta.**
 2. **Limite de caracteres da descrição.** As descrições acima andam entre 700 e 1100 caracteres. Se o campo cortar, cortar a partir do fim, mantendo sempre a lista do que está incluído e a linha do disclaimer.
 3. **Condição do downsell.** Confirmar que dá para esconder o downsell de quem aceitou o order bump. Se não der, desligar o downsell.
-4. **Restrições de conteúdo de saúde.** A Hotmart revê a página de vendas. A nossa não promete cura nem resultado médico e já traz o disclaimer, mas convém contar com uma ronda de revisão e não marcar tráfego para o dia seguinte à submissão.
+4. **Onde o funil manda o comprador.** O upsell de um clique precisa de uma página de vendas para o produto 3, e essa página é a nossa `/relapse-kit`. Ao criar o funil, ver se o campo da página de upsell aceita URL externa ou se obriga a Hotmart Pages, e copiar o link de compra de um clique que o funil gera: é esse link que o botão de aceitar da `/relapse-kit` tem de usar, não o checkout normal. Sem ele o comprador paga outra vez, com cartão outra vez, e deixa de ser um clique.
+5. **Restrições de conteúdo de saúde.** A Hotmart revê a página de vendas. A nossa não promete cura nem resultado médico e já traz o disclaimer, mas convém contar com uma ronda de revisão e não marcar tráfego para o dia seguinte à submissão.
 
 ### Decisão em aberto: preço em reais
 
