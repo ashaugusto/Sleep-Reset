@@ -32,6 +32,7 @@ const Upgrade = lazy(() => import("@/pages/upgrade"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const Terms = lazy(() => import("@/pages/terms"));
 const QuizResult = lazy(() => import("@/pages/quiz-result"));
+const Kit = lazy(() => import("@/pages/kit"));
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const queryClient = new QueryClient();
@@ -89,6 +90,11 @@ function Router() {
       <Route path="/upgrade">
         <AuthGuard><AppLayout><Upgrade /></AppLayout></AuthGuard>
       </Route>
+      {/* The upsell Hotmart's sales funnel redirects to after the payment
+          clears. Public and unguarded on purpose: the buyer has paid but has
+          not set a password yet, so there is no account to guard, and both
+          answers on the page end at /welcome with the transaction intact. */}
+      <Route path="/kit" component={Kit} />
       <Route path="/welcome" component={Welcome} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
