@@ -211,11 +211,12 @@ export async function recomputeAccess(email: string): Promise<void> {
   );
 }
 
-/** Which rungs this account owns right now. What the app should unlock. */
-export async function entitlementsFor(email: string): Promise<RungOrUnknown[]> {
-  const rows = await db.select().from(purchasesTable)
-    .where(and(eq(purchasesTable.email, email.toLowerCase().trim()), isNull(purchasesTable.revokedAt)));
-  return [...new Set(rows.map((r) => r.rung as RungOrUnknown))];
-}
+// There was an `entitlementsFor(email)` here that answered from the ledger
+// alone. It had no callers, which is the only reason it never shipped the
+// outage: the same one-table read inside GET /entitlements locked the library
+// for all nine buyers, because the ledger only starts on 9 Aug 2026 and
+// everything before it lives in the user columns. Removed rather than repaired
+// so the next person reaches for `rungsOwned`, which reads both. Anything that
+// needs this must pass the user record in too.
 
 export { RUNG_COLUMN };
