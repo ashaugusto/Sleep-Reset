@@ -110,8 +110,28 @@ O resumo do checkout puxa o nome e a descrição do produto. A descrição longa
 
 ---
 
-## 4. O que fica por decidir
+## 4. Decidido pelo Ash, 9 de Agosto às 10:42
 
-1. **A frase do banner.** É a única coisa aqui que é irreversível sem eu voltar a gerar a imagem. Diz se queres outra e refaço.
-2. **Imagens verticais de conteúdo.** O checkout de referência tem quatro imagens altas (cerca de 750x1600) por baixo do formulário, com garantia, depoimentos e o que está incluído pintados lá dentro. Não as fiz porque o conteúdo delas depende de escolher que provas mostramos, e prova social é o buraco que ainda temos. Se quiseres, faço com garantia e o que está incluído, sem depoimentos.
-3. **Segunda leitura das capas.** Estão feitas com fotografia de noite. Se preferires o registo clínico, claro e navy, que já esteve em cima da mesa como estilo do checkout, é outra série de imagens e não uma correcção destas.
+Fechado. Nada aqui fica em aberto.
+
+1. **A frase do banner fica como está.** `You fall asleep fine. You wake at 3AM. / Seven nights. One payment. No subscription, ever.` Não se volta a gerar a imagem 00.
+2. **As quatro imagens verticais não se fazem.** O checkout leva banner, formulário, order bump e popup de saída. Nada por baixo do formulário.
+3. **A série de capas fica na fotografia de noite.** Não se abre a segunda leitura clínica.
+
+### A consequência da decisão 2, que vale a pena saber antes de carregares
+
+Sem as verticais, **a garantia de 60 dias deixa de aparecer no checkout a quem compra a direito**. O único sítio onde ela fica escrita é o popup de saída, e esse só abre a quem está a sair. Quem vem da página de resultado, lê o banner e paga, nunca a vê no momento de pagar.
+
+Não é bloqueio e não custa imagem nenhuma resolver, porque a Hotmart mostra a descrição curta do produto no resumo da compra. A linha do produto 1 passaria de
+
+```
+Seven nights. One payment. No subscription.
+```
+
+para
+
+```
+Seven nights. One payment. No subscription. 60-day refund.
+```
+
+São seis palavras num campo de texto que já vais preencher. Se preferires deixar a linha como está, também não é erro: a garantia continua prometida na página de vendas e no email. Fica à tua escolha no momento de escrever a descrição.
