@@ -127,6 +127,44 @@ const RUNG_COLUMN: Partial<Record<Rung, "purchasedAt" | "premiumPurchasedAt" | "
   downsell: "downsellPurchasedAt",
 };
 
+/** What `rungsOwned` needs off the user record. */
+export interface RungCacheColumns {
+  purchasedAt: Date | null;
+  premiumPurchasedAt: Date | null;
+  kitPurchasedAt: Date | null;
+  downsellPurchasedAt: Date | null;
+  seatCredits: number | null;
+}
+
+/**
+ * Every rung an account owns, ledger and cache read together.
+ *
+ * The ledger alone is not the answer, and reading it alone was a live bug: the
+ * table only started being written when Hotmart became the till on 9 Aug 2026,
+ * so every account bought before that has zero rows and would come back owning
+ * nothing. All nine paying accounts were in that state the day /library
+ * shipped, which meant the library was locked for one hundred percent of the
+ * buyers it was built for, plus the review account we hand to Hotmart.
+ *
+ * The union is safe in the direction that matters, because the columns are a
+ * cache of this same calculation: a refund revokes the row and `recomputeAccess`
+ * clears the column, so a rung taken back does not come back through here. The
+ * only thing the cache adds is access granted before the ledger existed, which
+ * is exactly what we must not lose.
+ */
+export function rungsOwned(user: RungCacheColumns, rows: Purchase[]): Rung[] {
+  const owned = new Set<Rung>();
+  for (const row of rows) {
+    if (row.revokedAt) continue;
+    if (row.rung && row.rung !== "unknown") owned.add(row.rung as Rung);
+  }
+  for (const [rung, column] of Object.entries(RUNG_COLUMN) as [Rung, keyof RungCacheColumns][]) {
+    if (user[column]) owned.add(rung);
+  }
+  if ((user.seatCredits ?? 0) > 0) owned.add("seat");
+  return [...owned];
+}
+
 /**
  * Recompute one account's access from its purchase rows.
  *

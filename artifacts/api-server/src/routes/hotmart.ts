@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, usersTable, leadsTable, purchasesTable } from "@workspace/db";
 import { logger } from "../lib/logger";
 import {
@@ -15,7 +15,7 @@ import {
   toDate,
   type HotmartPurchasePayload,
 } from "../lib/hotmart";
-import { linkPurchasesToUser, recomputeAccess, recordPurchase, revokeTransaction } from "../lib/entitlements";
+import { linkPurchasesToUser, recomputeAccess, recordPurchase, revokeTransaction, rungsOwned } from "../lib/entitlements";
 
 const router: IRouter = Router();
 
@@ -372,6 +372,11 @@ router.get("/hotmart/claim", async (req: Request, res: Response) => {
 // ─── GET /entitlements ───────────────────────────────────────────────────────
 // What the signed-in account owns. The pages that gate the Kit and the Recovery
 // Pack read this instead of inferring access from a single purchasedAt flag.
+//
+// It answers from the ledger and from the user record together, via rungsOwned.
+// Reading only the ledger was wrong for everybody who bought before 9 Aug 2026,
+// which on the day /library shipped was every single buyer: the table had zero
+// rows and the library came back empty for all of them.
 router.get("/entitlements", async (req: Request, res: Response) => {
   const userId = req.session?.userId;
   if (!userId) {
@@ -383,11 +388,10 @@ router.get("/entitlements", async (req: Request, res: Response) => {
     res.status(404).json({ message: "User not found" });
     return;
   }
-  const rows = await db.select().from(purchasesTable)
-    .where(and(eq(purchasesTable.email, user.email), isNull(purchasesTable.revokedAt)));
+  const rows = await db.select().from(purchasesTable).where(eq(purchasesTable.email, user.email));
 
   res.json({
-    rungs: [...new Set(rows.map((r) => r.rung))],
+    rungs: rungsOwned(user, rows),
     purchasedAt: user.purchasedAt,
     premiumPurchasedAt: user.premiumPurchasedAt,
     kitPurchasedAt: user.kitPurchasedAt,
