@@ -19,6 +19,8 @@ export const leadsTable = pgTable("leads", {
   purchased: boolean("purchased").notNull().default(false),
   purchasedAt: timestamp("purchased_at"),
   stripeSessionId: text("stripe_session_id"),
+  /** Raw `sck` off a Hotmart purchase: the attribution we packed into the link. */
+  sck: text("sck"),
   recoverySentCount: integer("recovery_sent_count").notNull().default(0),
   recoveryLastAt: timestamp("recovery_last_at"),
   postPurchaseStep: integer("post_purchase_step").notNull().default(0),

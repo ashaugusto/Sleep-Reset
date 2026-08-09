@@ -11,6 +11,7 @@ import recoveryRouter from "./recovery";
 import dashboardRouter from "./dashboard";
 import trackingRouter from "./tracking";
 import quizRouter from "./quiz";
+import hotmartRouter from "./hotmart";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(recoveryRouter);
 router.use(dashboardRouter);
 router.use(trackingRouter);
 router.use(quizRouter);
+router.use(hotmartRouter);
 
 export default router;

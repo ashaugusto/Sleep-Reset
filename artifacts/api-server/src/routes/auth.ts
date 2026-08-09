@@ -1,7 +1,9 @@
-import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { Router, type Request, type Response } from "express";
+import { and, eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, purchasesTable } from "@workspace/db";
+import { CLAIM_WINDOW_HOURS } from "../lib/hotmart";
+import { linkPurchasesToUser, recomputeAccess, recordPurchase } from "../lib/entitlements";
 import { requireAuth } from "../middlewares/requireAuth";
 import { getStripeClient, isStripeConfigured } from "../stripeClient";
 import { sendWelcomeEmail } from "../emailService";
@@ -32,26 +34,39 @@ router.get("/auth/me", requireAuth, async (req, res) => {
 
 // ─── POST /api/auth/register ─────────────────────────────────────────────────
 // Called from the sign-up page after payment. Creates user + sets session.
+//
+// Two proofs of payment are accepted. `sessionId` is a Stripe checkout session,
+// verified against Stripe. `transaction` is a Hotmart transaction code, verified
+// against the purchases row its webhook wrote — and, because that code is short
+// and time-ordered enough to guess, only together with the buyer's own email
+// and only inside the claim window. Neither one ever overwrites a password that
+// already exists.
 router.post("/auth/register", async (req, res) => {
-  if (!isStripeConfigured()) {
-    res.status(503).json({ message: "Not configured" });
-    return;
-  }
-
-  const { sessionId, email, name, password } = req.body as {
+  const { sessionId, transaction, email, name, password } = req.body as {
     sessionId?: string;
+    transaction?: string;
     email?: string;
     name?: string;
     password?: string;
   };
 
-  if (!sessionId || !email || !password) {
-    res.status(400).json({ message: "sessionId, email and password are required" });
+  if (password && password.length < 6) {
+    res.status(400).json({ message: "Password must be at least 6 characters" });
     return;
   }
 
-  if (password.length < 6) {
-    res.status(400).json({ message: "Password must be at least 6 characters" });
+  if (transaction && !sessionId) {
+    await registerFromHotmart(req, res, { transaction, email, password });
+    return;
+  }
+
+  if (!isStripeConfigured()) {
+    res.status(503).json({ message: "Not configured" });
+    return;
+  }
+
+  if (!sessionId || !email || !password) {
+    res.status(400).json({ message: "sessionId, email and password are required" });
     return;
   }
 
@@ -136,6 +151,26 @@ router.post("/auth/register", async (req, res) => {
     })
     .returning();
 
+  // Write the Stripe sale into the purchases ledger as well. It is what lets a
+  // later Hotmart refund see that this lifetime access was paid somewhere else
+  // and leave it standing. Idempotent on the session id, so the Stripe webhook
+  // writing the same rows first costs nothing.
+  try {
+    await recordPurchase({
+      provider: "stripe", transactionId: sessionId, productKey: "front",
+      email: emailLower, rung: "front", event: "auth.register",
+    });
+    if (boughtRecoveryPack) {
+      await recordPurchase({
+        provider: "stripe", transactionId: sessionId, productKey: "bump",
+        email: emailLower, rung: "bump", event: "auth.register",
+      });
+    }
+    await linkPurchasesToUser(emailLower, user.id);
+  } catch (err) {
+    console.error("[auth/register] purchase ledger write failed (non-fatal):", err);
+  }
+
   req.session.userId = user.id;
 
   req.session.save((err) => {
@@ -150,6 +185,95 @@ router.post("/auth/register", async (req, res) => {
     });
   });
 });
+
+/**
+ * Sign-up for a buyer who paid on Hotmart.
+ *
+ * The account already exists — the webhook created it, passwordless, the moment
+ * the sale cleared — so this sets the password and signs them in. What it will
+ * not do is set a password on an account that has one: possession of a
+ * transaction code is proof of purchase, not proof of identity.
+ */
+async function registerFromHotmart(
+  req: Request,
+  res: Response,
+  args: { transaction: string; email?: string; password?: string },
+): Promise<void> {
+  const transaction = args.transaction.trim().slice(0, 64);
+  const emailGiven = args.email?.toLowerCase().trim();
+
+  if (!emailGiven || !args.password) {
+    res.status(400).json({ message: "Email and password are required" });
+    return;
+  }
+
+  const rows = await db.select().from(purchasesTable)
+    .where(and(eq(purchasesTable.provider, "hotmart"), eq(purchasesTable.transactionId, transaction)));
+
+  const live = rows.filter((r) => !r.revokedAt);
+  if (!live.length) {
+    // Same answer for "never existed", "refunded" and "wrong email": the reply
+    // must not tell somebody walking transaction codes which of those it was.
+    res.status(400).json({ message: "We could not verify this purchase. Check the link in your email." });
+    return;
+  }
+
+  const purchase = live[0];
+  if (purchase.email !== emailGiven) {
+    res.status(400).json({ message: "We could not verify this purchase. Check the link in your email." });
+    return;
+  }
+
+  const ageMs = Date.now() - new Date(purchase.purchasedAt).getTime();
+  if (ageMs > CLAIM_WINDOW_HOURS * 60 * 60 * 1000) {
+    res.status(410).json({ message: "This link has expired. Use the access link we emailed you, or sign in." });
+    return;
+  }
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, emailGiven)).limit(1);
+
+  if (existing?.passwordHash) {
+    // The account already has a password, so this is not a first sign-up and a
+    // transaction code must not be enough to walk into it. Repeat buyers sign in.
+    res.status(409).json({ message: "You already have an account. Sign in instead.", hasAccount: true });
+    return;
+  }
+
+  let user = existing;
+  if (!user) {
+    const inserted = await db.insert(usersTable).values({
+      id: crypto.randomUUID(),
+      email: emailGiven,
+      name: null,
+      passwordHash: await bcrypt.hash(args.password, 10),
+      purchasedAt: purchase.rung === "front" ? purchase.purchasedAt : null,
+    }).returning();
+    user = inserted[0];
+  } else {
+    const [updated] = await db.update(usersTable)
+      .set({ passwordHash: await bcrypt.hash(args.password, 10) })
+      .where(eq(usersTable.id, user.id))
+      .returning();
+    user = updated;
+  }
+
+  await linkPurchasesToUser(emailGiven, user.id);
+  await recomputeAccess(emailGiven);
+
+  const [fresh] = await db.select().from(usersTable).where(eq(usersTable.id, user.id)).limit(1);
+
+  req.session.userId = user.id;
+  req.session.save((err) => {
+    if (err) { res.status(500).json({ message: "Session error. Please try again." }); return; }
+    res.json({
+      id: fresh.id,
+      email: fresh.email,
+      name: fresh.name,
+      onboardingComplete: fresh.onboardingComplete,
+      purchasedAt: fresh.purchasedAt,
+    });
+  });
+}
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
 router.post("/auth/login", async (req, res) => {

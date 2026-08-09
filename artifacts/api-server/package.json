@@ -8,7 +8,8 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "script": "node ./run-script.mjs"
+    "script": "node ./run-script.mjs",
+    "smoke:hotmart": "node ./test/hotmart-purchase.smoke.mjs"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",

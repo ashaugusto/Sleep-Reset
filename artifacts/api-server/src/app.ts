@@ -70,7 +70,7 @@ app.post(
           const obj = evt.data?.object as {
             id?: string;
             customer_details?: { email?: string; phone?: string };
-            metadata?: { email?: string; fbp?: string; fbc?: string; product?: string; user_id?: string; hero_variant?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; ip?: string; ua?: string };
+            metadata?: { email?: string; fbp?: string; fbc?: string; product?: string; user_id?: string; bump_recovery_pack?: string; hero_variant?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; ip?: string; ua?: string };
             amount_total?: number;
             currency?: string;
           } ?? {};
@@ -85,6 +85,16 @@ app.post(
             await db.update(usersTable)
               .set({ premiumPurchasedAt: new Date() })
               .where(eq(usersTable.id, obj.metadata.user_id));
+            // Ledger row so a later refund on any processor can tell this pack
+            // apart from the platform purchase and take back only one of them.
+            if (email && sessionId) {
+              const { recordPurchase, linkPurchasesToUser } = await import("./lib/entitlements");
+              await recordPurchase({
+                provider: "stripe", transactionId: sessionId, productKey: "bump",
+                email, rung: "bump", event: "checkout.session.completed",
+              });
+              await linkPurchasesToUser(email, obj.metadata.user_id);
+            }
             logger.info({ userId: obj.metadata.user_id, sessionId }, "Recovery Pack upgrade marked");
             res.status(200).json({ received: true });
             return;
@@ -139,6 +149,31 @@ app.post(
                 .where(conds.length > 1 ? or(...conds) : conds[0]);
             }
             logger.info({ email, sessionId }, "Lead marked as purchased");
+
+            // Purchases ledger. Access is derived from these rows, so a Stripe
+            // sale has to appear here too — otherwise a Hotmart refund later
+            // finds no evidence this platform access was paid for and clears it.
+            if (email && sessionId) {
+              try {
+                const { recordPurchase, recomputeAccess } = await import("./lib/entitlements");
+                await recordPurchase({
+                  provider: "stripe", transactionId: sessionId, productKey: "front",
+                  email, rung: "front", event: "checkout.session.completed",
+                  // The order total, bump included. Nothing computes off it;
+                  // it is there so support can read a row and see the sale.
+                  priceCents: obj.amount_total ?? null, currency: (obj.currency || "eur").toUpperCase(),
+                });
+                if (md.bump_recovery_pack === "1") {
+                  await recordPurchase({
+                    provider: "stripe", transactionId: sessionId, productKey: "bump",
+                    email, rung: "bump", event: "checkout.session.completed",
+                  });
+                }
+                await recomputeAccess(email);
+              } catch (ledgerErr) {
+                logger.error(ledgerErr, "Purchases ledger write failed (non-fatal)");
+              }
+            }
 
             // Attribution: link quiz profile -> purchase (best-effort, isolated; never blocks the purchase path)
             if (email) {

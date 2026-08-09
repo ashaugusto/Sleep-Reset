@@ -20,6 +20,15 @@ export const usersTable = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   purchasedAt: timestamp("purchased_at"),
   premiumPurchasedAt: timestamp("premium_purchased_at"),
+  // The rest of the ladder. These are projections of the purchases table, not
+  // the source of truth: routes read them, the entitlements module writes them,
+  // and a refund recomputes them from the rows that survived.
+  /** The 3AM Relapse Kit, the one-click offer after the platform purchase. */
+  kitPurchasedAt: timestamp("kit_purchased_at"),
+  /** The single 3AM protocol, for whoever declined the Kit. */
+  downsellPurchasedAt: timestamp("downsell_purchased_at"),
+  /** Second seats bought and not yet handed to a partner. */
+  seatCredits: integer("seat_credits").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

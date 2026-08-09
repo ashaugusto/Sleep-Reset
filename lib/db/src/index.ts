@@ -27,9 +27,24 @@ function connectionConfig(url: string) {
   }
 }
 
+/**
+ * A local Postgres is usually built without SSL, and asking for it there fails
+ * with "the server does not support SSL connections" — which is how a test
+ * database looks like a broken query. Remote is unchanged: DO's cluster still
+ * gets SSL with its self-signed chain accepted.
+ */
+function isLocal(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "" || host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
 export const pool = new Pool({
   connectionString: connectionConfig(process.env.DATABASE_URL),
-  ssl: { rejectUnauthorized: false },
+  ssl: isLocal(process.env.DATABASE_URL) ? false : { rejectUnauthorized: false },
 });
 export const db = drizzle(pool, { schema });
 

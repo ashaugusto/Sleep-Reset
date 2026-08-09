@@ -10,9 +10,18 @@ export default function SignUpPage() {
   const queryClient = useQueryClient();
 
   const sessionId = params.get("session_id") ?? "";
+  const transaction = params.get("transaction") ?? "";
   const prefillEmail = params.get("email") ?? "";
   const prefillName = params.get("name") ?? "";
+  // What /welcome was allowed to show of the buyer's address: j***a@gmail.com.
+  const maskedEmail = params.get("masked") ?? "";
 
+  // A Hotmart buyer types their own email here. The transaction code alone is
+  // not proof of identity — it is short and time-ordered enough to guess — so
+  // the server only opens the account when the code and the address agree.
+  const needsEmail = !!transaction && !prefillEmail;
+
+  const [emailInput, setEmailInput] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +32,11 @@ export default function SignUpPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (needsEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailInput.trim())) {
+      setError("Enter the email you used at checkout");
+      return;
+    }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
@@ -42,8 +56,8 @@ export default function SignUpPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          sessionId,
-          email: prefillEmail,
+          ...(transaction ? { transaction } : { sessionId }),
+          email: (needsEmail ? emailInput : prefillEmail).trim().toLowerCase(),
           name: prefillName,
           password,
         }),
@@ -54,6 +68,7 @@ export default function SignUpPage() {
       if (!res.ok) {
         setError(data.message || "Something went wrong. Please try again.");
         setLoading(false);
+        if (data.hasAccount) setLocation("/sign-in");
         return;
       }
 
@@ -91,7 +106,32 @@ export default function SignUpPage() {
             </div>
           )}
 
+          {needsEmail && maskedEmail && (
+            <div className="bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-sm text-foreground">
+                Purchase confirmed for <strong>{maskedEmail}</strong>
+              </span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {needsEmail && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium" htmlFor="email">Your email</label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="The email you used at checkout"
+                  className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition"
+                />
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="password">Password</label>
               <div className="relative">

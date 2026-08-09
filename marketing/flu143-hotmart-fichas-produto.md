@@ -39,6 +39,23 @@ Antes do primeiro produto:
 
 Nomes dos produtos ficam **em inglês nos quatro mercados**. São nomes de marca ("Recovery Pack", "3AM Relapse Kit"), aparecem no recibo e no checkout, e traduzi-los obrigaria a sete produtos vezes quatro idiomas, ou seja vinte e oito produtos para gerir. O checkout em si já aparece na língua do comprador, que é o que importa para a conversão.
 
+### O webhook de compra, uma vez só para os cinco produtos
+
+É isto que entrega a compra. Sem ele a Hotmart cobra o cartão e o comprador chega a uma página de login onde não tem conta. Painel: Ferramentas → **Webhook (API e notificações)**.
+
+| Campo | Valor |
+|---|---|
+| URL | `https://sleepwired.com/api/hotmart/webhook` |
+| Versão | 2.0.0 |
+| Eventos | `PURCHASE_APPROVED`, `PURCHASE_COMPLETE`, `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK` |
+| Token (HOTTOK) | copiar do painel para o `.env` da raiz como `HOTMART_HOTTOK=`, depois `sudo systemctl restart sleepwired-api` |
+
+Um webhook só, não um por produto: quem decide o que abrir é o código da oferta que vem na notificação. Um código que não esteja no `.env` é registado, não abre nada, e deixa no log a dizer qual foi. Se um produto não entregar, é aí que se vê porquê.
+
+Reembolso e chargeback fecham o que foi comprado nessa transação e mais nada. Quem devolver o Recovery Pack de 19 EUR mantém a plataforma de 27 que pagou noutra compra.
+
+**A página de obrigado precisa do código da transação na URL.** É `https://sleepwired.com/welcome` em todas as fichas, e ela aceita a Hotmart desde a FLU-156, mas só deixa criar a conta ali mesmo se receber `?transaction=<código>`. Ligar o envio dos dados da compra na configuração pós-venda, ou acrescentar o parâmetro com a variável que o painel oferecer. Sem ele a página não rebenta: confirma a compra e manda esperar pelo email de acesso, que é um passo a mais no momento de maior intenção.
+
 ### Duas regras que valem para todas as ofertas dos sete produtos
 
 **Tipo de pagamento: pagamento único. Nenhuma oferta é mensal nem anual.** A página de venda promete "sem assinatura, pagas uma vez", e a única faixa vazia do mercado é essa. No painel isso é o campo *Pagamento único* na criação da oferta, nunca *Assinatura*. Parcelamento não é recorrência: continua ligado ao máximo permitido, é uma compra só dividida no cartão. O único degrau que fala em ano é a Reset Season, 39 EUR/ano, e mesmo essa cria-se como produto de pagamento único com entrega ao longo de doze meses (secção 8).
@@ -512,13 +529,15 @@ Se aprovares, a esteira em reais ficaria: front R$97, bump R$67, OTO R$167, down
 
 ## 10. O que falta no nosso lado antes de ligar o interruptor
 
-Criar os produtos na Hotmart é a parte que depende de ti. Estas três dependem do código, e sem elas a compra na Hotmart não entrega nada:
+Criar os produtos na Hotmart é a parte que depende de ti. Do lado do código eram três coisas; duas estão feitas na FLU-156.
 
-1. **Webhook de compra.** Não existe. Hoje não há nenhum endpoint que receba a notificação de compra da Hotmart e crie a conta do comprador. Uma venda na Hotmart resultaria em dinheiro cobrado e nenhum acesso. **É o bloqueio número um.**
-2. **Página do OTO.** O texto está escrito nos quatro idiomas em `src/locales/*.ts`, bloco `oto1`, mas nenhuma página o renderiza. A rota `/relapse-kit` é a que está nas fichas dos produtos 3 e 4 e ainda tem de ser criada.
-3. **A página `/welcome` a aceitar a Hotmart.** Hoje espera um `session_id` da Stripe. Com a Hotmart o comprador chega lá sem esse parâmetro.
+1. ~~**Webhook de compra.**~~ **Feito.** `POST /api/hotmart/webhook` recebe a notificação, valida o HOTTOK, cria a conta pelo email do comprador e liberta o degrau que corresponde ao código da oferta. Reembolso e chargeback fecham o que foi comprado nessa transação e não tocam no que foi pago noutra. Como se liga no painel: secção 1.
+2. **Página do OTO.** Continua por fazer. O texto está escrito nos quatro idiomas em `src/locales/*.ts`, bloco `oto1`, mas nenhuma página o renderiza. A rota `/relapse-kit` é a que está nas fichas dos produtos 3 e 4.
+3. ~~**A página `/welcome` a aceitar a Hotmart.**~~ **Feito.** Aceita as duas origens: com `session_id` fala com a Stripe, com `transaction` confirma contra o que o webhook registou. Como a compra e a notificação viajam em paralelo, a página espera pelo webhook até meio minuto antes de mandar o comprador para o email de acesso, em vez de lhe dizer que não encontrou nada.
 
-Enquanto `VITE_HOTMART_PRODUCT` estiver vazio, o site continua a cobrar pela Stripe e nada disto parte. Essa variável é o interruptor, e só se preenche quando os três pontos acima estiverem feitos.
+Falta ainda **o HOTTOK no `.env` da raiz**, que só existe depois de criares o webhook no painel, e um teste de compra real por cada código de oferta. A mecânica em si já está verificada de ponta a ponta contra uma base de dados descartável: `node artifacts/api-server/test/hotmart-purchase.smoke.mjs`, 60 verificações, incluindo os cinco degraus, as quatro variantes da oferta de entrada, o reembolso e o chargeback.
+
+Enquanto `VITE_HOTMART_PRODUCT` estiver vazio, o site continua a cobrar pela Stripe e nada disto parte. Essa variável é o interruptor.
 
 ---
 
@@ -544,3 +563,13 @@ VITE_HOTMART_OFF_BACKEND=
 ```
 
 São variáveis de build. Mudar uma obriga a reconstruir e voltar a publicar, não basta reiniciar o servidor.
+
+### E uma que não é de build, e vai noutro ficheiro
+
+O webhook corre no servidor e precisa do token do painel. Esse vai no `.env` da raiz, o que o systemd passa ao `sleepwired-api.service`:
+
+```
+HOTMART_HOTTOK=<o token em Ferramentas → Webhook (API e notificações)>
+```
+
+Depois de mudar: `sudo systemctl restart sleepwired-api`. Os códigos de oferta não precisam de ser repetidos ali, o servidor lê `HOTMART_OFF_FRONT` e cai para `VITE_HOTMART_OFF_FRONT`, portanto colar cada código uma vez no `.env` da raiz serve os dois lados. Enquanto o HOTTOK estiver vazio o webhook responde 503 e não liberta nada.
