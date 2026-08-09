@@ -123,7 +123,7 @@ export default function Upgrade() {
             </p>
           )}
           <p className="text-[11px] text-muted-foreground text-center">
-            Same 60-day money-back guarantee. Reply to any email to refund.
+            Same 30-day money-back guarantee. Reply to any email to refund.
           </p>
           {isOto && (
             <button

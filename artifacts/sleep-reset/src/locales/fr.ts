@@ -173,7 +173,7 @@ const fr: Dict = {
     fullReadLabel: "La version longue",
     watchNext: "À voir ensuite · Épisode {n} · {time}",
     cta: "Voir mon plan de 7 nuits",
-    ctaMicro: "Paiement unique · Remboursement 60 jours · Accès immédiat",
+    ctaMicro: "Paiement unique · Remboursement 30 jours · Accès immédiat",
 
     capture: {
       headline: "Où devons-nous envoyer votre plan ?",
@@ -305,7 +305,7 @@ const fr: Dict = {
     offerLabel: "L'offre",
     priceLine: "Un paiement unique de {price}. Pas d'abonnement, pas de prélèvement récurrent.",
     anchorLine: "Prix de bêta ouverte. Il passe à {price} au lancement public.",
-    guarantee: "Faites les sept nuits. Si votre sommeil n'a pas changé, tout est remboursé. 60 jours.",
+    guarantee: "Faites les sept nuits. Si votre sommeil n'a pas changé, tout est remboursé. 30 jours.",
     cta: "Commencer ce soir pour {price}",
     ctaBusy: "Ouverture du paiement",
     ctaMicro: "Paiement sécurisé par Hotmart. Aucun compte n'est nécessaire pour commencer.",
@@ -318,7 +318,7 @@ const fr: Dict = {
       },
       {
         q: "Et si cela ne marche pas pour moi ?",
-        a: "Alors vous aurez fait les sept nuits et vous êtes remboursé, jusqu'à 60 jours. Le remboursement ne dépend pas de notre accord sur les raisons.",
+        a: "Alors vous aurez fait les sept nuits et vous êtes remboursé, jusqu'à 30 jours. Le remboursement ne dépend pas de notre accord sur les raisons.",
       },
       {
         q: "Ai-je besoin d'un compte ?",
@@ -360,7 +360,7 @@ const fr: Dict = {
     cta: "Oui, j'ajoute le Relapse Kit",
     decline: "Non merci, emmenez-moi à mon protocole",
     micro: "Un clic. Votre carte n'est pas redemandée.",
-    guarantee: "Couvert par la même garantie de 60 jours que le protocole.",
+    guarantee: "Couvert par la même garantie de 30 jours que le protocole.",
   },
 };
 

@@ -24,6 +24,11 @@
 // locales. Change the promise in four languages and this follows; change it in
 // three and this says so.
 //
+// What is hardcoded is the range Hotmart allows, because that is the platform's
+// rule and not ours: 7, 15, 21 or 30 days, with 15 the minimum for European
+// sales. A promise outside that range fails the run before any checkout is
+// fetched, since no panel setting could ever match it.
+//
 // Exit 0 means every configured rung matches. Exit 1 means at least one does
 // not, and the buyer is seeing something we did not promise. Rungs with no
 // product or offer code yet are reported as pending, not as failures: they are
@@ -36,6 +41,23 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const APP = join(REPO_ROOT, "artifacts", "sleep-reset");
 const CHECKOUT_MODE_CUSTOM = "10";
+
+// ─── What Hotmart will actually let us promise ───────────────────────────────
+// The guarantee is a dropdown in the panel, not a free number, and it has four
+// entries. Anything the copy promises outside this set cannot be configured at
+// all: the buyer reads it, asks for the refund on day 40, and Hotmart's own
+// refund button has already expired. That is exactly what was live here, with
+// four pages in four languages promising 60 days against a platform maximum of
+// 30, so the check is in the script rather than in somebody's memory.
+//
+// The floor is the other half. Hotmart requires a minimum of 15 days for sales
+// in any European country, and we price in EUR, so 7 is not a valid setting for
+// us even though the panel offers it. Both live rungs were sitting on 7.
+//
+// Source: help.hotmart.com, "How to adjust the guarantee period for a product
+// I created?" (article 360034552751).
+const WARRANTY_OPTIONS = [7, 15, 21, 30];
+const WARRANTY_MIN_EU = 15;
 
 // The rungs, in the order the buyer meets them. Mirrors offers.ts.
 const RUNGS = [
@@ -251,6 +273,11 @@ async function verifyOffer({ label, product, off, expectPrice, expectWarranty, e
     if (expectWarranty != null && product.warrantyDays !== expectWarranty) {
       result.problems.push(`"${product.name}" refunds for ${product.warrantyDays} days, the sales pages promise ${expectWarranty}`);
     }
+    // Independent of what we promise: below the European floor the setting is
+    // not ours to make, so this is reported even when the copy agrees with it.
+    if (typeof product.warrantyDays === "number" && product.warrantyDays < WARRANTY_MIN_EU) {
+      result.problems.push(`"${product.name}" is set to ${product.warrantyDays} days. We sell in EUR, and Hotmart requires at least ${WARRANTY_MIN_EU} days for European sales.`);
+    }
   }
 
   if (expectBump && page.products.length < 2) {
@@ -279,6 +306,18 @@ async function main() {
   const allDays = new Set(Object.values(promised).flat());
   const guarantee = [...allDays].filter((d) => d >= 7 && d <= 365).sort((a, b) => b - a);
   const expectWarranty = guarantee[0] ?? null;
+
+  // A promise the panel has no dropdown entry for can never be honoured, so it
+  // fails the run on its own, before a single checkout is fetched.
+  const copyProblems = [];
+  if (expectWarranty != null && !WARRANTY_OPTIONS.includes(expectWarranty)) {
+    copyProblems.push(
+      `the sales pages promise ${expectWarranty} days, and Hotmart only offers ${WARRANTY_OPTIONS.join(", ")}. ` +
+        `No rung can be set to ${expectWarranty}, so this refund is one we would have to honour by hand.`,
+    );
+  } else if (expectWarranty != null && expectWarranty < WARRANTY_MIN_EU) {
+    copyProblems.push(`the sales pages promise ${expectWarranty} days, below the ${WARRANTY_MIN_EU} day minimum Hotmart requires for European sales.`);
+  }
 
   const targets = [];
   for (const spec of RUNGS) {
@@ -322,8 +361,8 @@ async function main() {
   for (const t of live) results.push(await verifyOffer(t));
 
   if (args.json) {
-    console.log(JSON.stringify({ expectWarranty, promised, results, pending }, null, 2));
-    return results.every((r) => r.ok) ? 0 : 1;
+    console.log(JSON.stringify({ expectWarranty, promised, copyProblems, results, pending }, null, 2));
+    return results.every((r) => r.ok) && !copyProblems.length ? 0 : 1;
   }
 
   console.log(`refund window promised by the site: ${expectWarranty ?? "unreadable"} days`);
@@ -332,6 +371,7 @@ async function main() {
       console.log(`  ${loc}: does not mention ${expectWarranty} days anywhere (found ${days.join(", ")})`);
     }
   }
+  for (const p of copyProblems) console.log(`  -> ${p}`);
   console.log("");
 
   for (const r of results) {
@@ -354,7 +394,7 @@ async function main() {
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} live rungs match the repo, ${pending.length} still to create.`);
-  return failed.length ? 1 : 0;
+  return failed.length || copyProblems.length ? 1 : 0;
 }
 
 main().then(

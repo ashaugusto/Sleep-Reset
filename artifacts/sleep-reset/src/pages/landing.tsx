@@ -16,7 +16,7 @@ const METHOD = "The Cognitive Shutdown Method";
 const CURRENCY = "€";
 const PRICE_TODAY = 27;
 const PRICE_AFTER = 97;
-const GUARANTEE_DAYS = 60;
+const GUARANTEE_DAYS = 30;
 const BUMP_DATE = new Date("2026-06-30T22:00:00Z");
 const BUMP_LABEL = "June 30";
 
@@ -212,7 +212,7 @@ const HEROES: Record<string, HeroVariant> = {
       <>
         For chronic insomnia, the first-line treatment isn't medication — it's CBT-I.{" "}
         <strong className="text-[#0E2541]">We turned the exact clinical protocol into 7 nights you run from your own bed.</strong>{" "}
-        €27. 60-night refund.
+        €27. 30-night refund.
       </>
     ),
   },

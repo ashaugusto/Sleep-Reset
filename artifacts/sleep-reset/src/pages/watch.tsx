@@ -145,7 +145,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "How much does it cost?",
-    `One payment of ${CURRENCY}${PRICE_TODAY}. No subscription, no recurring charges. Lifetime access, every future update included, and a 60-day money-back guarantee. Finish the 7 nights, and if your sleep hasn't changed, you get every cent back.`,
+    `One payment of ${CURRENCY}${PRICE_TODAY}. No subscription, no recurring charges. Lifetime access, every future update included, and a 30-day money-back guarantee. Finish the 7 nights, and if your sleep hasn't changed, you get every cent back.`,
   ],
   [
     "Is this meditation or another sleep app?",
@@ -153,7 +153,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "What if it doesn't work for me?",
-    "You have 60 days. Complete the 7 nights, and if you're not falling asleep faster and staying asleep longer, reply to any email and we refund you in full. No forms, no questions.",
+    "You have 30 days. Complete the 7 nights, and if you're not falling asleep faster and staying asleep longer, reply to any email and we refund you in full. No forms, no questions.",
   ],
 ];
 
@@ -400,7 +400,7 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
         {/* Offer line — the one purchase signal that lives above the fold on every device */}
         <p className="text-[#f5f5f5] text-[0.82rem] sm:text-sm font-semibold mt-2.5 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
           <span className="text-[#9b9b9b] line-through mr-1.5">{CURRENCY}{anchorPrice()}</span>
-          <span className="text-[#46d369]">{CURRENCY}{todayPrice()} once</span> · lifetime access · 60-day money-back guarantee
+          <span className="text-[#46d369]">{CURRENCY}{todayPrice()} once</span> · lifetime access · 30-day money-back guarantee
         </p>
         <p className="text-[#f0c14b] text-[0.68rem] sm:text-[0.72rem] font-bold tracking-wide mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
           Open-beta price. Rises to {CURRENCY}{anchorPrice()} at public launch
@@ -661,7 +661,7 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
             </h3>
             <p className="text-[#d2d2d2] text-sm sm:text-base mt-3 max-w-md">
               Start the 7-night protocol tonight for <span className="text-[#9b9b9b] line-through">{CURRENCY}{anchorPrice()}</span>{" "}
-              <span className="text-[#46d369] font-bold">{CURRENCY}{todayPrice()}</span> during open beta · 60-day money-back guarantee.
+              <span className="text-[#46d369] font-bold">{CURRENCY}{todayPrice()}</span> during open beta · 30-day money-back guarantee.
             </p>
             <button
               type="button"
@@ -857,7 +857,7 @@ function Faq() {
         >
           Start your 7 nights for {CURRENCY}{todayPrice()} <ChevronRight className="w-6 h-6" />
         </button>
-        <p className="text-[#999] text-xs mt-3">One payment · lifetime access · 60-day guarantee</p>
+        <p className="text-[#999] text-xs mt-3">One payment · lifetime access · 30-day guarantee</p>
       </div>
     </section>
   );
@@ -1174,7 +1174,7 @@ export default function Watch() {
                   One payment. No subscription, ever.
                 </p>
                 <p className="text-[#d2d2d2] text-sm mt-1">
-                  Locked at {CURRENCY}{PRICE_TODAY} during open beta. Rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.
+                  Locked at {CURRENCY}{PRICE_TODAY} during open beta. Rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 30-day guarantee.
                 </p>
               </div>
               <button

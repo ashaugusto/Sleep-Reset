@@ -173,7 +173,7 @@ const en: Dict = {
     fullReadLabel: "The long version",
     watchNext: "Watch next · Episode {n} · {time}",
     cta: "See my 7-night plan",
-    ctaMicro: "One payment · 60-day refund · Instant access",
+    ctaMicro: "One payment · 30-day refund · Instant access",
 
     capture: {
       headline: "Where should we send your plan?",
@@ -306,7 +306,7 @@ const en: Dict = {
     offerLabel: "The offer",
     priceLine: "One payment of {price}. No subscription, no recurring charge.",
     anchorLine: "Open beta price. It rises to {price} at public launch.",
-    guarantee: "Finish the seven nights. If your sleep hasn't changed, every cent back. 60 days.",
+    guarantee: "Finish the seven nights. If your sleep hasn't changed, every cent back. 30 days.",
     cta: "Start tonight for {price}",
     ctaBusy: "Taking you to checkout",
     ctaMicro: "Secure checkout by Hotmart. No account needed to start.",
@@ -319,7 +319,7 @@ const en: Dict = {
       },
       {
         q: "What if it doesn't work for me?",
-        a: "Then you did the seven nights and you get your money back, up to 60 days. The refund doesn't depend on us agreeing about why.",
+        a: "Then you did the seven nights and you get your money back, up to 30 days. The refund doesn't depend on us agreeing about why.",
       },
       {
         q: "Do I need an account?",
@@ -361,7 +361,7 @@ const en: Dict = {
     cta: "Yes, add the Relapse Kit",
     decline: "No thanks, take me to my protocol",
     micro: "One click. Your card is not asked for again.",
-    guarantee: "Covered by the same 60 day guarantee as the protocol.",
+    guarantee: "Covered by the same 30 day guarantee as the protocol.",
   },
 };
 

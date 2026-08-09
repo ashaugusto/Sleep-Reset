@@ -169,7 +169,7 @@ const es: Dict = {
     fullReadLabel: "La versión larga",
     watchNext: "A continuación · Episodio {n} · {time}",
     cta: "Ver mi plan de 7 noches",
-    ctaMicro: "Pago único · Devolución 60 días · Acceso inmediato",
+    ctaMicro: "Pago único · Devolución 30 días · Acceso inmediato",
 
     capture: {
       headline: "¿A dónde le enviamos su plan?",
@@ -301,7 +301,7 @@ const es: Dict = {
     offerLabel: "La oferta",
     priceLine: "Un pago único de {price}. Sin suscripción, sin cargos recurrentes.",
     anchorLine: "Precio de beta abierta. Sube a {price} en el lanzamiento público.",
-    guarantee: "Haga las siete noches. Si su sueño no ha cambiado, se le devuelve todo. 60 días.",
+    guarantee: "Haga las siete noches. Si su sueño no ha cambiado, se le devuelve todo. 30 días.",
     cta: "Empezar esta noche por {price}",
     ctaBusy: "Abriendo el pago",
     ctaMicro: "Pago seguro con Hotmart. No hace falta cuenta para empezar.",
@@ -314,7 +314,7 @@ const es: Dict = {
       },
       {
         q: "¿Y si a mí no me funciona?",
-        a: "Entonces habrá hecho las siete noches y se le devuelve el dinero, hasta 60 días. La devolución no depende de que nos pongamos de acuerdo en el porqué.",
+        a: "Entonces habrá hecho las siete noches y se le devuelve el dinero, hasta 30 días. La devolución no depende de que nos pongamos de acuerdo en el porqué.",
       },
       {
         q: "¿Necesito una cuenta?",
@@ -356,7 +356,7 @@ const es: Dict = {
     cta: "Sí, quiero añadir el Relapse Kit",
     decline: "No, gracias. Llévenme a mi protocolo",
     micro: "Un clic. No se vuelve a pedir la tarjeta.",
-    guarantee: "Cubierto por la misma garantía de 60 días que el protocolo.",
+    guarantee: "Cubierto por la misma garantía de 30 días que el protocolo.",
   },
 };
 

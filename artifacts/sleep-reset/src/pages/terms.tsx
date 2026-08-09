@@ -68,8 +68,8 @@ Your account is personal and non-transferable. You are responsible for maintaini
 The purchase grants you **lifetime access** to the program for your personal, non-commercial use only.`,
           },
           {
-            title: "5. Refund Policy — 60 nights, keep everything",
-            content: `We offer a full 60-night money-back guarantee from the date of purchase. If you don't notice a measurable improvement in your sleep within those 60 nights, you may request a full refund by emailing us at support@sleepwired.com.
+            title: "5. Refund Policy — 30 nights, keep everything",
+            content: `We offer a full 30-night money-back guarantee from the date of purchase. If you don't notice a measurable improvement in your sleep within those 30 nights, you may request a full refund by emailing us at support@sleepwired.com.
 
 You keep everything: all audio sessions, the workbook, the sleep window calculator, and any bonuses already delivered remain yours regardless of refund. There is no clawback.
 
