@@ -52,4 +52,9 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+# Os episódios são renderizados, não são código, e pesam 160 MB. A regra antiga
+# só apanhava a raiz de videos/, portanto videos/eps/*.mp4 aparecia como novo em
+# todo o `git status` e estava a um `git add .` de entrar no histórico para
+# sempre. O caminho continua a ser servido a partir do disco, não do repositório.
 artifacts/sleep-reset/public/videos/*.mp4
+artifacts/sleep-reset/public/videos/**/*.mp4

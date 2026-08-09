@@ -227,6 +227,21 @@ Lido directamente: `products/api/v1/products` para os produtos, e a configuraç�
 
 Todos com `is_currency_conversion_enabled: true`. Categoria `Saúde e Sports`, em português, num produto em inglês.
 
+> **Relido às 19h30 do mesmo dia, depois de o Ash publicar o Kit.** A tabela acima
+> ficou desactualizada em duas colunas e fica como estava, para se ver o que mudou:
+>
+> | ID | Estado | Checkout | Garantia |
+> |---|---|---|---|
+> | 8279398 | ACTIVE | `S107083069O` | 30 dias |
+> | 8279460 | ACTIVE | `M107083238V` | 30 dias |
+> | 8279532 | **ACTIVE** | **`P107083427H`** | 30 dias |
+>
+> A garantia dos três está nos 30 dias, que é o máximo da Hotmart e o que as
+> páginas prometem desde `cc202d2`. As três letras iniciais do código de checkout
+> são diferentes (S, M, P), portanto não há padrão para adivinhar o do próximo
+> degrau: lê-se do `__NUXT_DATA__` de `pay.hotmart.com/?off=<oferta>`, que resolve
+> o produto só pelo código da oferta e dispensa a API e o painel.
+
 ### Order bump: activo
 
 O Recovery Pack entra no resumo da compra como `ORDER_BUMP_ITEM` (produto 8279460, oferta `o1knxjme`), com a imagem `02_recoverypack.jpg` e a descrição dos sete áudios. Um relatório anterior deu isto como não configurado; estava errado.
@@ -290,6 +305,10 @@ HOTMART_HOTTOK=                  ainda por colar
 ```
 
 As quatro ofertas por tipo de sono ficam vazias porque ainda não existem no painel: `offerCode()` cai na genérica quando faltam, portanto o site funciona à mesma. O OTO 1 fica vazio porque o produto 8279532 está em DRAFT, e um código de produto em rascunho não cobra.
+
+> **19h30.** O Kit deixou de estar em rascunho, portanto o OTO 1 já não fica vazio:
+> `HOTMART_OFF_OTO1=bzkk9yds` na raiz e `VITE_HOTMART_PRODUCT_OTO1=P107083427H` no
+> `.env` do site. As quatro ofertas por tipo de sono continuam por criar.
 
 ### O que trava o build
 
