@@ -61,6 +61,8 @@ Antes dos textos, uma coisa que vi na configuração do checkout de referência 
 
 Ou seja, "o texto do checkout" reparte-se em três sítios, e só dois são campos de escrever.
 
+**Correcção de 9 de Agosto às 13:08.** O construtor tem sim componentes de texto e o Ash pôs dois no checkout, por baixo do banner: um título e um parágrafo, ambos ainda com o lorem ipsum de fábrica. Isso muda a conta acima e resolve o problema que a decisão 2 tinha aberto. A copy destes dois componentes está na secção 5, que é a que se copia para o painel.
+
 ### 3.1 Banner do topo (já pintado na imagem 00)
 
 ```
@@ -135,3 +137,74 @@ Seven nights. One payment. No subscription. 60-day refund.
 ```
 
 São seis palavras num campo de texto que já vais preencher. Se preferires deixar a linha como está, também não é erro: a garantia continua prometida na página de vendas e no email. Fica à tua escolha no momento de escrever a descrição.
+
+**Resolvido pela secção 5.** Com o bloco de texto por baixo do banner, a garantia passa a estar escrita no checkout a quem paga a direito. A linha curta do produto 1 pode ficar como estava.
+
+---
+
+## 5. Os dois blocos de texto por baixo do banner
+
+O que está no construtor são dois componentes: um título e um parágrafo. Trabalham em conjunto e o trabalho deles não é vender outra vez. A venda já foi feita na página de resultado; quem chega aqui já quer. O que ainda pode travar a mão em cima do cartão são três dúvidas, por esta ordem:
+
+1. **isto vai cobrar-me todos os meses?** É a maior, porque é o que toda a concorrência faz e é a promessa que nos distingue.
+2. **o que recebo, e quando?** Ninguém quer pagar e ficar à espera de um email.
+3. **e se não resultar?** A garantia, que sem este bloco não aparecia em lado nenhum no momento de pagar.
+
+O texto responde às três por essa ordem, em três parágrafos curtos. Em inglês nos quatro mercados, pela mesma razão do order bump: a interface da Hotmart traduz-se sozinha, o que nós escrevemos não.
+
+### 5.1 Título (componente de título, substitui `Lorem ipsum dolor`)
+
+```
+You are paying once. That is the whole thing.
+```
+
+Escolhido acima de "Tonight is night one" porque a objecção do momento não é a impaciência, é a desconfiança. Toda a gente neste nicho já foi apanhada por um teste gratuito que virou cobrança mensal. A frase diz em nove palavras aquilo que nos separa do mercado inteiro, e diz no segundo exacto em que a pessoa está a olhar para o campo do cartão.
+
+Duas alternativas, se quiseres testar:
+
+| Variante | Texto | Quando usar |
+|---|---|---|
+| B, entrega | `Night one can be tonight.` | se as métricas mostrarem abandono por hesitação e não por desconfiança |
+| C, identidade | `For the half of the night nobody gave you anything for.` | se quiseres continuar a frase do banner em vez de mudar de assunto |
+
+Não mais do que uma linha e meia no telemóvel. As três cabem.
+
+### 5.2 Parágrafo (componente de texto, substitui o bloco `Lorem ipsum dolor sit amet...`)
+
+```
+One payment for the full 7-night protocol. No trial, no subscription, nothing that renews next month.
+
+The moment your payment clears, the next page opens your account and night one is ready. Seven guided sessions, the sleep diary, and the charts that show whether it actually moved. Lifetime access, every future update included.
+
+Run the seven nights. If your sleep has not changed, write to support@sleepwired.com and you get every cent back, up to 60 days.
+```
+
+Três parágrafos, cerca de 430 caracteres. O lorem que lá está tem quase 500 e no telemóvel é uma parede de doze linhas: reparar que na captura de ecrã o texto empurra o formulário para fora do primeiro ecrã. Com quebras de linha a cada duas frases lê-se em diagonal, que é como se lê num checkout.
+
+**Versão curta**, se ainda achares pesado no telemóvel:
+
+```
+One payment. No subscription, nothing that renews.
+
+Your account opens on the next page and night one is ready tonight. Seven guided sessions, the sleep diary, lifetime access.
+
+If your sleep has not changed after the seven nights, every cent back, up to 60 days.
+```
+
+### 5.3 Porque é que cada frase está lá, para não se estragar ao editar
+
+- **"nothing that renews next month"** e não "o teu cartão não fica guardado". O cartão fica mesmo guardado, é isso que faz o one-click da página de upsell funcionar. A promessa que se pode fazer é que nada renova, e essa é verdadeira.
+- **"The moment your payment clears"** e não "instantâneo". Quem paga por métodos com aprovação diferida não tem acesso imediato, e prometer imediato a essa pessoa é o primeiro email de suporte.
+- **"the next page opens your account"** descreve o que a `/welcome` faz de facto quando recebe o `?transaction=`. Se esse parâmetro não for ligado na configuração pós-venda, esta frase passa a ser mentira e tem de mudar para "you get an email with your access". Ligar o parâmetro é mais barato do que baixar a promessa.
+- **"whether it actually moved"** é a única palavra de prova que lá está. O diário e os gráficos são o que nos separa de um pacote de áudios, e mencioná-los custa seis palavras.
+- **O email de suporte escrito por extenso** na frase da garantia. Uma garantia sem morada para onde escrever lê-se como cláusula; com morada lê-se como promessa.
+
+### 5.4 A linha de aviso, opcional
+
+O checkout fica numa categoria de saúde e a ficha do produto já leva o aviso. Se quiseres repeti-lo aqui, vai no fim do parágrafo e em texto mais pequeno:
+
+```
+Education and coaching, not medical care. Not a treatment or a diagnosis, and no replacement for a doctor.
+```
+
+Custa conversão, ganha tranquilidade na revisão da Hotmart. Como o aviso já está na descrição do produto, que é o que o revisor lê, a minha escolha seria deixar de fora do checkout. Fica contigo.
