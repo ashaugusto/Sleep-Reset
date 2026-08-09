@@ -41,9 +41,9 @@ export default function PrivacyPolicy() {
 
 **Usage data:** Basic technical information such as your browser type, device type, and pages visited, used to improve the product experience.
 
-**Lead data:** If you enter your email (and optionally your name and WhatsApp number) on the order form, we store it to (a) start a Stripe Checkout session and (b) — if you don't complete the purchase — send you up to three follow-up emails over the next 72 hours to help you finish your setup. You can stop these emails at any time by clicking the unsubscribe link in any message.
+**Lead data:** If you enter your email (and optionally your name and WhatsApp number) on the order form, we store it to (a) hand you over to our checkout and (b) — if you don't complete the purchase — send you up to three follow-up emails over the next 72 hours to help you finish your setup. You can stop these emails at any time by clicking the unsubscribe link in any message.
 
-**Payment data:** We process payments through Stripe. We do not store your credit card number or full payment details on our servers. Stripe's privacy policy governs payment data handling.`,
+**Payment data:** Payments are processed by Hotmart, which acts as merchant of record for the sale. Your card details are entered on Hotmart's checkout and never reach our servers: we do not store your card number or any full payment details. Hotmart's privacy policy governs payment data handling.`,
           },
           {
             title: "2. How We Use Your Information",
@@ -71,7 +71,7 @@ export default function PrivacyPolicy() {
             title: "4. Third-Party Services & Advertising Trackers",
             content: `We use the following third-party services:
 
-**Stripe:** Payment processing. Your payment data is governed by Stripe's Privacy Policy (stripe.com/privacy).
+**Hotmart:** Payment processing and merchant of record. Your payment data is governed by Hotmart's Privacy Policy (hotmart.com/en/legal/privacy-policy).
 
 **DigitalOcean:** Hosting and infrastructure. DigitalOcean's Privacy Policy applies to infrastructure-level data.
 

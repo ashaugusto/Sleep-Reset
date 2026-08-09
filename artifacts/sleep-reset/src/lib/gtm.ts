@@ -56,7 +56,7 @@ export const gtm = {
     this.viewVSL();
   },
 
-  // Email submitted on order form — intent signal before Stripe redirect
+  // Email submitted on order form — intent signal before the checkout redirect
   lead(email: string, eventId?: string) {
     push({
       event: "Lead",

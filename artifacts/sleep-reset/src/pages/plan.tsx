@@ -5,13 +5,12 @@ import {
   TYPE_TO_KEY_NIGHT,
   PRICE_TODAY,
   PRICE_ANCHOR,
-  BUMP_PRICE,
   type Profile,
 } from "@/lib/quiz-data";
 import { useI18n, fill, money } from "@/lib/i18n";
-import { providerFor, hotmartCheckoutUrl } from "@/lib/offers";
+import { hotmartCheckoutUrl } from "@/lib/offers";
 import { FunnelHeader } from "@/components/funnel-chrome";
-import { getParam, getCookie, logEvent, heroVariant, haptic } from "@/lib/funnel-track";
+import { getParam, logEvent, heroVariant, haptic } from "@/lib/funnel-track";
 import "@/styles/funnel.css";
 
 // ─── Offer page ──────────────────────────────────────────────────────────────
@@ -39,22 +38,13 @@ function isProfile(v: string): v is Profile {
 }
 
 export default function Plan() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [type, setType] = useState<Profile | null>(null);
-  const [bump, setBump] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [showSticky, setShowSticky] = useState(false);
   const offerRef = useRef<HTMLDivElement | null>(null);
   const inFlight = useRef(false);
-
-  // ── Who takes the money ──
-  // Stripe everywhere until a Hotmart product code is configured, and then only
-  // for the languages Hotmart is worth its 9.9% in. When it is Hotmart, the
-  // Recovery Pack is an order bump inside their checkout, so the checkbox on
-  // this page comes off: offering it twice would charge for it twice.
-  const provider = providerFor(locale);
-  const nativeBump = provider === "hotmart";
 
   // ── Which type are we selling to ──
   // ?type= comes from the result page, so the page renders instantly. The
@@ -88,8 +78,10 @@ export default function Plan() {
     return () => io.disconnect();
   }, [type]);
 
-  const total = bump ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY;
-  const anchorTotal = bump ? PRICE_ANCHOR + BUMP_PRICE : PRICE_ANCHOR;
+  // One price on this page, always. The Recovery Pack is added and priced on
+  // the Hotmart checkout, so nothing here can change the total any more.
+  const total = PRICE_TODAY;
+  const anchorTotal = PRICE_ANCHOR;
 
   const checkout = useCallback(async () => {
     if (inFlight.current) return;
@@ -97,67 +89,42 @@ export default function Plan() {
     haptic();
     setErr("");
     setBusy(true);
-    logEvent(bump ? "plan_checkout_bump" : "plan_checkout");
+    logEvent("plan_checkout");
     try {
       gtm.initiateCheckout("", null);
     } catch {}
 
-    // Hotmart is a hosted checkout: no session to create, we just hand the
-    // visitor over with the offer that matches their type. sck is the only
-    // field Hotmart gives back untouched on the webhook, so attribution rides
-    // in there. If the offer is not configured yet the URL comes back empty
-    // and we fall through to Stripe rather than send anyone to a dead page.
-    if (nativeBump) {
-      const url = hotmartCheckoutUrl("front", {
-        profile: type,
-        tracking: {
-          t: type,
-          h: heroVariant() || "plan",
-          qp: getParam("qp"),
-          c: getParam("utm_content"),
-          s: getParam("utm_source"),
-        },
-      });
-      if (url) {
-        window.location.href = url;
-        return;
-      }
-    }
+    // Hotmart is a hosted checkout: no session to create, we hand the visitor
+    // over with the offer that matches their type. sck is the only field
+    // Hotmart gives back untouched on the webhook, so attribution rides in
+    // there. There is no second processor to fall through to: if the URL comes
+    // back empty the offer is not configured and the honest move is to say the
+    // checkout is down, not to route the sale somewhere we no longer sell.
+    const url = hotmartCheckoutUrl("front", {
+      profile: type,
+      tracking: {
+        t: type,
+        h: heroVariant() || "plan",
+        qp: getParam("qp"),
+        c: getParam("utm_content"),
+        s: getParam("utm_source"),
+      },
+    });
 
-    try {
-      const res = await fetch("/api/checkout/express", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bump,
-          hero_variant: heroVariant() || "plan",
-          source: "plan",
-          quiz_profile: getParam("qp"),
-          profile_type: type ?? "",
-          locale,
-          fbp: getCookie("_fbp"),
-          fbc: getCookie("_fbc"),
-          utm_source: getParam("utm_source"),
-          utm_medium: getParam("utm_medium"),
-          utm_campaign: getParam("utm_campaign"),
-          utm_content: getParam("utm_content"),
-          cancel_path: window.location.pathname + window.location.search,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) {
-        setErr(t.plan.checkoutError);
-        setBusy(false);
-        inFlight.current = false;
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
+    if (!url) {
+      logEvent("plan_checkout_unconfigured");
       setErr(t.plan.checkoutError);
       setBusy(false);
       inFlight.current = false;
+      return;
     }
-  }, [bump, type, locale, t, nativeBump]);
+
+    // No lead row is written here, and that is not an oversight: this page never
+    // asks for an email. The sale is reconstructed on the other side, where the
+    // Hotmart webhook reads the buyer's email off the payload and the tracking
+    // back off sck, then writes the lead and fires CAPI Purchase.
+    window.location.href = url;
+  }, [type, t]);
 
   if (!type) {
     return (
@@ -223,36 +190,10 @@ export default function Plan() {
           </div>
 
           {/* ── Order bump ── */}
-          {/* Hidden on Hotmart, where the same pack is a native bump one step later. */}
-          <div className="fnl-bump mt-8" data-on={bump} hidden={nativeBump}>
-            <span className="fnl-label">{t.plan.bump.label}</span>
-            <label className="fnl-check mt-3">
-              <input
-                type="checkbox"
-                checked={bump}
-                onChange={(e) => {
-                  haptic();
-                  setBump(e.target.checked);
-                  logEvent(e.target.checked ? "plan_bump_on" : "plan_bump_off");
-                }}
-              />
-              <span className="fnl-box" aria-hidden="true">
-                <Check className="w-3.5 h-3.5" strokeWidth={3} />
-              </span>
-              <span>
-                <span className="block text-[1rem] font-semibold leading-snug">
-                  {t.plan.bump.title}
-                </span>
-                <span className="fnl-helper block mt-1">{t.plan.bump.body}</span>
-                <span className="block mt-2 text-[0.9375rem] font-semibold" style={{ color: "var(--brass-hi)" }}>
-                  {fill(t.plan.bump.check, { price: money(t, BUMP_PRICE) })}
-                </span>
-              </span>
-            </label>
-            <p className="fnl-micro mt-3">
-              {fill(t.plan.bump.note, { price: money(t, BUMP_PRICE) })}
-            </p>
-          </div>
+          {/* Not here. The same pack is a native Hotmart bump one step later, on
+              the checkout itself, and it was hidden on this page for as long as
+              Hotmart has been live. Two places to tick the same box is how a
+              buyer gets charged 19 EUR twice. */}
 
           {/* ── The offer ── */}
           <div ref={offerRef} className="fnl-offer mt-8">

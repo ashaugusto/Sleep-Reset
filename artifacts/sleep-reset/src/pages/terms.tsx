@@ -59,7 +59,9 @@ Individual results vary. We make no guarantee that the program will resolve your
             content: `To access the full program, you must:
 
 1. Create an account with a valid email address and password
-2. Complete a one-time purchase of €27 via Stripe
+2. Complete a one-time purchase of €27 through our checkout
+
+Payments are processed by Hotmart, which acts as merchant of record for the sale. Your receipt and any applicable VAT are issued by Hotmart, and refunds are handled through them.
 
 Your account is personal and non-transferable. You are responsible for maintaining the security of your credentials. Do not share your account with others.
 

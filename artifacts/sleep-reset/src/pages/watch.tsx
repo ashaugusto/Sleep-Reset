@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Play, Info, Search, Bell, ChevronRight,
   X, Plus, ThumbsUp,
   Headphones, Calculator, FileText, Sunrise, ListChecks, Infinity as InfinityIcon,
 } from "lucide-react";
 import { gtm } from "@/lib/gtm";
+import { hotmartCheckoutUrl } from "@/lib/offers";
 
 // ═══════════════════════════════════════════════════════════════════
 // /watch — Netflix-style streaming homepage for Sleep Wired.
@@ -18,32 +19,20 @@ import { gtm } from "@/lib/gtm";
 const BRAND = "SLEEP WIRED";
 const PRICE_TODAY = 27;
 const PRICE_ANCHOR = 47; // open-beta price; rises to €47 at public launch (honest anchor, mirrors landing's price bump — no fake resetting countdown)
-const BUMP_PRICE = 19;   // Recovery Pack — order bump (STRIPE_PRICE_PREMIUM). Same €19 as the /upgrade OTO.
+const BUMP_PRICE = 19;   // Recovery Pack — native Hotmart order bump. Same €19 as the /upgrade OTO.
 
-// ─── Recovery Pack bump — shared across every CTA ───────────────────
-// The bump lives module-level (not inside a single component's useState) so
-// that ticking the Recovery Pack updates the price on EVERY checkout CTA at
-// once — nav, sticky bar, end-card, info modal, FAQ, billboard, offer bar —
-// instead of only the offer bar. Mixed prices across CTAs confuse the buyer
-// on the way to Stripe. useBump() subscribes each CTA; startCheckout() reads
-// the same flag by default so the express order always matches what's shown.
-let bumpOn = false;
-const bumpSubs = new Set<() => void>();
-function setBumpGlobal(next: boolean) {
-  if (bumpOn === next) return;
-  bumpOn = next;
-  bumpSubs.forEach((fn) => fn());
-}
-function useBump(): boolean {
-  return useSyncExternalStore(
-    (cb) => { bumpSubs.add(cb); return () => { bumpSubs.delete(cb); }; },
-    () => bumpOn,
-    () => false, // SSR snapshot — bump always starts off, no hydration mismatch
-  );
-}
-// Displayed prices, bump-aware — used by every CTA so they move together.
-const todayPrice = (b: boolean) => (b ? PRICE_TODAY + BUMP_PRICE : PRICE_TODAY);
-const anchorPrice = (b: boolean) => (b ? PRICE_ANCHOR + BUMP_PRICE : PRICE_ANCHOR);
+// ─── One price, on every CTA ────────────────────────────────────────
+// This page used to carry a module-level bump flag so that ticking the
+// Recovery Pack moved the price on all eight CTAs at once — nav, sticky bar,
+// end-card, info modal, FAQ, billboard, offer bar. It was ticked here and
+// charged as a second Stripe line item.
+//
+// The Recovery Pack is now a native Hotmart order bump, offered and charged on
+// the checkout screen itself. This page can no longer change what the buyer is
+// charged, so it no longer pretends to: every CTA shows the front price and the
+// add-on appears once, where the money is taken.
+const todayPrice = () => PRICE_TODAY;
+const anchorPrice = () => PRICE_ANCHOR;
 const CURRENCY = "€";
 
 // Episode map — dedicated cuts from the VSL (audio-normalized v3).
@@ -198,11 +187,12 @@ function logEvent(event: string) {
   } catch { /* noop */ }
 }
 
-// ─── Express checkout — Start goes straight to Stripe ───────────────
-// No email form: Stripe collects the email on its hosted page, and the
-// webhook upserts the lead + fires CAPI Purchase from it. We still pass
-// fbp/fbc/utm so Purchase attribution survives. Falls back to the proven
-// /start order form if the express endpoint is unavailable.
+// ─── Express checkout — Start goes straight to Hotmart ──────────────
+// No email form: Hotmart collects the email on its hosted page, and its
+// webhook writes the lead and fires CAPI Purchase from it. Attribution rides
+// in `sck`, the one field Hotmart hands back untouched. If the offer is not
+// configured we send the visitor to the /start order form instead, which is
+// the only fallback left and does not involve a second processor.
 function cookie(k: string): string {
   if (typeof document === "undefined") return "";
   const m = document.cookie.match(new RegExp("(?:^|; )" + k.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)"));
@@ -215,54 +205,51 @@ function resolveFbc(): string {
   const fbclid = new URLSearchParams(window.location.search).get("fbclid");
   return fbclid ? `fb.1.${Date.now()}.${fbclid}` : "";
 }
+/** Attribution for the Hotmart handover, from whatever the URL is carrying. */
+function watchTracking(): Record<string, string> {
+  const u = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  return {
+    h: "watch",
+    s: u.get("utm_source") || "",
+    c: u.get("utm_content") || "",
+  };
+}
+
 let checkoutInFlight = false;
-async function startCheckout(bump = bumpOn) {
+async function startCheckout() {
   if (checkoutInFlight) return;
   checkoutInFlight = true;
-  logEvent(bump ? "watch_cta_click_bump" : "watch_cta_click");
-  // Meta InitiateCheckout — express path has no email yet, so fire the pixel
-  // with fbp/fbc-based matching only. Lets Meta optimize on IC (server-side
-  // express checkout intentionally omits it). Email-gated path fires its own.
+  logEvent("watch_cta_click");
+  // Meta InitiateCheckout — the express path has no email yet, so the pixel
+  // fires on fbp/fbc matching only. The email-gated path below fires its own.
   try { gtm.initiateCheckout(""); } catch { /* noop */ }
-  const fallback = () => { window.location.href = "/start#order-form"; };
-  try {
-    const u = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const r = await fetch("/api/checkout/express", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        hero_variant: "watch",
-        bump,
-        fbp: cookie("_fbp"),
-        fbc: resolveFbc(),
-        utm_source: u.get("utm_source") || "",
-        utm_medium: u.get("utm_medium") || "",
-        utm_campaign: u.get("utm_campaign") || "",
-        utm_content: u.get("utm_content") || "",
-      }),
-    });
-    if (!r.ok) { checkoutInFlight = false; fallback(); return; }
-    const { url } = await r.json();
-    if (url) window.location.href = url;
-    else { checkoutInFlight = false; fallback(); }
-  } catch {
+
+  const url = hotmartCheckoutUrl("front", { tracking: watchTracking() });
+  if (!url) {
     checkoutInFlight = false;
-    fallback();
+    logEvent("watch_checkout_unconfigured");
+    window.location.href = "/start#order-form";
+    return;
   }
+  window.location.href = url;
 }
 
 // ─── Email-gated checkout — captures the lead into the recovery drip ─
-// Reuses /api/checkout/public: it upserts the lead (so the abandonment drip
-// enrolls them if they bail on Stripe) AND fires server-side CAPI Lead + IC,
-// then returns a Stripe URL. Used by the exit-intent gate below. Returns true
-// if the redirect started, false so the caller can show an error.
+// Used by the exit-intent gate. POST /api/lead upserts the lead (so the
+// abandonment drip enrols them if they bail on the checkout) and fires
+// server-side CAPI Lead + IC; the redirect is built here. Returns true if the
+// redirect started, false so the caller can show an error.
 async function startCheckoutWithEmail(email: string): Promise<boolean> {
   const v = email.trim().toLowerCase();
   const leadEventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   try { gtm.lead(v, leadEventId); } catch { /* noop */ }
+
+  const url = hotmartCheckoutUrl("front", { email: v, tracking: watchTracking() });
+  if (!url) return false;
+
   try {
     const u = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const r = await fetch("/api/checkout/public", {
+    await fetch("/api/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -277,14 +264,11 @@ async function startCheckoutWithEmail(email: string): Promise<boolean> {
         utm_content: u.get("utm_content") || "",
       }),
     });
-    if (!r.ok) return false;
-    const { url, session_id } = await r.json();
-    try { gtm.initiateCheckout(v, session_id ?? null); } catch { /* noop */ }
-    if (url) { window.location.href = url; return true; }
-    return false;
-  } catch {
-    return false;
-  }
+  } catch { /* the lead is worth having, never worth losing the sale over */ }
+
+  try { gtm.initiateCheckout(v, null); } catch { /* noop */ }
+  window.location.href = url;
+  return true;
 }
 
 // ─── Sound design (WebAudio — no asset files) ───────────────────────
@@ -370,7 +354,6 @@ function Intro({ onDone }: { onDone: () => void }) {
 
 // ─── Billboard (hero) ───────────────────────────────────────────────
 function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () => void }) {
-  const bump = useBump();
   return (
     <div className="relative w-full" style={{ height: "min(56.25vw + 120px, 92vh)", minHeight: 480 }}>
       {/* Static cinematic still (cold-blue, on-brand with the Top 10 set).
@@ -416,12 +399,11 @@ function Billboard({ onPlay, onMoreInfo }: { onPlay: () => void; onMoreInfo: () 
         </p>
         {/* Offer line — the one purchase signal that lives above the fold on every device */}
         <p className="text-[#f5f5f5] text-[0.82rem] sm:text-sm font-semibold mt-2.5 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
-          <span className="text-[#9b9b9b] line-through mr-1.5">{CURRENCY}{anchorPrice(bump)}</span>
-          <span className="text-[#46d369]">{CURRENCY}{todayPrice(bump)} once</span> · lifetime access · 60-day money-back guarantee
-          {bump && <span className="text-[#f0c14b]"> · incl. Recovery Pack</span>}
+          <span className="text-[#9b9b9b] line-through mr-1.5">{CURRENCY}{anchorPrice()}</span>
+          <span className="text-[#46d369]">{CURRENCY}{todayPrice()} once</span> · lifetime access · 60-day money-back guarantee
         </p>
         <p className="text-[#f0c14b] text-[0.68rem] sm:text-[0.72rem] font-bold tracking-wide mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.8)]">
-          Open-beta price. Rises to {CURRENCY}{anchorPrice(bump)} at public launch
+          Open-beta price. Rises to {CURRENCY}{anchorPrice()} at public launch
         </p>
 
         <div className="flex items-center gap-3 mt-4 sm:mt-6">
@@ -617,7 +599,6 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
   const vref = useRef<HTMLVideoElement>(null);
   const [ended, setEnded] = useState(false);
   const [count, setCount] = useState<number | null>(null);
-  const bump = useBump();
   const nextEp = ep ? EPISODES.find((e) => e.n === ep.n + 1) ?? null : null;
 
   useEffect(() => {
@@ -679,15 +660,15 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
               The finale isn't another episode. It's your first full night of sleep.
             </h3>
             <p className="text-[#d2d2d2] text-sm sm:text-base mt-3 max-w-md">
-              Start the 7-night protocol tonight for <span className="text-[#9b9b9b] line-through">{CURRENCY}{anchorPrice(bump)}</span>{" "}
-              <span className="text-[#46d369] font-bold">{CURRENCY}{todayPrice(bump)}</span> during open beta · 60-day money-back guarantee.
+              Start the 7-night protocol tonight for <span className="text-[#9b9b9b] line-through">{CURRENCY}{anchorPrice()}</span>{" "}
+              <span className="text-[#46d369] font-bold">{CURRENCY}{todayPrice()}</span> during open beta · 60-day money-back guarantee.
             </p>
             <button
               type="button"
               onClick={() => { logEvent(`watch_endcard_cta_ep${ep.n}`); startCheckout(); }}
               className="mt-6 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-8 py-3.5 rounded-[4px] transition-colors"
             >
-              <Play className="w-5 h-5 fill-white" /> Start your 7 nights for {CURRENCY}{todayPrice(bump)}
+              <Play className="w-5 h-5 fill-white" /> Start your 7 nights for {CURRENCY}{todayPrice()}
             </button>
 
             {nextEp ? (
@@ -738,7 +719,6 @@ function PlayerModal({ ep, onClose, onPlayEp }: { ep: Episode | null; onClose: (
 
 // ─── "More Info" jaw — series detail + offer ────────────────────────
 function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => void; onPlayEp: (ep: Episode) => void }) {
-  const bump = useBump();
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -777,7 +757,7 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
                 onClick={() => startCheckout()}
                 className="flex items-center gap-2 bg-[#E50914] text-white font-bold rounded-[4px] px-6 py-2 text-sm sm:text-base hover:bg-[#f6121d] transition-colors"
               >
-                Start your 7 nights for {CURRENCY}{todayPrice(bump)}
+                Start your 7 nights for {CURRENCY}{todayPrice()}
               </button>
               <span className="w-9 h-9 rounded-full border-2 border-[#5b5b5b] text-white flex items-center justify-center hover:border-white transition-colors cursor-pointer" title="My List">
                 <Plus className="w-5 h-5" />
@@ -842,7 +822,6 @@ function InfoModal({ open, onClose, onPlayEp }: { open: boolean; onClose: () => 
 // ─── FAQ accordion (Netflix marketing style) ────────────────────────
 function Faq() {
   const [open, setOpen] = useState<number | null>(null);
-  const bump = useBump();
   return (
     <section className="px-[4%] py-12 sm:py-16 max-w-[815px] mx-auto">
       <h2 className="text-white font-extrabold text-2xl sm:text-[2.5rem] text-center mb-6 sm:mb-8">
@@ -876,7 +855,7 @@ function Faq() {
           onClick={() => startCheckout()}
           className="inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-lg sm:text-2xl px-8 py-3.5 rounded-[4px] transition-colors"
         >
-          Start your 7 nights for {CURRENCY}{todayPrice(bump)} <ChevronRight className="w-6 h-6" />
+          Start your 7 nights for {CURRENCY}{todayPrice()} <ChevronRight className="w-6 h-6" />
         </button>
         <p className="text-[#999] text-xs mt-3">One payment · lifetime access · 60-day guarantee</p>
       </div>
@@ -922,7 +901,7 @@ function AuthorityBand() {
 // Express checkout skips email, so abandoners are unrecoverable. This soft
 // gate fires once per session on exit intent (desktop: cursor leaves toward
 // the tab bar; mobile: fast scroll-up after deep engagement). Submitting
-// saves the lead + redirects to Stripe; dismissing costs nothing.
+// saves the lead + redirects to the checkout; dismissing costs nothing.
 function LeadGateModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -942,7 +921,7 @@ function LeadGateModal({ open, onClose }: { open: boolean; onClose: () => void }
     setLoading(true);
     logEvent("watch_leadgate_submit");
     const ok = await startCheckoutWithEmail(v);
-    if (!ok) { setLoading(false); startCheckout(); } // fall back to express Stripe
+    if (!ok) { setLoading(false); startCheckout(); } // fall back to the express handover
   }
   return (
     <div
@@ -1007,7 +986,6 @@ export default function Watch() {
   const [playerEp, setPlayerEp] = useState<Episode | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
-  const bump = useBump(); // Recovery Pack order bump — shared so every CTA moves together
 
   // Bebas Neue for title art — injected here so the rest of the app
   // doesn't pay for it.
@@ -1119,7 +1097,7 @@ export default function Watch() {
               onClick={() => startCheckout()}
               className="bg-[#E50914] hover:bg-[#f6121d] text-white text-[0.78rem] font-bold px-3.5 py-1.5 rounded-[4px] transition-colors"
             >
-              Start for {CURRENCY}{todayPrice(bump)}
+              Start for {CURRENCY}{todayPrice()}
             </button>
           </div>
         </div>
@@ -1174,72 +1152,37 @@ export default function Watch() {
               ))}
             </div>
 
-            {/* ── Order bump — the value ladder's first rung ──────────────
-                The 7 nights get you sleeping. The Recovery Pack keeps you
-                sleeping when life throws a bad night (travel, illness, 3AM
-                anxiety, shift work). Same €19 as the post-purchase OTO —
-                offered here so the buyer can add it in one checkout, lifting
-                AOV without a second transaction. Fulfilled via the express
-                checkout's bump line item + metadata.bump_recovery_pack. */}
-            <button
-              type="button"
-              onClick={() => setBumpGlobal(!bump)}
-              aria-pressed={bump}
-              className="w-full text-left rounded-md mt-5 p-4 sm:p-5 flex items-start gap-3.5 transition-colors border-2 border-dashed"
-              style={{
-                borderColor: bump ? "#46d369" : "#f0c14b",
-                background: bump ? "rgba(70,211,105,0.08)" : "rgba(240,193,75,0.06)",
-              }}
-            >
-              <span
-                className="shrink-0 mt-0.5 w-6 h-6 rounded-[5px] flex items-center justify-center border-2 transition-colors"
-                style={{
-                  borderColor: bump ? "#46d369" : "#8a8a8a",
-                  background: bump ? "#46d369" : "transparent",
-                }}
-              >
-                {bump && <ThumbsUp className="w-3.5 h-3.5 text-black" strokeWidth={3} />}
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="text-[#f0c14b] text-[0.6rem] font-bold uppercase tracking-[0.18em]">Add-on · one click</span>
-                  <span className="text-white text-[0.98rem] font-bold">
-                    Yes, add the Recovery Pack for {CURRENCY}{BUMP_PRICE}
-                  </span>
-                </span>
-                <span className="block text-[#c9c9c9] text-[0.83rem] leading-snug mt-1">
-                  7 guided sessions for the nights the old pattern tries to come back: jet lag, illness, 3 AM anxiety, Sunday-night dread, shift work. Relapse insurance for your sleep.
-                  <span className="text-[#9b9b9b]"> Normally sold for {CURRENCY}{BUMP_PRICE} after you finish. Grab it now in the same checkout.</span>
-                </span>
-              </span>
-            </button>
+            {/* ── Order bump ──────────────────────────────────────────────
+                The Recovery Pack was ticked here and paid for as a second line
+                item on the Stripe session. On Hotmart it is a native order bump
+                on the checkout itself, one screen later and one click. Keeping
+                a toggle here as well would show a total this page cannot charge
+                and invite a second €19. It is offered where it is charged. */}
 
-            {/* Offer bar — price, guarantee, CTA (total reflects the bump) */}
+            {/* Offer bar — price, guarantee, CTA */}
             <div
               className="rounded-md mt-3 px-6 sm:px-9 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
               style={{ background: "linear-gradient(90deg, #1f1f1f 0%, #2a1215 60%, #3d090e 100%)" }}
             >
               <div className="flex-1">
                 <div className="flex items-baseline gap-2.5 mb-1">
-                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{anchorPrice(bump)}</span>
-                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{todayPrice(bump)}</span>
+                  <span className="text-[#9b9b9b] text-lg sm:text-xl line-through">{CURRENCY}{anchorPrice()}</span>
+                  <span className="text-white text-2xl sm:text-3xl font-extrabold leading-none">{CURRENCY}{todayPrice()}</span>
                   <span className="text-[#f0c14b] text-[0.62rem] font-bold uppercase tracking-[0.15em] border border-[#f0c14b]/40 rounded px-1.5 py-0.5">Open beta</span>
                 </div>
                 <p className="text-white text-base sm:text-lg font-extrabold leading-tight">
                   One payment. No subscription, ever.
                 </p>
                 <p className="text-[#d2d2d2] text-sm mt-1">
-                  {bump
-                    ? <>7-night protocol <span className="text-white font-semibold">+ Recovery Pack</span> for {CURRENCY}{PRICE_TODAY} + {CURRENCY}{BUMP_PRICE}. One payment, lifetime access to both. 60-day money-back guarantee on the whole order.</>
-                    : <>Locked at {CURRENCY}{PRICE_TODAY} during open beta. Rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.</>}
+                  Locked at {CURRENCY}{PRICE_TODAY} during open beta. Rises to {CURRENCY}{PRICE_ANCHOR} at public launch. Finish the 7 nights; if your sleep hasn't changed, every cent back. 60-day guarantee.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => startCheckout(bump)}
+                onClick={() => startCheckout()}
                 className="shrink-0 inline-flex items-center gap-2 bg-[#E50914] hover:bg-[#f6121d] text-white font-bold text-base sm:text-lg px-7 py-3.5 rounded-[4px] transition-colors"
               >
-                <Play className="w-5 h-5 fill-white" /> Start Night 1 for {CURRENCY}{todayPrice(bump)}
+                <Play className="w-5 h-5 fill-white" /> Start Night 1 for {CURRENCY}{todayPrice()}
               </button>
             </div>
           </div>
@@ -1281,7 +1224,7 @@ export default function Watch() {
             onClick={() => startCheckout()}
             className="flex items-center justify-center gap-2 bg-[#E50914] text-white font-bold text-base py-3 rounded-[4px] w-full"
           >
-            <Play className="w-5 h-5 fill-white" /> Start your 7 nights for {CURRENCY}{todayPrice(bump)}
+            <Play className="w-5 h-5 fill-white" /> Start your 7 nights for {CURRENCY}{todayPrice()}
           </button>
         </div>
       )}

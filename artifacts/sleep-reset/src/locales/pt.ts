@@ -304,7 +304,7 @@ const pt: Dict = {
     guarantee: "Faça as sete noites. Se o seu sono não tiver mudado, devolvemos tudo. 60 dias.",
     cta: "Começar hoje por {price}",
     ctaBusy: "Abrindo o pagamento",
-    ctaMicro: "Pagamento seguro pela Stripe. Não precisa de conta para começar.",
+    ctaMicro: "Pagamento seguro pela Hotmart. Não precisa de conta para começar.",
     checkoutError: "O pagamento não abriu. Tente novamente.",
     faqLabel: "Antes de decidir",
     faq: [

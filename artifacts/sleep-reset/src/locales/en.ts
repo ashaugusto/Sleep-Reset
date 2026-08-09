@@ -309,7 +309,7 @@ const en: Dict = {
     guarantee: "Finish the seven nights. If your sleep hasn't changed, every cent back. 60 days.",
     cta: "Start tonight for {price}",
     ctaBusy: "Taking you to checkout",
-    ctaMicro: "Secure checkout by Stripe. No account needed to start.",
+    ctaMicro: "Secure checkout by Hotmart. No account needed to start.",
     checkoutError: "Checkout didn't open. Please try again.",
     faqLabel: "Before you decide",
     faq: [

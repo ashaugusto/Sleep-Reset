@@ -8,6 +8,7 @@ import {
 import { customFetch } from "@/lib/fetch";
 import { useToast } from "@/hooks/use-toast";
 import { gtm } from "@/lib/gtm";
+import { hotmartCheckoutUrl } from "@/lib/offers";
 
 // ─── Brand & Pricing ────────────────────────────────
 const BRAND = "Sleep Wired";
@@ -416,7 +417,6 @@ function OrderForm({ id, priceToday, prefillEmail, prefillWhatsapp }: {
   const [email, setEmail] = useState(prefillEmail || "");
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState(prefillWhatsapp || "");
-  const [bump, setBump] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   // Hydrate after async fetch on parent
@@ -452,28 +452,45 @@ function OrderForm({ id, priceToday, prefillEmail, prefillWhatsapp }: {
       // Shared event_id so browser fbq Lead and server-side CAPI Lead dedupe
       const leadEventId = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
       gtm.lead(email.trim(), leadEventId);
-      const r = await customFetch("/api/checkout/public", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          name: name.trim() || null,
-          whatsapp: whatsapp.trim() || null,
-          hero_variant: heroVariant,
-          fbp: cookieValue("_fbp"),
-          fbc: resolveFbc(),
-          lead_event_id: leadEventId,
-          bump,
-          ...utm,
-        }),
+      // Hotmart is a hosted checkout: the URL is built here, from the offer
+      // codes in the build, and there is no session to ask the API for. If it
+      // comes back empty the offer is not configured — say so rather than send
+      // a buyer to a dead page.
+      const url = hotmartCheckoutUrl("front", {
+        email: email.trim(),
+        tracking: {
+          h: heroVariant,
+          s: utm.utm_source,
+          c: utm.utm_content,
+        },
       });
-      if (!r.ok) {
-        const body = await r.json().catch(() => ({ message: "Could not start checkout." }));
-        toast({ title: body.message ?? "Checkout failed", variant: "destructive" });
+      if (!url) {
+        toast({ title: "Checkout is temporarily unavailable. Please try again shortly.", variant: "destructive" });
         return;
       }
-      const { url, session_id } = await r.json();
-      gtm.initiateCheckout(email.trim(), session_id ?? null);
+
+      // Write the lead down first: it is what enrols an abandoned checkout in
+      // the follow-up drip and what fires CAPI Lead and InitiateCheckout from
+      // our server. It must never hold up the sale, so a failure here is
+      // swallowed and the buyer goes to Hotmart anyway.
+      try {
+        await customFetch("/api/lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            name: name.trim() || null,
+            whatsapp: whatsapp.trim() || null,
+            hero_variant: heroVariant,
+            fbp: cookieValue("_fbp"),
+            fbc: resolveFbc(),
+            lead_event_id: leadEventId,
+            ...utm,
+          }),
+        });
+      } catch { /* noop */ }
+
+      gtm.initiateCheckout(email.trim(), null);
       window.location.href = url;
     } catch {
       toast({ title: "Network error. Please try again.", variant: "destructive" });
@@ -527,20 +544,10 @@ function OrderForm({ id, priceToday, prefillEmail, prefillWhatsapp }: {
           Instant access — you set your password right after checkout.
         </p>
 
-        <label className="flex items-start gap-3 p-3.5 bg-[#FAF3E0] border border-[#E8D8A8] rounded-xl cursor-pointer">
-          <input
-            type="checkbox"
-            checked={bump}
-            onChange={(e) => setBump(e.target.checked)}
-            className="mt-0.5 w-4 h-4 accent-[#C9A14A] shrink-0"
-          />
-          <span className="text-sm text-[#1F2937] leading-snug">
-            <strong>Yes — add the Recovery Pack for {CURRENCY}19</strong>
-            <span className="block text-[#6B7280] text-xs mt-0.5">
-              The toolkit for when life knocks sleep out of rhythm — jet-lag, 3 AM anxiety, stress weeks, shift work. Lock in your results for life.
-            </span>
-          </span>
-        </label>
+        {/* The Recovery Pack used to be a checkbox here. It is now the native
+            order bump on the Hotmart checkout, one screen later, where it is
+            one click and no second charge. Ticking it in both places is how a
+            buyer pays 19 EUR twice. */}
 
         <button
           type="submit"
@@ -553,7 +560,7 @@ function OrderForm({ id, priceToday, prefillEmail, prefillWhatsapp }: {
         </button>
 
         <div className="flex items-center justify-center gap-4 pt-1">
-          <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]"><Lock className="w-3 h-3" /> Secured by Stripe</span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]"><Lock className="w-3 h-3" /> Secure checkout by Hotmart</span>
           <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]"><Shield className="w-3 h-3" /> {GUARANTEE_DAYS}-day refund · keep everything</span>
         </div>
       </form>
@@ -1090,7 +1097,7 @@ export default function Landing() {
           {[
             {
               q: "Do I need to create an account before paying?",
-              a: "No. Enter your email, pay through Stripe, then set your password right after. Your account is created automatically — zero friction. You're inside the protocol in under 2 minutes.",
+              a: "No. Enter your email, pay through our checkout, then set your password right after. Your account is created automatically — zero friction. You're inside the protocol in under 2 minutes.",
             },
             {
               q: "Does this really work for anxiety-driven insomnia?",

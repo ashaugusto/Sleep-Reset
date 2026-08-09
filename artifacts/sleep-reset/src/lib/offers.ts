@@ -1,5 +1,4 @@
 import { PRICE_TODAY, PRICE_ANCHOR, BUMP_PRICE, type Profile } from "@/lib/quiz-data";
-import type { Locale } from "@/lib/i18n";
 
 // ─── The product ladder ──────────────────────────────────────────────────────
 // Every offer we sell, in one place, in the order the buyer meets them. Until
@@ -59,25 +58,26 @@ export const OFFERS: Record<Rung, Offer> = {
 };
 
 // ─── Where the money is taken ────────────────────────────────────────────────
-// Hotmart costs 9.9% + 0.50 USD against Stripe's ~2.9%, and gives back three
-// things Stripe does not: the funnel mechanics as configuration rather than
-// code, merchant-of-record status for EU VAT, and an affiliate market. Ash
-// chose Hotmart for every market, so VITE_HOTMART_LOCALES is meant to stay
-// empty and every language checks out on Hotmart. The extra fee in EN and FR
-// buys one panel and one set of funnel rules instead of two of each.
+// Hotmart, and only Hotmart. Decided by Ash on 9 Aug 2026 in FLU-143: Stripe is
+// abandoned, the whole structure and the whole funnel live on Hotmart.
 //
-// The filter stays in the code as the way back: setting VITE_HOTMART_LOCALES
-// to "pt,es" sends EN and FR to Stripe again without a deploy of new logic.
-// Stripe also remains the fallback whenever a rung has no offer code, so a
-// half-configured Hotmart never becomes a dead button.
+// Hotmart costs 9.9% + 0.50 USD against Stripe's ~2.9%, and gives back three
+// things Stripe did not: the funnel mechanics as configuration rather than
+// code, merchant-of-record status for EU VAT, and an affiliate market. One
+// panel and one set of funnel rules for every market, instead of two of each.
+//
+// There is deliberately no second processor and no fallback. A fallback is what
+// turns "we sell on Hotmart" into two half-maintained checkouts, and it is what
+// made a missing offer code silently charge somebody through the other one. A
+// rung with no offer code now returns "" and the page says so, loudly, to us.
+// Stripe survives in the API for exactly one thing: verifying a sale that was
+// already made there, so nobody who paid before today is stranded.
 //
 // Vite inlines import.meta.env only for statically written keys, so every
 // variable below is spelled out. Dynamic lookup silently yields undefined in a
-// production build, which would fail as a quiet fallback to Stripe.
+// production build, which here would mean a dead buy button.
 
 const ENV: Record<string, string> = {
-  provider: String(import.meta.env.VITE_CHECKOUT_PROVIDER || ""),
-  hotmartLocales: String(import.meta.env.VITE_HOTMART_LOCALES || ""),
   product: String(import.meta.env.VITE_HOTMART_PRODUCT || ""),
   front: String(import.meta.env.VITE_HOTMART_OFF_FRONT || ""),
   frontMaintenance: String(import.meta.env.VITE_HOTMART_OFF_FRONT_MAINTENANCE || ""),
@@ -105,20 +105,13 @@ const FRONT_BY_PROFILE: Record<Profile, string> = {
   circadian: ENV.frontCircadian,
 };
 
-export type Provider = "stripe" | "hotmart";
-
-/** Which processor takes this visitor's money. Stripe unless told otherwise. */
-export function providerFor(locale: Locale): Provider {
-  if (!ENV.product) return "stripe";
-  if (ENV.provider === "hotmart") {
-    const only = ENV.hotmartLocales
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (only.length && !only.includes(locale)) return "stripe";
-    return "hotmart";
-  }
-  return "stripe";
+/**
+ * True once the Hotmart product code is in the build. False means no rung can
+ * be sold at all, which is a deploy problem, not a visitor problem: the pages
+ * show their error copy instead of a button that goes nowhere.
+ */
+export function isCheckoutConfigured(): boolean {
+  return !!ENV.product;
 }
 
 /** The Hotmart offer code for a rung, or "" when it has not been created yet. */
@@ -151,9 +144,9 @@ function buildSck(ctx: CheckoutContext): string {
 }
 
 /**
- * The hosted checkout URL, or "" when this rung has no offer configured. An
- * empty string is the caller's signal to fall back to Stripe rather than send
- * somebody to a broken page.
+ * The hosted checkout URL, or "" when this rung has no offer configured yet.
+ * An empty string is the caller's signal to keep the button off the page (or
+ * to show the checkout error) rather than send somebody to a broken page.
  */
 export function hotmartCheckoutUrl(rung: Rung, ctx: CheckoutContext = {}): string {
   const off = offerCode(rung, ctx.profile);

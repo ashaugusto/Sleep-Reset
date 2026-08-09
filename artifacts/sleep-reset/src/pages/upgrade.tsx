@@ -5,8 +5,8 @@ import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Headphones, Check, Loader2 } from "lucide-react";
-import { customFetch } from "@/lib/fetch";
 import { toast } from "@/hooks/use-toast";
+import { hotmartCheckoutUrl } from "@/lib/offers";
 
 const RECOVERY_PACK = [
   { slug: "jet-lag", title: "Jet Lag Reset", desc: "Resolve time-zone shifts in 3 nights" },
@@ -31,22 +31,23 @@ export default function Upgrade() {
 
   const alreadyOwns = !!user?.premiumPurchasedAt;
 
-  const handleCheckout = async () => {
+  // Hotmart is the only checkout. Nothing is created server-side: the buyer is
+  // handed to the hosted page for the Recovery Pack offer with their email
+  // prefilled, and the webhook grants the pack when the payment clears. The
+  // email is what ties the sale back to this account, so an account with no
+  // email on it cannot buy here — that is a data problem, not a payment one.
+  const handleCheckout = () => {
     setLoading(true);
-    try {
-      const r = await customFetch("/api/checkout/upgrade", { method: "POST", credentials: "include" });
-      if (!r.ok) {
-        const body = await r.json().catch(() => ({ message: "Could not start checkout." }));
-        toast({ title: body.message ?? "Checkout failed", variant: "destructive" });
-        return;
-      }
-      const { url } = await r.json();
-      window.location.href = url;
-    } catch {
-      toast({ title: "Network error. Please try again.", variant: "destructive" });
-    } finally {
+    const url = hotmartCheckoutUrl("bump", {
+      email: user?.email ?? undefined,
+      tracking: { h: isOto ? "oto" : "upgrade" },
+    });
+    if (!url) {
       setLoading(false);
+      toast({ title: "Checkout is temporarily unavailable. Please try again shortly.", variant: "destructive" });
+      return;
     }
+    window.location.href = url;
   };
 
   return (

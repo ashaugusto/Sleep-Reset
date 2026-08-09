@@ -5,6 +5,35 @@ import { db, usersTable, leadsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { sendCapiEvent } from "../lib/meta-capi";
 
+// ─── What is left of payments once Stripe stops taking money ─────────────────
+// FLU-143, decided by Ash on 9 Aug 2026: Stripe is abandoned, the structure and
+// the funnel live on Hotmart. Hotmart is a hosted checkout, so there is no
+// session for us to create and nothing here builds a checkout any more. The
+// three routes that did — /checkout/public, /checkout/express, /checkout/upgrade
+// — are gone rather than left returning 503, because a dead route that answers
+// politely is a route somebody wires a button to again by accident.
+//
+// Two things survive, for two different reasons:
+//
+//   POST /lead          the half of /checkout/public that was never about
+//                       Stripe. It writes the visitor down before we hand them
+//                       to Hotmart, which is what enrols them in the
+//                       abandonment drip and what fires CAPI Lead and
+//                       InitiateCheckout from our server instead of from a
+//                       redirect we do not control.
+//
+//   GET  /auth/claim    read-only verification of a Stripe session. Nobody new
+//                       can reach it, but the people who bought before today
+//                       have success links with ?session_id= in their inbox and
+//                       a working /welcome is the difference between them
+//                       getting their account and emailing support. It is the
+//                       only Stripe call left in the request path, it creates
+//                       nothing, and it can be deleted once those links are
+//                       older than anyone will click.
+//
+// Hotmart's own routes live in routes/hotmart.ts. That is where a sale is
+// recorded, access is granted, and CAPI Purchase is fired.
+
 const router: IRouter = Router();
 
 function clientIp(req: Request): string | null {
@@ -12,14 +41,12 @@ function clientIp(req: Request): string | null {
   return xfwd || req.socket.remoteAddress || null;
 }
 
-// ─── Public checkout — no account required ───────────────────────────────────
-router.post("/checkout/public", async (req: Request, res: Response) => {
-  if (!isStripeConfigured()) {
-    res.status(503).json({ message: "Payment is not configured yet. Please try again shortly." });
-    return;
-  }
-
-  const { email, name, whatsapp, hero_variant, fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, lead_event_id, bump } = req.body as {
+// ─── Lead capture, immediately before the handover to Hotmart ────────────────
+// Called by the pages that ask for an email before sending the visitor to the
+// checkout. Never blocks the sale: the caller redirects to Hotmart whatever
+// this answers, so the worst case is a lost drip enrolment, not a lost buyer.
+router.post("/lead", async (req: Request, res: Response) => {
+  const { email, name, whatsapp, hero_variant, fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, lead_event_id } = req.body as {
     email?: string;
     name?: string;
     whatsapp?: string;
@@ -31,7 +58,6 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
     utm_campaign?: string;
     utm_content?: string;
     lead_event_id?: string;
-    bump?: boolean;
   };
   if (!email) {
     res.status(400).json({ message: "Email is required" });
@@ -43,9 +69,9 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   const whatsappClean = whatsapp?.trim().replace(/[^\d+]/g, "").slice(0, 20) || null;
   const heroVariantClean = (hero_variant ?? "default").toString().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32) || "default";
 
-  // Persist lead (upsert on email — non-blocking for checkout flow)
+  let leadId: string | null = null;
   try {
-    await db.insert(leadsTable).values({
+    const rows = await db.insert(leadsTable).values({
       email: emailTrimmed,
       name: nameTrimmed,
       whatsapp: whatsappClean,
@@ -74,69 +100,16 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
         userAgent: sql`COALESCE(EXCLUDED.user_agent, ${leadsTable.userAgent})`,
         updatedAt: new Date(),
       },
-    });
+    }).returning({ id: leadsTable.id });
+    leadId = rows[0]?.id ?? null;
   } catch (e) {
-    console.error("[checkout/public] lead persist failed:", e);
-    // continue — don't block Stripe flow on DB issue
-  }
-
-  const stripe = getStripeClient();
-  const priceId = process.env.STRIPE_PRICE_ID || process.env.VITE_STRIPE_PRICE_ID;
-
-  if (!priceId) {
-    res.status(503).json({ message: "Product not configured. Please contact support." });
+    console.error("[lead] persist failed:", e);
+    res.status(200).json({ ok: false });
     return;
   }
 
-  const existing = await stripe.customers.list({ email: emailTrimmed, limit: 1 });
-  let customer = existing.data[0];
-  if (!customer) {
-    customer = await stripe.customers.create({ email: emailTrimmed, name: nameTrimmed ?? undefined });
-  }
-
-  const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  const basePath = process.env.APP_URL ? "" : "/sleep-reset";
-  const baseUrl = `${appUrl}${basePath}`;
-
-  // Order bump: the Recovery Pack (€19) added as a 2nd line item if the buyer checked it.
-  const bumpPriceId = process.env.STRIPE_PRICE_PREMIUM;
-  const wantsBump = bump === true && !!bumpPriceId;
-  const lineItems: { price: string; quantity: number }[] = [{ price: priceId, quantity: 1 }];
-  if (wantsBump) lineItems.push({ price: bumpPriceId as string, quantity: 1 });
-
-  const session = await stripe.checkout.sessions.create({
-    customer: customer.id,
-    payment_method_types: ["card"],
-    line_items: lineItems,
-    mode: "payment",
-    success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/`,
-    metadata: {
-      email: emailTrimmed,
-      name: nameTrimmed ?? "",
-      whatsapp: whatsappClean ?? "",
-      hero_variant: heroVariantClean,
-      fbp: fbp ?? "",
-      fbc: fbc ?? "",
-      utm_source: utm_source ?? "",
-      utm_campaign: utm_campaign ?? "",
-      bump_recovery_pack: wantsBump ? "1" : "",
-    },
-  });
-
-  // Stash session_id on lead for later webhook reconciliation
-  let leadId: string | null = null;
-  try {
-    const updated = await db.update(leadsTable)
-      .set({ stripeSessionId: session.id, updatedAt: new Date() })
-      .where(eq(leadsTable.email, emailTrimmed))
-      .returning({ id: leadsTable.id });
-    leadId = updated[0]?.id ?? null;
-  } catch (e) {
-    console.error("[checkout/public] session_id update failed:", e);
-  }
-
-  // CAPI Lead + InitiateCheckout — deterministic attribution (immune to ITP/adblocker)
+  // CAPI Lead + InitiateCheckout — deterministic attribution (immune to ITP and
+  // adblockers). Purchase is fired later, by the Hotmart webhook.
   const userData = {
     email: emailTrimmed,
     phone: whatsappClean,
@@ -156,7 +129,7 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
   const eventSourceUrl = `${process.env.APP_URL || "https://sleepwired.com"}/`;
   try {
     if (leadId) {
-      // Prefer browser-generated event_id so fbq Lead and CAPI Lead dedupe; fallback to leadId
+      // Prefer the browser-generated event_id so fbq Lead and CAPI Lead dedupe.
       void sendCapiEvent({
         eventName: "Lead",
         eventId: lead_event_id && lead_event_id.length > 0 ? lead_event_id : leadId,
@@ -164,101 +137,22 @@ router.post("/checkout/public", async (req: Request, res: Response) => {
         userData,
         customData,
       });
+      void sendCapiEvent({
+        eventName: "InitiateCheckout",
+        eventId: `ic_${leadId}`,
+        eventSourceUrl,
+        userData,
+        customData: { ...customData, numItems: 1 },
+      });
     }
-    // IC event_id = session.id; browser fbq IC fires with eventID=transaction_id (also session.id) → dedupe
-    void sendCapiEvent({
-      eventName: "InitiateCheckout",
-      eventId: session.id,
-      eventSourceUrl,
-      userData,
-      customData: { ...customData, numItems: 1 },
-    });
   } catch (e) {
-    console.error("[checkout/public] CAPI Lead/IC dispatch failed (non-fatal):", e);
+    console.error("[lead] CAPI dispatch failed (non-fatal):", e);
   }
 
-  res.json({ url: session.url, session_id: session.id });
+  res.json({ ok: true, lead_id: leadId });
 });
 
-// ─── Express checkout — Start → Stripe directly (email collected by Stripe) ───
-// No pre-payment email/lead capture (product decision: optimize for Purchase,
-// not intermediate Lead/IC). Stripe collects the email on its hosted page; the
-// /api/stripe/webhook handler upserts the lead and fires CAPI Purchase from
-// customer_details.email + the fbp/fbc/utm we stash in the session metadata.
-router.post("/checkout/express", async (req: Request, res: Response) => {
-  if (!isStripeConfigured()) {
-    res.status(503).json({ message: "Payment is not configured yet. Please try again shortly." });
-    return;
-  }
-
-  const {
-    fbp, fbc, utm_source, utm_medium, utm_campaign, utm_content, hero_variant, bump,
-    source, quiz_profile, profile_type, locale, cancel_path,
-  } = req.body as {
-    fbp?: string; fbc?: string; utm_source?: string; utm_medium?: string;
-    utm_campaign?: string; utm_content?: string; hero_variant?: string; bump?: boolean;
-    // Sent by /plan: which quiz profile and type this sale came from, the
-    // language the offer was read in, and where to land a cancelled checkout.
-    source?: string; quiz_profile?: string; profile_type?: string;
-    locale?: string; cancel_path?: string;
-  };
-
-  const stripe = getStripeClient();
-  const priceId = process.env.STRIPE_PRICE_ID || process.env.VITE_STRIPE_PRICE_ID;
-  if (!priceId) {
-    res.status(503).json({ message: "Product not configured. Please contact support." });
-    return;
-  }
-
-  const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  const basePath = process.env.APP_URL ? "" : "/sleep-reset";
-  const baseUrl = `${appUrl}${basePath}`;
-  const heroVariantClean = (hero_variant ?? "watch").toString().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32) || "watch";
-
-  // Cancel destination. Client-supplied, so it is whitelisted to a same-site
-  // absolute path: an open redirect on a Stripe cancel_url is a phishing hop
-  // straight off a page the visitor already trusts.
-  const cancelPath =
-    typeof cancel_path === "string" && /^\/[A-Za-z0-9\-._~/?&=%+]*$/.test(cancel_path) && !cancel_path.startsWith("//")
-      ? cancel_path.slice(0, 512)
-      : "/";
-
-  // Order bump: the Recovery Pack (€19) added as a 2nd line item if the buyer checked it.
-  // The account-claim flow (routes/auth.ts) grants premium access off metadata.bump_recovery_pack.
-  const bumpPriceId = process.env.STRIPE_PRICE_PREMIUM;
-  const wantsBump = bump === true && !!bumpPriceId;
-  const lineItems: { price: string; quantity: number }[] = [{ price: priceId, quantity: 1 }];
-  if (wantsBump) lineItems.push({ price: bumpPriceId as string, quantity: 1 });
-
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: lineItems,
-    mode: "payment",
-    customer_creation: "always",
-    success_url: `${baseUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}${cancelPath}`,
-    metadata: {
-      source: (source ?? "watch_express").toString().replace(/[^a-z0-9_-]/gi, "").slice(0, 32) || "watch_express",
-      hero_variant: heroVariantClean,
-      bump_recovery_pack: wantsBump ? "1" : "",
-      quiz_profile: (quiz_profile ?? "").slice(0, 64),
-      profile_type: (profile_type ?? "").replace(/[^a-z]/g, "").slice(0, 16),
-      locale: (locale ?? "").replace(/[^a-z]/g, "").slice(0, 8),
-      fbp: (fbp ?? "").slice(0, 200),
-      fbc: (fbc ?? "").slice(0, 200),
-      utm_source: (utm_source ?? "").slice(0, 100),
-      utm_medium: (utm_medium ?? "").slice(0, 100),
-      utm_campaign: (utm_campaign ?? "").slice(0, 100),
-      utm_content: (utm_content ?? "").slice(0, 100),
-      ip: clientIp(req) ?? "",
-      ua: ((req.headers["user-agent"] as string | undefined) ?? "").slice(0, 480),
-    },
-  });
-
-  res.json({ url: session.url, session_id: session.id });
-});
-
-// ─── Verify payment session (GET — returns email/name from Stripe) ────────────
+// ─── Legacy: verify a Stripe session (read-only, pre-Hotmart buyers) ─────────
 router.get("/auth/claim", async (req: Request, res: Response) => {
   if (!isStripeConfigured()) {
     res.status(503).json({ message: "Not configured" });
@@ -296,54 +190,6 @@ router.get("/auth/claim", async (req: Request, res: Response) => {
   } catch {
     res.status(400).json({ message: "Invalid session" });
   }
-});
-
-// ─── Upgrade checkout (Recovery Pack €19) ────────────────────────────────────
-router.post("/checkout/upgrade", requireAuth, async (req: Request, res: Response) => {
-  if (!isStripeConfigured()) {
-    res.status(503).json({ message: "Payment is not configured yet." });
-    return;
-  }
-  const priceId = process.env.STRIPE_PRICE_PREMIUM;
-  if (!priceId) {
-    res.status(503).json({ message: "Premium product not configured." });
-    return;
-  }
-
-  const userId = req.userId!;
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-  if (!user || !user.email) {
-    res.status(400).json({ message: "User not found." });
-    return;
-  }
-  if (user.premiumPurchasedAt) {
-    res.status(409).json({ message: "Already upgraded." });
-    return;
-  }
-
-  const stripe = getStripeClient();
-  const existing = await stripe.customers.list({ email: user.email, limit: 1 });
-  let customer = existing.data[0];
-  if (!customer) {
-    customer = await stripe.customers.create({ email: user.email, name: user.name ?? undefined });
-  }
-
-  const appUrl = process.env.APP_URL || "https://sleepwired.com";
-  const session = await stripe.checkout.sessions.create({
-    customer: customer.id,
-    payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
-    mode: "payment",
-    success_url: `${appUrl}/dashboard?upgraded=1`,
-    cancel_url: `${appUrl}/upgrade?canceled=1`,
-    metadata: {
-      product: "recovery_pack",
-      user_id: userId,
-      email: user.email,
-    },
-  });
-
-  res.json({ url: session.url });
 });
 
 // ─── Purchase status ──────────────────────────────────────────────────────────
