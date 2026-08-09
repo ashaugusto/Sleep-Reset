@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n, fill, money } from "@/lib/i18n";
 import { OFFERS, hotmartCheckoutUrl } from "@/lib/offers";
 import { FunnelHeader } from "@/components/funnel-chrome";
+import { FunnelWidget, widgetMarkup } from "@/components/funnel-widget";
 import { logEvent, haptic } from "@/lib/funnel-track";
+import widgetSource from "@/funnel-widgets/oto1.html?raw";
 import "@/styles/funnel.css";
 
 // ─── OTO 1: the 3AM Relapse Kit ──────────────────────────────────────────────
@@ -25,13 +27,22 @@ import "@/styles/funnel.css";
 // available on this screen, so the decline is a real link, styled to be found,
 // not a grey whisper under the fold.
 //
-// The `micro` line in the copy ("your card is not asked for again") is
-// deliberately not rendered yet. It is true of Hotmart's one-click widget and
-// false of a plain checkout link, and this ships with the checkout link because
-// that is the path that works today. It goes back on the page the day the
-// funnel widget replaces the button below.
+// Two ways to say yes, and the page picks by itself. Hotmart's funnel step
+// generates a widget, pasted into src/funnel-widgets/oto1.html, that holds the
+// real one click buttons: the card already on file is charged without a second
+// checkout. While that file is empty the button below opens a normal checkout
+// instead, which sells the kit but asks for the card a second time ninety
+// seconds after the first. The `micro` line ("your card is not asked for
+// again") is only true of the widget, so it is only shown with the widget.
+//
+// An embed that never draws is treated as no embed: the widget reports back
+// whether it made it onto the screen, and if it did not, our own buttons come
+// back. The one thing this page must never be is a page a buyer cannot leave.
 
 const TRANSACTION_KEYS = ["transaction", "trans", "hotmart_transaction", "tid"];
+
+/** The Hotmart funnel widget, or "" while nobody has pasted one in. */
+const WIDGET = widgetMarkup(widgetSource);
 
 export default function Kit() {
   const { t } = useI18n();
@@ -59,12 +70,24 @@ export default function Kit() {
     tracking: { h: "oto1", tx: transaction || null },
   });
 
+  // null while the widget is still deciding whether it exists on screen. false
+  // means fall back to our own buttons, which is also where a page with no
+  // widget pasted starts.
+  const [widgetLive, setWidgetLive] = useState<boolean | null>(WIDGET ? null : false);
+
+  const onWidgetSettled = useCallback((live: boolean) => {
+    setWidgetLive(live);
+    // A widget that was pasted and then did not draw is the expensive silent
+    // failure here: the page looks fine and the one click upsell is gone.
+    logEvent(live ? "kit_widget" : "kit_widget_dead");
+  }, []);
+
   useEffect(() => {
     logEvent("kit_view");
-    // An OTO with no offer code is not a visitor-facing failure, it is a deploy
-    // one: the page still works, it just has nothing to sell. Worth a line in
-    // the log so it shows up as lost revenue rather than as silence.
-    if (!checkoutUrl) logEvent("kit_unconfigured");
+    // Nothing to sell at all: no widget pasted and no offer code in the build.
+    // Not a visitor-facing failure, a deploy one, and worth a line in the log so
+    // it shows up as lost revenue rather than as silence.
+    if (!checkoutUrl && !WIDGET) logEvent("kit_unconfigured");
   }, [checkoutUrl]);
 
   const buy = () => {
@@ -137,22 +160,33 @@ export default function Kit() {
           </p>
           <p className="fnl-body mb-5">{fill(c.priceLine, { price })}</p>
 
-          {checkoutUrl ? (
-            <button className="fnl-cta" onClick={buy} disabled={busy}>
-              {c.cta}
-            </button>
-          ) : (
-            // No offer code, no button. The buyer is not told the kit exists
-            // and then handed a dead link; they go on to what they paid for.
-            <button className="fnl-cta" onClick={decline}>
-              {c.decline}
-            </button>
+          {/* Hotmart's own Yes and No, charging the card already on file. Both
+              answers live inside the embed, which is why ours are not rendered
+              next to it. */}
+          {WIDGET && widgetLive !== false && (
+            <>
+              <FunnelWidget html={WIDGET} onSettled={onWidgetSettled} className="fnl-widget" />
+              <p className="fnl-micro mt-3">{c.micro}</p>
+            </>
           )}
+
+          {widgetLive === false &&
+            (checkoutUrl ? (
+              <button className="fnl-cta" onClick={buy} disabled={busy}>
+                {c.cta}
+              </button>
+            ) : (
+              // No offer code, no button. The buyer is not told the kit exists
+              // and then handed a dead link; they go on to what they paid for.
+              <button className="fnl-cta" onClick={decline}>
+                {c.decline}
+              </button>
+            ))}
 
           <p className="fnl-micro mt-3">{c.guarantee}</p>
         </div>
 
-        {checkoutUrl && (
+        {widgetLive === false && checkoutUrl && (
           <button className="fnl-ghost mt-6" onClick={decline}>
             {c.decline}
           </button>

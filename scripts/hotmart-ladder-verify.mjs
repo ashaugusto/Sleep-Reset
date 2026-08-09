@@ -360,8 +360,10 @@ async function main() {
   const results = [];
   for (const t of live) results.push(await verifyOffer(t));
 
+  const widget = funnelWidgetState();
+
   if (args.json) {
-    console.log(JSON.stringify({ expectWarranty, promised, copyProblems, results, pending }, null, 2));
+    console.log(JSON.stringify({ expectWarranty, promised, copyProblems, results, pending, widget }, null, 2));
     return results.every((r) => r.ok) && !copyProblems.length ? 0 : 1;
   }
 
@@ -392,9 +394,36 @@ async function main() {
     for (const p of pending) console.log(`     ${p.label.padEnd(18)} missing ${p.missing.join(", ")}`);
   }
 
+  console.log(
+    `\nOTO one click: ${widget.pasted ? "widget pasted, /kit charges the card on file" : "no widget, /kit opens a second checkout"}`,
+  );
+  if (!widget.pasted) {
+    console.log(`     Produtos > Funil de Vendas > the OTO step > </> , paste into`);
+    console.log(`     ${widget.file}`);
+  }
+
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} live rungs match the repo, ${pending.length} still to create.`);
   return failed.length || copyProblems.length ? 1 : 0;
+}
+
+// ─── The half of the OTO that is neither price nor warranty ──────────────────
+// A rung can match the repo on every number and still be sold the slow way. The
+// Funil de Vendas generates a widget per step, and until that widget is pasted
+// into the page, /kit sells the kit through a normal checkout link: the buyer
+// types the card a second time, ninety seconds after typing it the first. It
+// works, so nothing here fails because of it, but it is the difference between
+// an upsell and a link and it is invisible from the panel and from the page.
+//
+// Reported, never fatal: same rule as a rung with no offer code yet.
+function funnelWidgetState() {
+  const file = join(APP, "src", "funnel-widgets", "oto1.html");
+  try {
+    const raw = readFileSync(file, "utf8");
+    return { file, exists: true, pasted: raw.replace(/<!--[\s\S]*?-->/g, "").trim().length > 0 };
+  } catch {
+    return { file, exists: false, pasted: false };
+  }
 }
 
 main().then(

@@ -384,6 +384,18 @@
 }
 @media (hover: hover) { .fnl-ghost:hover { color: var(--text-2); } }
 
+/* Where Hotmart's funnel widget lands on /kit. Deliberately no min-height and
+   no padding: the page decides the embed failed by measuring this box, and a
+   box with a height of its own would report a dead widget as a live one. The
+   selectors below only lay the vendor's buttons out; their look is the
+   widget's own, and what can be styled is styled in the Hotmart panel. */
+.fnl-widget:not(:empty) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.fnl-widget :is(a, button) { width: 100%; }
+
 /* ── Panels ────────────────────────────────────────────────────────────── */
 .fnl-panel {
   background: var(--ink-raised);
