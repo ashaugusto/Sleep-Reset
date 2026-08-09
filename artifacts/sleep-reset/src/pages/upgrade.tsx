@@ -38,9 +38,10 @@ export default function Upgrade() {
   // email on it cannot buy here — that is a data problem, not a payment one.
   //
   // Built once, on render, rather than on the click. The Recovery Pack is its
-  // own Hotmart product and its product id is not in the build yet, so this
-  // comes back empty — and an empty URL has to take the button off the page,
-  // not wait for somebody to press it and then apologise.
+  // own Hotmart product (M107083238V, not the protocol's id), so this can come
+  // back empty if that id ever leaves the build — and an empty URL has to take
+  // the button off the page, not wait for somebody to press it and then
+  // apologise.
   const checkoutUrl = hotmartCheckoutUrl("bump", {
     email: user?.email ?? undefined,
     tracking: { h: isOto ? "oto" : "upgrade" },
