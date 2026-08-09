@@ -422,7 +422,22 @@ Education and coaching, not medical care.
 
 ## 7. Order bump, funil de vendas e afiliados
 
-**Decisão do Ash, 9 de Agosto: a esteira monta-se pela Payment Link API, não à mão no painel.** Isso muda a natureza desta secção e de todo o ficheiro. As duas formas existem e fazem coisas diferentes:
+**Decisão do Ash, 9 de Agosto, ao fim da manhã: produto normal no painel, com o checkout personalizado.** Substitui a decisão da Payment Link tomada de manhã. O que a motivou foi um checkout de referência que o Ash mandou, `pay.hotmart.com/B102813651H?checkoutMode=10`: página com banner próprio, tipografia própria, popup de saída e um bloco "Compre junto" antes do botão de compra.
+
+O que se verificou nesse link, carregando-o com cada valor do parâmetro:
+
+| `checkoutMode` | Estado que a página assume |
+|---|---|
+| ausente | o normal |
+| `0` | `DEFAULT_DESKTOP` |
+| `2` | `WIDGET` |
+| `10` | `CUSTOM`, a página do construtor de checkout |
+
+O construtor e o Compre Junto são funcionalidades do produto no painel. O payload de criação da Payment Link não tem campo para nenhum dos dois: `name`, `value`, `currency`, `checkout_configuration` (métodos de pagamento, páginas de obrigado, cupão, campos do formulário), `link_configuration`, `subscription`. A oferta adicional tem ainda menos: `payment_link_ucode`, `name`, `value`, `currency`, `is_main_offer`. Não há aparência nem bump em lado nenhum. Por isso o caminho da Payment Link fica de parte.
+
+**Consequência no link:** o `checkoutMode=10` tem de ir na URL de checkout. Sem ele, o mesmo produto abre no checkout normal e o trabalho do construtor não aparece. É onde o `offers.ts` monta a URL, `hotmartCheckoutUrl`.
+
+As duas formas continuam a existir e fazem coisas diferentes:
 
 | | Painel (produto Hotmart normal) | Payment Link API |
 |---|---|---|
@@ -439,7 +454,9 @@ Duas condições que se definem na criação do link e não se podem esquecer, p
 
 Continua a ser o produto 2 (Recovery Pack), 19,00 EUR, com o título e o corpo da tabela da secção 3. Ticket com o bump aceite: 46,00 EUR.
 
-O order bump na mesma transação, sem redirecionamento, é uma funcionalidade da página de pagamento do painel (Ferramentas, Aparência da página de pagamento, até dez produtos). Confirmar se a página de checkout gerada pelo Payment Link aceita bump. Se não aceitar, o bump passa a ser um segundo `charge-by-offer` imediatamente a seguir à compra, o que dá o mesmo dinheiro mas conta como duas transações.
+O order bump na mesma transação, sem redirecionamento, é uma funcionalidade da página de pagamento do painel (Ferramentas, Aparência da página de pagamento, até dez produtos). **A pergunta que estava aqui em aberto está respondida: a Payment Link não aceita bump**, não há campo para isso na API. É mais uma razão para o produto no painel.
+
+No checkout de referência o bloco aparece como "Achetez ensemble" com imagem, título, corpo com listagem, preço riscado e percentagem de desconto. A interface traduz-se sozinha para a língua do navegador, o texto do bump não: o do exemplo estava em espanhol dentro de um checkout em francês. O nosso texto de bump é escrito uma vez e vai ser lido em todos os mercados na língua em que o escrevermos. Escrever em inglês.
 
 ### 7.2 Funil de vendas
 
@@ -515,7 +532,7 @@ Estas quatro não são detalhes. Cada uma delas, se sair diferente do esperado, 
 1. **Garantia de 60 dias.** A página promete 60 dias em todos os idiomas (`guarantee` nos quatro `src/locales/*.ts`). Se o painel só oferecer 7, 15 ou 30 dias, há duas saídas: baixar a promessa na página, ou manter os 60 e honrar os dias que passarem da janela da Hotmart por reembolso manual. Recomendo o segundo enquanto o volume for pequeno, porque a garantia longa é parte do que faz esta oferta funcionar. **Confirma isto antes de publicar a primeira oferta.**
 2. **Limite de caracteres da descrição.** As descrições acima andam entre 700 e 1100 caracteres. Se o campo cortar, cortar a partir do fim, mantendo sempre a lista do que está incluído e a linha do disclaimer.
 3. **Condição do downsell.** Confirmar que dá para esconder o downsell de quem aceitou o order bump. Se não der, desligar o downsell. Pelo caminho da API isto é nosso e resolve-se em código: quem aceitou o bump não vê a página do downsell.
-4. **Restrições de conteúdo de saúde.** A Hotmart revê a página de vendas. A nossa não promete cura nem resultado médico e já traz o disclaimer, mas convém contar com uma ronda de revisão e não marcar tráfego para o dia seguinte à submissão. **Pelo caminho do Payment Link não há revisão de produto nenhuma**, o que apaga este risco e também apaga a conta de revisor da FLU-158. O disclaimer fica na mesma, por causa dos anúncios, que esses têm as suas próprias regras.
+4. **Restrições de conteúdo de saúde.** A Hotmart revê a página de vendas. A nossa não promete cura nem resultado médico e já traz o disclaimer, mas convém contar com uma ronda de revisão e não marcar tráfego para o dia seguinte à submissão. Com a volta à criação de produto no painel, **a revisão volta a existir e a conta de revisor da FLU-158 volta a ser precisa** — está feita. O disclaimer fica na mesma, por causa dos anúncios, que esses têm as suas próprias regras.
 
 ### Decisão em aberto: preço em reais
 
