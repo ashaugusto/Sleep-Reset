@@ -208,3 +208,57 @@ Education and coaching, not medical care. Not a treatment or a diagnosis, and no
 ```
 
 Custa conversão, ganha tranquilidade na revisão da Hotmart. Como o aviso já está na descrição do produto, que é o que o revisor lê, a minha escolha seria deixar de fora do checkout. Fica contigo.
+
+---
+
+## 6. Estado verificado da conta, 9 de Agosto às 13h
+
+Lido directamente: `products/api/v1/products` para os produtos, e a configuração do construtor que vem dentro de `pay.hotmart.com/S107083069O?checkoutMode=10`. Não é o que devia estar, é o que está.
+
+### Produtos
+
+| ID | Nome | Estado | Oferta | Preço | Garantia |
+|---|---|---|---|---|---|
+| 8279398 | Sleep Wired: The 7-Night Protocol | ACTIVE | `x4qj5aft` | 27 EUR | **7 dias** |
+| 8279460 | Sleep Wired: The Recovery Pack | ACTIVE | `o1knxjme` | 19 EUR | **7 dias** |
+| 8279532 | Sleep Wired: The 3AM Relapse Kit | DRAFT | `bzkk9yds` | 47 EUR | **7 dias** |
+| 8279449 | The Recovery Pack (EBOOK) | DRAFT | | | duplicado, apagar |
+| 8279392 | Sleep Wired: The 7-Night Protocol | DELETED | | | ok |
+
+Todos com `is_currency_conversion_enabled: true`. Categoria `Saúde e Sports`, em português, num produto em inglês.
+
+### Order bump: activo
+
+O Recovery Pack entra no resumo da compra como `ORDER_BUMP_ITEM` (produto 8279460, oferta `o1knxjme`), com a imagem `02_recoverypack.jpg` e a descrição dos sete áudios. Um relatório anterior deu isto como não configurado; estava errado.
+
+### Preço que o comprador vê (Alemanha)
+
+```
+produto 1   27,00 + 5,13 IVA (19%)  = 32,13 EUR
+order bump  19,00 + 3,61 IVA (19%)  = 22,61 EUR
+os dois                              = 54,74 EUR
+```
+
+`businessModel: DEEMED_SELLER`, "Hotmart as Deemed Seller for Creators in CH with Electronic Product for European or British shopper". Comissão com imposto CH a 8,1%. O IVA está legal; o que não bate é a página de vendas dizer 27.
+
+### Auteur no checkout
+
+`authorName: Fluyon`, `authorEmail: info@fluyon.ch`. Vem do Perfil Público. O comprador vem do Sleep Wired e nunca viu a Fluyon.
+
+### Construtor: os quatro blocos, e o que falta em cada um
+
+Uma linha só, coluna esquerda com peso 2 e direita com peso 1.
+
+| Coluna | Componente | Conteúdo actual | Substituir por |
+|---|---|---|---|
+| esquerda | `hotpay-text` tipo `title` | `Lorem ipsum dolor` | secção 5.1 |
+| esquerda | `hotpay-text` tipo `text` | lorem completo, ~500 caracteres | secção 5.2 |
+| esquerda | `hotpay-checkout` | formulário, fixo | nada |
+| direita | `hotpay-image` | `def.jpg`, demo da Hotmart, 1023x682 | `00_checkout-banner.jpg` |
+| direita | `hotpay-advantages` | selos SSL, segurança, email, conteúdo | nada |
+
+O banner desenhado é 1440x480 (3:1) e o espaço do construtor está a mostrar uma imagem 3:2. Se ficar cortado, a alternativa é gerar uma versão 3:2 do mesmo banner.
+
+### Vendas
+
+`payments/api/v1/sales/history` devolve zero. Nunca houve uma venda pela Hotmart, portanto nada do que se mexer agora parte uma compra existente.
