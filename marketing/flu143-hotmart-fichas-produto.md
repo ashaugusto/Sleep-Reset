@@ -39,6 +39,12 @@ Antes do primeiro produto:
 
 Nomes dos produtos ficam **em inglês nos quatro mercados**. São nomes de marca ("Recovery Pack", "3AM Relapse Kit"), aparecem no recibo e no checkout, e traduzi-los obrigaria a sete produtos vezes quatro idiomas, ou seja vinte e oito produtos para gerir. O checkout em si já aparece na língua do comprador, que é o que importa para a conversão.
 
+### Duas regras que valem para todas as ofertas dos sete produtos
+
+**Tipo de pagamento: pagamento único. Nenhuma oferta é mensal nem anual.** A página de venda promete "sem assinatura, pagas uma vez", e a única faixa vazia do mercado é essa. No painel isso é o campo *Pagamento único* na criação da oferta, nunca *Assinatura*. Parcelamento não é recorrência: continua ligado ao máximo permitido, é uma compra só dividida no cartão. O único degrau que fala em ano é a Reset Season, 39 EUR/ano, e mesmo essa cria-se como produto de pagamento único com entrega ao longo de doze meses (secção 8).
+
+**Tracking keys: desligadas.** A doc do webhook de compra 2.0.0 diz que `purchase.offer.metadata`, que é o objeto onde as tracking keys chegam, é "available only for subscription products". Numa oferta de pagamento único preenchem-se no painel e nunca aparecem no webhook. A atribuição faz-se pelos três campos que chegam sempre: `purchase.offer.code` (qual das cinco ofertas, ou seja o degrau e o tipo de sono), `purchase.origin.sck` (o que o site mete na URL, já implementado em `src/lib/offers.ts`) e `product.ucode` (identificador estável do produto). Se um dia houver produto de assinatura, as tracking keys voltam à mesa: dez por oferta, chave até 25 caracteres, valor até 100.
+
 ---
 
 ## 2. Produto 1. A plataforma
@@ -54,6 +60,8 @@ Nomes dos produtos ficam **em inglês nos quatro mercados**. São nomes de marca
 | Preço | `27.00` |
 | Moeda | EUR |
 | Preço de referência riscado, se o campo existir | `47.00` |
+| Tipo de pagamento | **Pagamento único.** Nunca assinatura, nem mensal nem anual |
+| Tracking keys | deixar desligadas, ver secção 1 |
 | Garantia | 60 dias (ver aviso na secção 9) |
 | Página de vendas | `https://sleepwired.com/plan` |
 | Página de obrigado | `https://sleepwired.com/welcome` |
