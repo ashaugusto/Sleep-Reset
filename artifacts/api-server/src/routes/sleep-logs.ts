@@ -8,6 +8,8 @@ import {
   UpdateSleepLogMorningParams,
   UpdateSleepLogMorningBody,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/requireAuth";
+import { requireSelf } from "../middlewares/requireSelf";
 
 const router: IRouter = Router();
 
@@ -60,7 +62,7 @@ function calculateSleepMetrics(
   };
 }
 
-router.get("/users/:userId/sleep-logs", async (req, res) => {
+router.get("/users/:userId/sleep-logs", requireAuth, requireSelf, async (req, res) => {
   const { userId } = ListSleepLogsParams.parse(req.params);
 
   const logs = await db
@@ -72,7 +74,7 @@ router.get("/users/:userId/sleep-logs", async (req, res) => {
   res.json(logs);
 });
 
-router.post("/users/:userId/sleep-logs", async (req, res) => {
+router.post("/users/:userId/sleep-logs", requireAuth, requireSelf, async (req, res) => {
   const { userId } = CreateSleepLogParams.parse(req.params);
   const body = CreateSleepLogBody.parse(req.body);
 
@@ -95,7 +97,7 @@ router.post("/users/:userId/sleep-logs", async (req, res) => {
   res.status(201).json(log);
 });
 
-router.put("/users/:userId/sleep-logs/:logId/morning", async (req, res) => {
+router.put("/users/:userId/sleep-logs/:logId/morning", requireAuth, requireSelf, async (req, res) => {
   const { userId, logId } = UpdateSleepLogMorningParams.parse(req.params);
   const body = UpdateSleepLogMorningBody.parse(req.body);
 

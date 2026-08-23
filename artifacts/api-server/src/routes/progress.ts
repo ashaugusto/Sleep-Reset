@@ -2,10 +2,12 @@ import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import { db, sleepLogsTable, nightCompletionsTable } from "@workspace/db";
 import { GetProgressParams } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/requireAuth";
+import { requireSelf } from "../middlewares/requireSelf";
 
 const router: IRouter = Router();
 
-router.get("/users/:userId/progress", async (req, res) => {
+router.get("/users/:userId/progress", requireAuth, requireSelf, async (req, res) => {
   const { userId } = GetProgressParams.parse(req.params);
 
   const logs = await db

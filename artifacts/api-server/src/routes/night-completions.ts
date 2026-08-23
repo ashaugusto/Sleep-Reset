@@ -6,10 +6,12 @@ import {
   UpdateNightCompletionParams,
   UpdateNightCompletionBody,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/requireAuth";
+import { requireSelf } from "../middlewares/requireSelf";
 
 const router: IRouter = Router();
 
-router.get("/users/:userId/night-completions", async (req, res) => {
+router.get("/users/:userId/night-completions", requireAuth, requireSelf, async (req, res) => {
   const { userId } = ListNightCompletionsParams.parse(req.params);
 
   const completions = await db
@@ -21,7 +23,7 @@ router.get("/users/:userId/night-completions", async (req, res) => {
   res.json(completions);
 });
 
-router.put("/users/:userId/night-completions/:nightNumber", async (req, res) => {
+router.put("/users/:userId/night-completions/:nightNumber", requireAuth, requireSelf, async (req, res) => {
   const { userId, nightNumber } = UpdateNightCompletionParams.parse(req.params);
   const body = UpdateNightCompletionBody.parse(req.body);
 
