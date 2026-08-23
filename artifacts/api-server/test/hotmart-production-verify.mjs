@@ -1,4 +1,5 @@
 // A compra de teste que a FLU-156 pede, contra o site a sério.
+// Estendida na FLU-227 aos degraus 4 (protocolo avulso) e 5 (segundo assento).
 //
 // O smoke test irmão (hotmart-purchase.smoke.mjs) prova a lógica contra uma
 // base de dados descartável. Este prova a outra metade, que nenhum teste local
@@ -8,6 +9,14 @@
 //
 // Cria contas verdadeiras na base de produção e apaga-as no fim. Se rebentar a
 // meio, --cleanup-only limpa o que ficou para trás.
+//
+// Os degraus 4 e 5 ainda não têm produto publicado no painel, portanto não têm
+// código de oferta. Isso trava a metade da Hotmart, não a nossa: a compra é
+// semeada no livro com o formato que o webhook escreveria (ver `seedRung`) e
+// todo o resto corre pelo código de produção, incluindo o reembolso, que se
+// orienta pelo número da transacção e nunca pelo código da oferta. No dia em
+// que HOTMART_OFF_DOWNSELL e HOTMART_OFF_SEAT estiverem no .env, as mesmas
+// linhas passam a entrar pelo webhook sem se mudar nada aqui.
 //
 //   node --env-file=.env artifacts/api-server/test/hotmart-production-verify.mjs
 //   node --env-file=.env artifacts/api-server/test/hotmart-production-verify.mjs --cleanup-only
@@ -35,6 +44,12 @@ const BUYER = process.env.VERIFY_EMAIL || `ashaugusto+${TAG}${STAMP}@icloud.com`
 // Os outros dois degraus não mandam email nenhum, por isso não precisam de
 // caixa. `.invalid` é reservado e nunca sai da máquina.
 const BUYER_UNKNOWN = `${TAG}-unknown-${STAMP}@sleepwired.invalid`;
+// O parceiro que recebe o segundo assento. Conta nova, criada por ele a partir
+// do convite, nunca pelo webhook. Também não recebe email nenhum.
+const PARTNER = `${TAG}-partner-${STAMP}@sleepwired.invalid`;
+// A senha que o comprador escolhe em /sign-up e a que o parceiro escolhe no
+// convite. Contas de teste, apagadas no fim, mas ainda assim não "123456".
+const PASSWORD = `flu227-${STAMP}`;
 
 const OFF = {
   front: (process.env.HOTMART_OFF_FRONT || "").trim(),
@@ -54,6 +69,8 @@ const TX = {
   bump: `${TAG.toUpperCase()}B${STAMP}`,
   oto1: `${TAG.toUpperCase()}K${STAMP}`,
   unknown: `${TAG.toUpperCase()}U${STAMP}`,
+  downsell: `${TAG.toUpperCase()}D${STAMP}`,
+  seat: `${TAG.toUpperCase()}S${STAMP}`,
 };
 
 // A base é a mesma que o servidor usa: cluster gerido da DO, com cadeia
@@ -116,6 +133,67 @@ async function post(body, { hottok = HOTTOK } = {}) {
   return { status: res.status, json };
 }
 
+// ─── Sessões ────────────────────────────────────────────────────────────────
+// Os degraus 4 e 5 não vivem só no webhook: metade deles são rotas que exigem
+// um comprador com sessão iniciada (/api/seats) e a outra metade são rotas que
+// exigem que não haja sessão nenhuma (/api/seats/invite/<token>, que o parceiro
+// abre sem conta). Por isso dois frascos de cookies em vez de um, e um que
+// nunca é enviado.
+function jar() { return { cookie: "" }; }
+const OWNER = jar();
+const GUEST = jar();
+
+async function api(pathname, { method = "GET", body, as = null } = {}) {
+  const res = await fetch(`${BASE}${pathname}`, {
+    method,
+    headers: {
+      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...(as?.cookie ? { Cookie: as.cookie } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const set = res.headers.get("set-cookie");
+  if (set && as) as.cookie = set.split(";")[0];
+  let json = null;
+  try { json = await res.json(); } catch { /* corpo vazio */ }
+  return { status: res.status, json };
+}
+
+// ─── Semear um degrau que ainda não tem oferta no painel ─────────────────────
+// Quando o código de oferta existe no .env, a compra entra por onde entra a
+// sério: o webhook. Quando não existe, o webhook classificaria como `unknown` e
+// não abriria nada, o que não é uma falha do código mas do painel.
+//
+// Nesse caso a linha é escrita à mão no livro de compras, com exactamente o
+// formato que o webhook escreveria. Tudo o que vem a seguir continua a correr
+// pelo código de produção sem saber a diferença: o recálculo de acessos, o
+// /api/entitlements, o convite, e o reembolso, que só olha para o número da
+// transacção e nunca para o código da oferta. Sem isto, os degraus 4 e 5 só
+// seriam testáveis depois de o Ash publicar os produtos, que é ao contrário da
+// ordem em que as coisas se fazem.
+async function seedRung({ transaction, rung, price, email }) {
+  const offer = OFF[rung];
+  if (offer) {
+    const r = await post(payload({ event: "PURCHASE_APPROVED", transaction, email, name: "Teste FLU156", offer, ucode: UCODE[rung], price }));
+    return { via: "webhook", ok: r.status === 200 && r.json?.rung === rung, detail: JSON.stringify(r.json) };
+  }
+  await pool.query(
+    `insert into purchases (id, provider, transaction_id, dedupe_key, email, rung, offer_code,
+                            status, price_cents, currency, event, purchased_at, created_at, updated_at)
+     values ($1, 'hotmart', $2, $3, $4, $5, null, 'approved', $6, 'EUR', 'seed.flu227', now(), now(), now())
+     on conflict (dedupe_key) do nothing`,
+    [crypto.randomUUID(), transaction, `hotmart:${transaction}:${rung}`, email, rung, Math.round(price * 100)],
+  );
+  return { via: "semeado", ok: true, detail: "" };
+}
+
+async function invites(ownerEmail) {
+  const { rows } = await pool.query(
+    `select token, redeemed_at, redeemed_by_email, granted_purchase_id
+       from seat_invites where owner_email = $1 order by created_at`, [ownerEmail]);
+  return rows;
+}
+
 async function purchases(email) {
   const { rows } = await pool.query(
     `select transaction_id, rung, status, revoked_at, offer_code, price_cents, currency, sck, user_id
@@ -131,10 +209,13 @@ async function user(email) {
 
 async function cleanup() {
   const like = `%${TAG}%`;
+  // Os convites primeiro: apontam para linhas de compras, e apagar as compras
+  // antes deixava convites órfãos com um token vivo na base de produção.
+  const i = await pool.query(`delete from seat_invites where owner_email ilike $1 or redeemed_by_email ilike $1`, [like]);
   const p = await pool.query(`delete from purchases where email ilike $1`, [like]);
   const l = await pool.query(`delete from leads where email ilike $1`, [like]);
   const u = await pool.query(`delete from users where email ilike $1`, [like]);
-  console.log(`\nLimpeza: ${p.rowCount} compras, ${l.rowCount} leads, ${u.rowCount} contas.`);
+  console.log(`\nLimpeza: ${p.rowCount} compras, ${i.rowCount} convites, ${l.rowCount} leads, ${u.rowCount} contas.`);
 }
 
 async function main() {
@@ -149,10 +230,11 @@ async function main() {
   console.log(`\nAlvo: ${BASE}`);
   console.log(`Comprador de teste: ${BUYER}`);
   console.log(`Ofertas: front=${OFF.front} bump=${OFF.bump} oto1=${OFF.oto1}`);
-  console.log(`Sem oferta publicada: downsell=${OFF.downsell || "(nenhuma)"} seat=${OFF.seat || "(nenhuma)"}\n`);
+  console.log(`Degraus 4 e 5: downsell=${OFF.downsell || "(sem oferta, semeado)"} seat=${OFF.seat || "(sem oferta, semeado)"}\n`);
 
   // Deixa a mesa limpa antes de começar, para o caso de uma corrida anterior
   // ter ficado a meio.
+  await pool.query(`delete from seat_invites where owner_email ilike $1 or redeemed_by_email ilike $1`, [`%${TAG}%`]);
   await pool.query(`delete from purchases where email ilike $1`, [`%${TAG}%`]);
   await pool.query(`delete from leads where email ilike $1`, [`%${TAG}%`]);
   await pool.query(`delete from users where email ilike $1`, [`%${TAG}%`]);
@@ -240,14 +322,128 @@ async function main() {
   const r7 = await post(payload({ event: "PURCHASE_REFUNDED", transaction: `NUNCAEXISTIU${STAMP}`, email: BUYER, offer: OFF.bump, price: 19 }));
   check("reembolso de venda que nunca chegou não rebenta", r7.status === 200 && r7.json?.action === "nothing_to_revoke", JSON.stringify(r7.json));
 
-  console.log("\nDegraus sem oferta publicada:");
+  // ─── FLU-227: os degraus 4 e 5 ─────────────────────────────────────────────
+  // Daqui para baixo o comprador tem senha. Tudo o que se apoiava em ele NÃO
+  // ter conta (o /claim a responder hasAccount:false) já correu acima.
+
+  console.log("\nDegrau 4 — o protocolo avulso (downsell):");
+  const seedDown = await seedRung({ transaction: TX.downsell, rung: "downsell", price: 9, email: BUYER });
+  check(`compra do downsell registada (${seedDown.via})`, seedDown.ok, seedDown.detail);
+
+  console.log("\nDegrau 5 — o segundo assento (seat):");
+  const seedSeat = await seedRung({ transaction: TX.seat, rung: "seat", price: 17, email: BUYER });
+  check(`compra do assento registada (${seedSeat.via})`, seedSeat.ok, seedSeat.detail);
+
+  // A senha. Não é um extra do teste: é o que faz correr `recomputeAccess` pelo
+  // caminho a sério, e é a única forma de o comprador chegar às rotas do
+  // assento, que exigem sessão.
+  console.log("\nO comprador põe senha (/api/auth/register):");
+  const reg = await api("/api/auth/register", {
+    method: "POST",
+    body: { transaction: TX.front, email: BUYER, password: PASSWORD },
+    as: OWNER,
+  });
+  check("registo aceite", reg.status === 200 && !!reg.json?.id, JSON.stringify(reg.json));
+  check("sessão iniciada (veio cookie)", !!OWNER.cookie, "sem set-cookie");
+
+  const uReg = await user(BUYER);
+  check("o protocolo avulso abriu na conta", !!uReg?.downsell_purchased_at, "downsell_purchased_at vazio");
+  check("um assento creditado", uReg?.seat_credits === 1, String(uReg?.seat_credits));
+  check("a plataforma continua aberta", !!uReg?.purchased_at);
+
+  const ent = await api("/api/entitlements", { as: OWNER });
+  check("entitlements devolve o degrau 4", Array.isArray(ent.json?.rungs) && ent.json.rungs.includes("downsell"), JSON.stringify(ent.json?.rungs));
+  check("entitlements devolve o degrau 5", Array.isArray(ent.json?.rungs) && ent.json.rungs.includes("seat"), JSON.stringify(ent.json?.rungs));
+
+  console.log("\nO assento vira convite:");
+  const seats0 = await api("/api/seats", { as: OWNER });
+  check("um assento comprado, um por dar", seats0.json?.owned === 1 && seats0.json?.available === 1, JSON.stringify(seats0.json));
+  const noSession = await api("/api/seats");
+  check("sem sessão a lista é recusada", noSession.status === 401, String(noSession.status));
+
+  const made = await api("/api/seats/invite", { method: "POST", as: OWNER });
+  check("convite criado", made.status === 201 && typeof made.json?.url === "string", JSON.stringify(made.json));
+  const inviteUrl = made.json?.url || "";
+  const token = inviteUrl.split("/seat/")[1] || "";
+  check("o link aponta para /seat/<token> de 64 hex", /^[0-9a-f]{64}$/.test(token), inviteUrl);
+
+  const again2 = await api("/api/seats/invite", { method: "POST", as: OWNER });
+  check("um assento não dá dois convites", again2.status === 409, String(again2.status));
+  const rowsInv = await invites(BUYER);
+  check("um só convite na base", rowsInv.length === 1, String(rowsInv.length));
+
+  console.log("\nO parceiro abre o convite (sem conta, sem sessão):");
+  const look = await api(`/api/seats/invite/${token}`);
+  check("o convite é válido", look.status === 200 && look.json?.valid === true, JSON.stringify(look.json));
+  check("ainda por usar", look.json?.redeemed === false);
+  check("não devolve email nenhum", !JSON.stringify(look.json || {}).includes("@"), JSON.stringify(look.json));
+  const lookMiss = await api(`/api/seats/invite/${"0".repeat(64)}`);
+  check("token que não existe devolve 404", lookMiss.status === 404, String(lookMiss.status));
+
+  const self = await api(`/api/seats/invite/${token}/claim`, { method: "POST", body: { email: BUYER, password: PASSWORD } });
+  check("o comprador não pode gastar o assento em si próprio", self.status === 400, JSON.stringify(self.json));
+  const weak = await api(`/api/seats/invite/${token}/claim`, { method: "POST", body: { email: PARTNER, password: "123" } });
+  check("senha curta é recusada", weak.status === 400, JSON.stringify(weak.json));
+
+  const claimed = await api(`/api/seats/invite/${token}/claim`, {
+    method: "POST",
+    body: { email: PARTNER, name: "Parceiro FLU227", password: PASSWORD },
+    as: GUEST,
+  });
+  check("o parceiro resgata o assento", claimed.status === 200 && claimed.json?.ok === true, JSON.stringify(claimed.json));
+  check("e fica com sessão iniciada", claimed.json?.signedIn === true, JSON.stringify(claimed.json));
+
+  const uPartner = await user(PARTNER);
+  check("conta do parceiro criada", !!uPartner);
+  check("com senha, escolhida por ele", !!uPartner?.password_hash);
+  check("com a plataforma aberta", !!uPartner?.purchased_at, "purchased_at vazio: pagou-se um assento e não se entregou nada");
+  check("e sem herdar o que era do comprador", !uPartner?.premium_purchased_at && !uPartner?.downsell_purchased_at && uPartner?.seat_credits === 0);
+
+  const pPartner = await purchases(PARTNER);
+  check("uma linha no livro, ligada à transacção do assento", pPartner.length === 1 && pPartner[0]?.transaction_id === TX.seat, JSON.stringify(pPartner));
+  check("registada como front, que é o que ele recebe", pPartner[0]?.rung === "front", pPartner[0]?.rung);
+  check("a zero, porque quem pagou foi o outro", pPartner[0]?.price_cents === 0, String(pPartner[0]?.price_cents));
+
+  const meAsPartner = await api("/api/auth/me", { as: GUEST });
+  check("o parceiro entra na área de membros", meAsPartner.status === 200 && meAsPartner.json?.email === PARTNER, JSON.stringify(meAsPartner.json));
+
+  const usedTwice = await api(`/api/seats/invite/${token}/claim`, { method: "POST", body: { email: `outro-${PARTNER}`, password: PASSWORD } });
+  check("o convite não serve duas vezes", usedTwice.status === 409, String(usedTwice.status));
+  const seats1 = await api("/api/seats", { as: OWNER });
+  check("o comprador vê o assento ocupado", seats1.json?.available === 0 && seats1.json?.seats?.[0]?.redeemedAt, JSON.stringify(seats1.json));
+  check("e vê o email do parceiro mascarado", typeof seats1.json?.seats?.[0]?.redeemedBy === "string" && seats1.json.seats[0].redeemedBy.includes("***"), JSON.stringify(seats1.json?.seats?.[0]));
+
+  console.log("\nReembolso do degrau 5 — fecha os dois lados, e só esses:");
+  const rSeat = await post(payload({ event: "PURCHASE_REFUNDED", transaction: TX.seat, email: BUYER, price: 17 }));
+  check("webhook responde revoked", rSeat.status === 200 && rSeat.json?.action === "revoked", JSON.stringify(rSeat.json));
+  const uPartnerAfter = await user(PARTNER);
+  check("o parceiro perde o acesso", !uPartnerAfter?.purchased_at, "acesso pago por um assento devolvido continua aberto");
+  const uOwnerAfter = await user(BUYER);
+  check("o crédito do assento desaparece", uOwnerAfter?.seat_credits === 0, String(uOwnerAfter?.seat_credits));
+  check("a plataforma do comprador fica de pé", !!uOwnerAfter?.purchased_at, "reembolso levou acesso que não era dele");
+  check("e o protocolo avulso também", !!uOwnerAfter?.downsell_purchased_at, "reembolso levou acesso que não era dele");
+  const lookDead = await api(`/api/seats/invite/${token}`);
+  check("o convite morre com o assento", lookDead.status === 404, String(lookDead.status));
+
+  console.log("\nReembolso do degrau 4 — fecha só o protocolo avulso:");
+  const rDown = await post(payload({ event: "PURCHASE_REFUNDED", transaction: TX.downsell, email: BUYER, price: 9 }));
+  check("webhook responde revoked", rDown.status === 200 && rDown.json?.action === "revoked", JSON.stringify(rDown.json));
+  const uDownAfter = await user(BUYER);
+  check("o protocolo avulso fecha", !uDownAfter?.downsell_purchased_at);
+  check("a plataforma continua aberta depois de quatro estornos", !!uDownAfter?.purchased_at, "reembolso levou acesso que não era dele");
+
+  console.log("\nDegraus ainda sem oferta no painel:");
   for (const rung of ["downsell", "seat"]) {
-    check(`${rung}: sem código no .env, ainda não há o que testar`, !OFF[rung], `HOTMART_OFF_${rung.toUpperCase()} está preenchido — acrescenta o teste`);
+    // Isto não é uma falha: é o estado do painel a ser dito em voz alta. O
+    // caminho de entrega acima já correu de qualquer maneira, semeado.
+    console.log(`  nota  ${rung}: HOTMART_OFF_${rung.toUpperCase()}=${OFF[rung] || "(vazio)"}`);
   }
 
   await cleanup();
   const after = await user(BUYER);
   check("limpeza não deixou conta de teste para trás", after === null);
+  check("nem a conta do parceiro", (await user(PARTNER)) === null);
+  check("nem convites com token vivo", (await invites(BUYER)).length === 0);
 
   await pool.end();
   console.log(`\n${passed} passaram, ${failures.length} falharam.`);

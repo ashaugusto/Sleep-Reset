@@ -362,6 +362,40 @@ const fr: Dict = {
     micro: "Un clic. Votre carte n'est pas redemandée.",
     guarantee: "Couvert par la même garantie de 30 jours que le protocole.",
   },
+
+  // Rungs 4 et 5, texte de Sophie : marketing/esteira-degraus-4-7-copy.md.
+  downsell: {
+    name: "The 3AM Protocol",
+    eyebrow: "Avant d'entrer",
+    title: "Alors prenez seulement l'audio",
+    promise: "L'audio de vingt minutes qui est au coeur du kit, seul, pour la nuit où l'insomnie revient.",
+    bullets: [
+      "Le protocole de 20 minutes, le même enregistrement qui est au coeur du kit, sans la carte et sans les trois versions par déclencheur.",
+      "Fait pour être écouté dans le noir, silences compris. Rien à lire à trois heures du matin.",
+      "Il arrive dans votre bibliothèque, sur le même identifiant, dès le paiement.",
+      "À vous, définitivement. Payé une fois, sans abonnement.",
+    ],
+    priceLine: "Un paiement unique de {price}, ajouté à la commande que vous venez de passer.",
+    cta: "Oui, je prends le protocole pour {price}",
+    decline: "Non merci, emmenez-moi à mon protocole",
+    guarantee: "Couvert par la même garantie de 30 jours que le protocole.",
+  },
+  seat: {
+    name: "Second Seat",
+    eyebrow: "Pour l'autre côté du lit",
+    title: "Elle non plus ne dort pas",
+    promise: "Un deuxième compte pour la personne que vous réveillez, avec les sept nuits calculées sur ses nuits à elle.",
+    bullets: [
+      "Un compte séparé, avec son propre identifiant, son propre journal de sommeil et une fenêtre de sommeil calculée sur ses nuits, pas sur les vôtres.",
+      "Son propre parcours de départ. Elle répond aux mêmes questions et reçoit le plan de son cas.",
+      "Les mêmes sept nuits et les mêmes enregistrements que vous. Rien n'est une version allégée.",
+      "Accès à vie, payé une fois, sans abonnement. Le compte reste le sien même si un jour les deux se séparent.",
+      "Cela fonctionne comme cadeau. Vous payez, elle reçoit l'invitation et fait la configuration elle-même.",
+    ],
+    priceLine: "Un paiement unique de {price}. Rien ne change à votre propre accès.",
+    cta: "Ajouter un deuxième accès pour {price}",
+    guarantee: "La même garantie de 30 jours que le protocole.",
+  },
 };
 
 export default fr;

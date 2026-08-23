@@ -12,6 +12,7 @@ import dashboardRouter from "./dashboard";
 import trackingRouter from "./tracking";
 import quizRouter from "./quiz";
 import hotmartRouter from "./hotmart";
+import seatsRouter from "./seats";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(dashboardRouter);
 router.use(trackingRouter);
 router.use(quizRouter);
 router.use(hotmartRouter);
+router.use(seatsRouter);
 
 export default router;

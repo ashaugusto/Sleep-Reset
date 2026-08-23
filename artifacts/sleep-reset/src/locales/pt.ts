@@ -358,6 +358,40 @@ const pt: Dict = {
     micro: "Um clique. O cartão não é pedido de novo.",
     guarantee: "Coberto pela mesma garantia de 30 dias do protocolo.",
   },
+
+  // Degraus 4 e 5, texto da Sophie: marketing/esteira-degraus-4-7-copy.md.
+  downsell: {
+    name: "The 3AM Protocol",
+    eyebrow: "Antes de entrar",
+    title: "Então leve só o áudio",
+    promise: "O áudio de vinte minutos que está no centro do kit, sozinho, para a noite em que a insónia voltar.",
+    bullets: [
+      "O protocolo de 20 minutos, a mesma gravação que está no centro do kit, sem o cartão e sem as três versões por gatilho.",
+      "Feito para ouvir no escuro, com os silêncios mantidos. Nada para ler às três da manhã.",
+      "Entra na sua biblioteca no mesmo login, no momento em que pagar.",
+      "Seu para sempre. Pago uma vez, sem assinatura.",
+    ],
+    priceLine: "Um pagamento único de {price}, somado ao pedido que você acabou de fazer.",
+    cta: "Sim, quero o protocolo por {price}",
+    decline: "Não, obrigado. Quero ir para o meu protocolo",
+    guarantee: "Coberto pela mesma garantia de 30 dias do protocolo.",
+  },
+  seat: {
+    name: "Second Seat",
+    eyebrow: "Para o outro lado da cama",
+    title: "Ela também não está dormindo",
+    promise: "Uma segunda conta para quem você acorda, com as sete noites calculadas sobre as noites dela.",
+    bullets: [
+      "Uma conta separada, com login próprio, sleep-log próprio e janela de sono calculada sobre as noites dela, não sobre as suas.",
+      "Onboarding próprio do início. Ela responde às mesmas perguntas e recebe o plano do caso dela.",
+      "As mesmas sete noites e as mesmas gravações que você tem. Nada é versão reduzida.",
+      "Acesso vitalício, pago uma vez, sem assinatura. Continua dela mesmo que um dia se separem das contas.",
+      "Serve como presente. Você paga, ela recebe o convite e faz a configuração sozinha.",
+    ],
+    priceLine: "Um pagamento único de {price}. Nenhuma alteração no seu acesso.",
+    cta: "Adicionar um segundo assento por {price}",
+    guarantee: "A mesma garantia de 30 dias do protocolo.",
+  },
 };
 
 export default pt;

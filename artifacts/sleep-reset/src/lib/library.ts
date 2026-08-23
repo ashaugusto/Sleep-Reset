@@ -38,6 +38,12 @@ export interface Pack {
   document?: { href: string; title: string; desc: string };
   /** Where a member who does not own it goes to buy it. */
   buyHref: string;
+  /**
+   * A rung that contains this one whole. The library hides a locked pack whose
+   * superset is already owned, because the alternative is offering a Kit buyer
+   * the single protocol they can already play two cards further down the page.
+   */
+  supersededBy?: Rung;
 }
 
 // Every session runs 2:19 to 2:41, measured 9 Aug 2026, which is the "~2-3 min"
@@ -100,10 +106,26 @@ const RELAPSE_KIT: Pack = {
   ],
 };
 
-/** In the order the buyer meets them, which is also the order they are sold. */
-export const PACKS: Pack[] = [RECOVERY_PACK, RELAPSE_KIT];
+// The fourth rung, offered to whoever says no to the Kit. It is not a smaller
+// version of the Kit and it is not a separate recording: it is the one file the
+// Kit is built around, sold on its own at 9 EUR. Same audio, same 20:25, same
+// slug — which is the point, and is why `supersededBy` is set. A buyer who took
+// the Kit already owns this file, and a locked card offering it to them for 9
+// EUR would be selling something they can play on the card above.
+const SINGLE_PROTOCOL: Pack = {
+  rung: "downsell",
+  title: "The 3AM Protocol",
+  // Sophie's promise line for this rung, EN: marketing/esteira-degraus-4-7-copy.md.
+  blurb: "The twenty minute audio at the centre of the kit, on its own, for the night it comes back.",
+  buyHref: "/protocol",
+  supersededBy: "oto1",
+  tracks: [RELAPSE_KIT.tracks[0]],
+};
 
-export { RECOVERY_PACK, RELAPSE_KIT };
+/** In the order the buyer meets them, which is also the order they are sold. */
+export const PACKS: Pack[] = [RECOVERY_PACK, RELAPSE_KIT, SINGLE_PROTOCOL];
+
+export { RECOVERY_PACK, RELAPSE_KIT, SINGLE_PROTOCOL };
 
 /** The file a track's player points at. One place, so a rename breaks once. */
 export function trackSrc(track: Track): string {

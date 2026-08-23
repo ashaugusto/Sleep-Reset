@@ -34,6 +34,9 @@ const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const Terms = lazy(() => import("@/pages/terms"));
 const QuizResult = lazy(() => import("@/pages/quiz-result"));
 const Kit = lazy(() => import("@/pages/kit"));
+const Protocol = lazy(() => import("@/pages/protocol"));
+const Partner = lazy(() => import("@/pages/partner"));
+const Seat = lazy(() => import("@/pages/seat"));
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const queryClient = new QueryClient();
@@ -97,12 +100,25 @@ function Router() {
       <Route path="/library">
         <AuthGuard><AppLayout><Library /></AppLayout></AuthGuard>
       </Route>
+      {/* Rung 5, the buyer's end: buy a second seat and hand it over. Guarded,
+          because the seat belongs to an account. The partner's end is /seat,
+          which is public and lives with the other unguarded routes below. */}
+      <Route path="/partner">
+        <AuthGuard><AppLayout><Partner /></AppLayout></AuthGuard>
+      </Route>
       {/* The upsell Hotmart's sales funnel redirects to after the payment
           clears. Public and unguarded on purpose: the buyer has paid but has
           not set a password yet, so there is no account to guard, and both
           answers on the page end at /welcome with the transaction intact. */}
       <Route path="/kit" component={Kit} />
+      {/* Rung 4, and the only page in the funnel shown after a refusal: the 9
+          EUR protocol offered to whoever said no on /kit. Public and unguarded
+          for the same reason /kit is, and it ends at /welcome either way. */}
+      <Route path="/protocol" component={Protocol} />
       <Route path="/welcome" component={Welcome} />
+      {/* The partner claiming the seat. Public by necessity: they have no
+          account, and the token in the path is the whole credential. */}
+      <Route path="/seat/:token" component={Seat} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms" component={Terms} />
       {/* The previous homepage, kept whole. /wired is an alias so old links

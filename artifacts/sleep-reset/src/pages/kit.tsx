@@ -38,6 +38,12 @@ import "@/styles/funnel.css";
 // An embed that never draws is treated as no embed: the widget reports back
 // whether it made it onto the screen, and if it did not, our own buttons come
 // back. The one thing this page must never be is a page a buyer cannot leave.
+//
+// One asymmetry to know about, and it is not fixable from here. Our own No goes
+// to /protocol, the 9 EUR downsell. The widget's No belongs to Hotmart and goes
+// wherever the funnel step in the panel points it, so the downsell only happens
+// on that path once somebody sets /protocol as the step's decline destination.
+// That is panel configuration, not code, and it is on the panel spec issue.
 
 const TRANSACTION_KEYS = ["transaction", "trans", "hotmart_transaction", "tid"];
 
@@ -70,6 +76,20 @@ export default function Kit() {
     tracking: { h: "oto1", tx: transaction || null },
   });
 
+  // Where "no" goes now. The refusal used to end the ladder at /welcome; rung 4
+  // is the 9 EUR version of this same offer, so a decline goes there first and
+  // /welcome is one click further on again. Only when there is something to
+  // sell: with no downsell offer code in the build, /protocol would be a page
+  // whose only control is the way out, and that is a step for nothing.
+  const downsellUrl = hotmartCheckoutUrl("downsell");
+  const onwardFromNo = useMemo(() => {
+    if (!downsellUrl) return onward;
+    const q = new URLSearchParams();
+    if (transaction) q.set("transaction", transaction);
+    if (email) q.set("email", email);
+    return `/protocol${q.toString() ? `?${q}` : ""}`;
+  }, [downsellUrl, transaction, email, onward]);
+
   // null while the widget is still deciding whether it exists on screen. false
   // means fall back to our own buttons, which is also where a page with no
   // widget pasted starts.
@@ -101,7 +121,7 @@ export default function Kit() {
 
   const decline = () => {
     logEvent("kit_decline");
-    window.location.href = onward;
+    window.location.href = onwardFromNo;
   };
 
   const price = money(t, OFFERS.oto1.price);

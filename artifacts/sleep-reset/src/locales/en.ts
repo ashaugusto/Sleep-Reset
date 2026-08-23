@@ -363,6 +363,40 @@ const en: Dict = {
     micro: "One click. Your card is not asked for again.",
     guarantee: "Covered by the same 30 day guarantee as the protocol.",
   },
+
+  // Rungs 4 and 5, copy by Sophie: marketing/esteira-degraus-4-7-copy.md.
+  downsell: {
+    name: "The 3AM Protocol",
+    eyebrow: "Before you go in",
+    title: "Then take just the audio",
+    promise: "The twenty minute audio at the centre of the kit, on its own, for the night it comes back.",
+    bullets: [
+      "The 20 minute protocol, the same recording that sits at the centre of the kit, without the card and without the three trigger versions.",
+      "Made to be played in the dark, with the silences left in. Nothing to read at three in the morning.",
+      "It lands in your library on the same login, the moment you pay.",
+      "Yours for good. Paid once, no subscription.",
+    ],
+    priceLine: "One payment of {price}, added to the order you just made.",
+    cta: "Yes, take the protocol for {price}",
+    decline: "No thanks, take me to my protocol",
+    guarantee: "Covered by the same 30 day guarantee as the protocol.",
+  },
+  seat: {
+    name: "Second Seat",
+    eyebrow: "For the other side of the bed",
+    title: "They are not sleeping either",
+    promise: "A second account for the person you wake up, with the seven nights worked out on their nights, not yours.",
+    bullets: [
+      "A separate account, with its own login, its own sleep log and a sleep window worked out on their nights, not yours.",
+      "Their own onboarding from the start. They answer the same questions and get the plan for their case.",
+      "The same seven nights and the same recordings you have. Nothing about it is a cut down version.",
+      "Lifetime access, paid once, no subscription. It stays theirs even if the two accounts go separate ways.",
+      "It works as a gift. You pay, they get the invitation and set it up themselves.",
+    ],
+    priceLine: "One payment of {price}. Nothing changes about your own access.",
+    cta: "Add a second seat for {price}",
+    guarantee: "The same 30 day guarantee as the protocol.",
+  },
 };
 
 export default en;

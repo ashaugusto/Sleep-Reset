@@ -76,6 +76,55 @@ export type Oto1Copy = {
   guarantee: string;
 };
 
+/** ── The downsell, shown only to whoever said no to the Kit. ──
+ *  Fourth rung, 9 EUR: public/audio/kit-3am-protocol.mp3 sold on its own,
+ *  without the three trigger versions and without the printed card. Same file
+ *  the Kit buyer gets, which is why src/lib/library.ts marks it superseded by
+ *  the Kit and never offers it back to somebody who took the Kit.
+ *
+ *  Copy from Sophie, FLU-226: marketing/esteira-degraus-4-7-copy.md. She wrote
+ *  it for exactly this reading of the rung, and flagged the alternative (a
+ *  Recovery Pack track sold alone) as needing a different text. */
+export type DownsellCopy = {
+  /** Product name. English in all four languages, like the Kit. */
+  name: string;
+  eyebrow: string;
+  title: string;
+  /** One line under the title: what the offer is, in the visitor's language. */
+  promise: string;
+  bullets: [string, string, string, string];
+  /** "One payment of {price}." */
+  priceLine: string;
+  /** Carries the price too: "Yes, take the protocol for {price}". */
+  cta: string;
+  /** The refusal has to be a real, findable link, or the page is a dark pattern. */
+  decline: string;
+  guarantee: string;
+};
+
+/** ── The second seat, sold inside the platform rather than in the funnel. ──
+ *  Fifth rung, 17 EUR: a full second account for the person who gets woken up.
+ *  Sophie's angle, and it is the whole offer: not a shared login, an account of
+ *  their own with the sleep window worked out on their nights.
+ *
+ *  There is no `decline` here because there is no refusal screen. This is not a
+ *  step in a funnel, it is a card in the member area, and the way to say no is
+ *  to not press the button.
+ *
+ *  Copy from Sophie, FLU-226. She left one question open, whether the partner is
+ *  invited by link or named at the checkout; the answer is the link, which is
+ *  what /partner and /seat implement, so the copy stands as written. */
+export type SeatCopy = {
+  name: string;
+  eyebrow: string;
+  title: string;
+  promise: string;
+  bullets: [string, string, string, string, string];
+  priceLine: string;
+  cta: string;
+  guarantee: string;
+};
+
 export type Dict = {
   code: string;
   /** Native name, shown in the switcher. */
@@ -181,4 +230,6 @@ export type Dict = {
   };
 
   oto1: Oto1Copy;
+  downsell: DownsellCopy;
+  seat: SeatCopy;
 };

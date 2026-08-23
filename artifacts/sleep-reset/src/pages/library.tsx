@@ -6,7 +6,7 @@ import { PACKS, trackSrc, type Pack } from "@/lib/library";
 import { OFFERS } from "@/lib/offers";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Headphones, FileText, Lock, Loader2 } from "lucide-react";
+import { Headphones, FileText, Lock, Loader2, UserPlus } from "lucide-react";
 
 // ─── The member library ──────────────────────────────────────────────────────
 // Ash asked where the Kit's member page is, and whether it is the same one as
@@ -43,6 +43,11 @@ export default function Library() {
 
   const ownedCount = PACKS.filter((p) => owns(p.rung)).length;
 
+  // A locked pack whose superset is already owned is not an offer, it is a
+  // second price tag on a file they can already play. The downsell is the only
+  // one of these today: it is the Kit's 20 minute protocol on its own.
+  const shown = PACKS.filter((p) => owns(p.rung) || !(p.supersededBy && owns(p.supersededBy)));
+
   return (
     <div className="p-6 space-y-8 pb-24">
       <div className="space-y-2 pt-4">
@@ -54,10 +59,38 @@ export default function Library() {
         </p>
       </div>
 
-      {PACKS.map((pack) => (
+      {shown.map((pack) => (
         <PackCard key={pack.rung} pack={pack} owned={owns(pack.rung)} email={user?.email ?? null} />
       ))}
+
+      {/* The fifth rung is not a pack: nothing to play, and what it delivers is
+          a second account rather than a file. It gets a row of its own rather
+          than a PackCard pretending it has tracks. */}
+      <SeatRow owned={owns("seat")} />
     </div>
+  );
+}
+
+/** The second seat, from the buyer's side. The whole flow lives on /partner. */
+function SeatRow({ owned }: { owned: boolean }) {
+  const [, setLocation] = useLocation();
+  return (
+    <Card className="p-5 bg-secondary/30 border-border/50 space-y-4">
+      <div className="flex items-start gap-3">
+        <UserPlus className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Second Seat</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {owned
+              ? "You have a seat to give. Send the invitation and they get their own account and their own seven nights."
+              : "A second account for the person you wake up, with the seven nights worked out on their nights, not yours."}
+          </p>
+        </div>
+      </div>
+      <Button variant="outline" className="w-full" onClick={() => setLocation("/partner")}>
+        {owned ? "Give the seat" : `Add a second seat for \u20ac${OFFERS.seat.price}`}
+      </Button>
+    </Card>
   );
 }
 

@@ -27,7 +27,12 @@ export const usersTable = pgTable("users", {
   kitPurchasedAt: timestamp("kit_purchased_at"),
   /** The single 3AM protocol, for whoever declined the Kit. */
   downsellPurchasedAt: timestamp("downsell_purchased_at"),
-  /** Second seats bought and not yet handed to a partner. */
+  /**
+   * Second seats bought. Bought, not remaining: `recomputeAccess` rewrites this
+   * from the live seat rows in the ledger, so anything decremented here comes
+   * straight back. Seats still free are counted in `seat_invites` instead, and
+   * `seatStateFor` in the API is the only thing that should be asked.
+   */
   seatCredits: integer("seat_credits").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
