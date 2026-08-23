@@ -17,8 +17,8 @@ const CURRENCY = "€";
 const PRICE_TODAY = 27;
 const PRICE_AFTER = 97;
 const GUARANTEE_DAYS = 30;
-const BUMP_DATE = new Date("2026-06-30T22:00:00Z");
-const BUMP_LABEL = "June 30";
+const BUMP_DATE = new Date("2026-09-30T22:00:00Z");
+const BUMP_LABEL = "September 30";
 
 const VIMEO_ID = "1182232180";
 const VIMEO_PLAYER_API = "https://player.vimeo.com/api/player.js";
@@ -1129,7 +1129,7 @@ export default function Landing() {
             },
             {
               q: `Why does the price jump to €97 after ${BUMP_LABEL}?`,
-              a: `We're locking in early customers at €27 before the full audio library and clinical advisor review go live on July 1. After that the price moves to €97 permanently — the protocol itself stays identical. If you wait, you pay €70 more for the same product. No fake countdown, no reset — the date is fixed.`,
+              a: `€27 is the launch price for early customers. From ${BUMP_LABEL} it moves to €97 and stays there. The protocol you get is identical either way, so waiting costs you €70 for the same product.`,
             },
           ].map((faq, i) => (
             <div key={i} className="border-b border-[#EFEFEC] last:border-0">
