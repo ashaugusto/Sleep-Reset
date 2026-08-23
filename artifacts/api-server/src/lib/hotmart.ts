@@ -11,7 +11,19 @@ import { createHash, timingSafeEqual } from "node:crypto";
 // ever sends one we reject it rather than guess, because a misread offer code
 // grants the wrong product.
 
-export type Rung = "front" | "bump" | "oto1" | "downsell" | "seat" | "season" | "backend";
+// The seventh rung is sold at two prices, and each price is its own Hotmart
+// offer, so it is two rungs: the written plan, and the same plan with thirty
+// minutes on a call. Buying the second is what buys the call, and that has to
+// be visible in what the account owns rather than inferred from an amount.
+export type Rung =
+  | "front"
+  | "bump"
+  | "oto1"
+  | "downsell"
+  | "seat"
+  | "season"
+  | "backend"
+  | "backendLive";
 /** A paid-for offer we have no mapping for. Recorded, never granted. */
 export type RungOrUnknown = Rung | "unknown";
 
@@ -97,6 +109,7 @@ export function rungForOffer(offerCode?: string | null, productUcode?: string | 
     ["seat", ["OFF_SEAT"]],
     ["season", ["OFF_SEASON"]],
     ["backend", ["OFF_BACKEND"]],
+    ["backendLive", ["OFF_BACKEND_LIVE"]],
   ];
 
   if (code) {
@@ -121,6 +134,7 @@ export function rungForOffer(offerCode?: string | null, productUcode?: string | 
       ["seat", "UCODE_SEAT"],
       ["season", "UCODE_SEASON"],
       ["backend", "UCODE_BACKEND"],
+      ["backendLive", "UCODE_BACKEND_LIVE"],
     ];
     for (const [rung, name] of ucodeMap) {
       const configured = env(name).toLowerCase();

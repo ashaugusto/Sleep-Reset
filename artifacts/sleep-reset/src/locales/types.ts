@@ -125,6 +125,86 @@ export type SeatCopy = {
   guarantee: string;
 };
 
+/** ── The shape the in-platform rungs share. ──
+ *  Rungs 4, 5 and 6 are the same page under different names: a promise, a list
+ *  of bullets, one price and one button. Sophie's mould, written down once so
+ *  the sixth does not drift from the fourth, and so the seventh can say exactly
+ *  what it changes.
+ *
+ *  `bullets` is narrowed to a fixed length by each rung that uses it. A tuple is
+ *  what turns a dropped line into a type error rather than a page that is one
+ *  bullet shorter in Spanish and nowhere else.
+ */
+export type RungCopy = {
+  name: string;
+  eyebrow: string;
+  title: string;
+  promise: string;
+  bullets: string[];
+  priceLine: string;
+  cta: string;
+  /** Only rung 4 has a refusal: it is the one that lives on an exit page. */
+  decline?: string;
+  guarantee: string;
+};
+
+/** ── Reset Season, the sixth rung: four drops across a year, paid once. ──
+ *  39 EUR, sold inside the platform, delivered on 1 January, 1 April, 1 July
+ *  and 1 October and on no other day. Every buyer gets the four dates that fall
+ *  inside their twelve months, which is why the copy names them.
+ *
+ *  The line the whole rung stands on: this is not a subscription. The sales page
+ *  promises "paid once, no subscription", and a year of content bought in one go
+ *  is the only shape that keeps that true. Three of the five bullets say so out
+ *  loud, in all four languages, and none of them may be softened.
+ *
+ *  `{nextDate}` is the one variable here that is not a price: the next of the
+ *  four dates counted from today, in the visitor's language, with no preposition
+ *  and no article, because the French and Spanish bullets already carry `le` and
+ *  `el`. src/lib/season.ts is the only place that works it out.
+ *
+ *  There is no `decline`, for the same reason the seat has none: this is a card
+ *  in the member area, not a step in a funnel, and the way to say no is to not
+ *  press the button.
+ *
+ *  Copy from Sophie, FLU-226: marketing/esteira-degraus-4-7-copy.md.
+ */
+export type SeasonCopy = Omit<RungCopy, "bullets" | "decline"> & {
+  bullets: [string, string, string, string, string];
+};
+
+/** One level of rung 7. The head of the page is shared between the two; the
+ *  price line and the button are not, and `{price}` resolves per level rather
+ *  than once for the page. */
+export type BackendTier = {
+  name: string;
+  priceLine: string;
+  /** Only the upper level has one: a bullet more, not a bullet different. */
+  extra: string | null;
+  cta: string;
+};
+
+/** ── The Recalibration, the seventh rung: a person reads the buyer's log. ──
+ *  Sold at the end of night 7 and only to an account with seven logged nights,
+ *  because what is being sold is a reading of that log. Two levels: 79 for the
+ *  written plan, 149 for the same plan plus thirty minutes live. The prices are
+ *  in src/lib/offers.ts under `backend` and `backendLive`, one Hotmart offer
+ *  each, and the tiers below are in that same order.
+ *
+ *  Two lines are compliance, not style, and they are the last bullet and the
+ *  guarantee: this is education and coaching, never diagnosis or treatment. The
+ *  guarantee cannot be the shared 30 days either. Human work already delivered
+ *  does not come back like a file, so the promise is made before the work
+ *  starts: we read the log first, and if there is not enough in it we say so and
+ *  refund without having begun.
+ *
+ *  Copy from Sophie, FLU-226: marketing/esteira-degraus-4-7-copy.md.
+ */
+export type BackendCopy = Omit<RungCopy, "bullets" | "priceLine" | "cta" | "decline"> & {
+  bullets: [string, string, string, string, string];
+  tiers: [BackendTier, BackendTier];
+};
+
 export type Dict = {
   code: string;
   /** Native name, shown in the switcher. */
@@ -232,4 +312,6 @@ export type Dict = {
   oto1: Oto1Copy;
   downsell: DownsellCopy;
   seat: SeatCopy;
+  season: SeasonCopy;
+  backend: BackendCopy;
 };

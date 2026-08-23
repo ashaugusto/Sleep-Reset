@@ -396,6 +396,53 @@ const fr: Dict = {
     cta: "Ajouter un deuxième accès pour {price}",
     guarantee: "La même garantie de 30 jours que le protocole.",
   },
+  // Degraus 6 e 7, texto da Sophie: marketing/esteira-degraus-4-7-copy.md.
+  // O degrau 6 abre no dia 14 e o 7 no fim da noite 7: src/lib/rung-gates.ts
+  // guarda essa ordem, porque as duas ofertas juntas comiam-se uma a outra.
+  season: {
+    name: "Reset Season",
+    eyebrow: "L'année n'est pas plate",
+    title: "Il y a quatre nuits par an où ça revient",
+    promise: "Quatre nouveaux protocoles sur une année, aux quatre dates où le sommeil se casse. Payé une fois.",
+    bullets: [
+      "Quatre livraisons par an, à dates fixes : le 1er janvier, le 1er avril, le 1er juillet et le 1er octobre. Ce sont les quatre moments où le sommeil lâche, et il lâche toujours aux mêmes.",
+      "Vous recevez les quatre livraisons qui tombent dans vos douze mois. La première est le {nextDate}.",
+      "Chaque livraison est un nouvel enregistrement plus une page sur quoi faire cette semaine-là. Pas de théorie et pas de programme.",
+      "Payé une fois pour les douze mois. Sans reconduction, sans carte enregistrée et sans rien à annuler.",
+      "Ce que vous avez déjà reste exactement comme c'est. Et les livraisons que vous recevez restent dans votre bibliothèque définitivement, y compris après la fin de l'année.",
+    ],
+    priceLine: "Un paiement unique de {price} pour les quatre livraisons de l'année. Ce n'est pas un abonnement.",
+    cta: "Je prends Reset Season pour {price}",
+    guarantee: "Garantie de 30 jours à partir de votre première livraison, pas de l'achat. Le délai ne commence que quand vous avez quelque chose en main.",
+  },
+  backend: {
+    name: "The Recalibration",
+    eyebrow: "Après 7 nuits enregistrées",
+    title: "L'application calcule. Ici, quelqu'un regarde",
+    promise: "Quelqu'un lit les nuits que vous avez enregistrées et vous renvoie par écrit la fenêtre que vos propres données demandent.",
+    bullets: [
+      "Vous n'envoyez rien. Votre journal de sommeil est déjà dans le compte, et c'est là-dessus que le travail se fait.",
+      "Une personne parcourt votre journal nuit par nuit. Ce n'est pas le calcul automatique de l'application, celui-là vous l'avez déjà et vous le gardez.",
+      "Vous recevez un plan écrit pour votre cas : la fenêtre recalculée, quoi changer en premier et quoi arrêter de faire.",
+      "Il arrive en 7 jours ouvrés au plus, une fois. Ce n'est pas un suivi continu et il n'y a aucun abonnement derrière.",
+      "C'est de l'éducation et de l'accompagnement sur les habitudes de sommeil. Ce n'est pas un diagnostic, pas un traitement, et cela ne remplace pas un médecin.",
+    ],
+    tiers: [
+      {
+        name: "The Recalibration",
+        priceLine: "Le plan écrit, en 7 jours ouvrés au plus.",
+        extra: null,
+        cta: "Demander ma recalibration pour {price}",
+      },
+      {
+        name: "The Recalibration Live",
+        priceLine: "Le même plan écrit, et 30 minutes en direct pour le parcourir avec vous.",
+        extra: "Trente minutes en visio, fixées après votre lecture du plan, pour les questions qui n'apparaissent qu'à la lecture.",
+        cta: "Je prends le plan et l'appel pour {price}",
+      },
+    ],
+    guarantee: "Nous regardons votre journal avant de commencer. S'il n'y a pas assez de nuits pour travailler, nous le disons et nous vous remboursons sans avoir commencé.",
+  },
 };
 
 export default fr;

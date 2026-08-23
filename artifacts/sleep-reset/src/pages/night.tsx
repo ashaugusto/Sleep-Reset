@@ -1,5 +1,7 @@
 import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useEntitlements } from "@/hooks/use-entitlements";
+import { isBackendOffered } from "@/lib/rung-gates";
 import {
   useListNightCompletions,
   useUpdateNightCompletion,
@@ -7,6 +9,8 @@ import {
   useGetUser,
   getGetUserQueryKey,
   useUpdateSleepProfile,
+  useGetProgress,
+  getGetProgressQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -206,6 +210,15 @@ export default function Night() {
     query: { enabled: !!userId, queryKey: getListNightCompletionsQueryKey(userId || "") },
   });
 
+  // Rung 7 is asked for here and nowhere else: the end of night seven, when the
+  // log it is read from has just been filled in and is worth the most to the
+  // person who filled it. src/lib/rung-gates.ts holds the condition, including
+  // why rung 6 deliberately does not share this moment.
+  const { data: progress } = useGetProgress(userId || "", {
+    query: { enabled: !!userId, queryKey: getGetProgressQueryKey(userId || "") },
+  });
+  const { owns } = useEntitlements();
+
   const updateCompletion = useUpdateNightCompletion();
   const updateProfile = useUpdateSleepProfile();
 
@@ -250,8 +263,19 @@ export default function Night() {
 
   const handleComplete = () => {
     setShowCelebration(true);
+    // The seventh night ends on the recalibration rather than on the dashboard,
+    // when the gate is open for it. Every other night, and every account that
+    // already owns it, goes where it always went.
+    const next = isBackendOffered({
+      loggedNights: progress?.logsCount ?? 0,
+      night: nightId,
+      purchasedAt: user?.purchasedAt ? new Date(user.purchasedAt) : null,
+      owned: (["backend", "backendLive"] as const).filter(owns),
+    })
+      ? "/recalibration"
+      : "/dashboard";
     setTimeout(() => {
-      setLocation("/dashboard");
+      setLocation(next);
     }, 2000);
   };
 

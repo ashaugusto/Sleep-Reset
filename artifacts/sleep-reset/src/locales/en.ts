@@ -397,6 +397,53 @@ const en: Dict = {
     cta: "Add a second seat for {price}",
     guarantee: "The same 30 day guarantee as the protocol.",
   },
+  // Degraus 6 e 7, texto da Sophie: marketing/esteira-degraus-4-7-copy.md.
+  // O degrau 6 abre no dia 14 e o 7 no fim da noite 7: src/lib/rung-gates.ts
+  // guarda essa ordem, porque as duas ofertas juntas comiam-se uma a outra.
+  season: {
+    name: "Reset Season",
+    eyebrow: "The year is not flat",
+    title: "There are four nights a year when this comes back",
+    promise: "Four new protocols across a year, on the four dates when sleep tends to fall over. Paid once.",
+    bullets: [
+      "Four drops a year, on fixed dates: 1 January, 1 April, 1 July and 1 October. Those are the four points where sleep goes, and it goes at the same ones every time.",
+      "You get the four drops that fall inside your twelve months. The first one is {nextDate}.",
+      "Each drop is a new recording plus one page of what to do that week. No theory and no course.",
+      "Paid once for the twelve months. No renewal, no card kept on file, nothing to cancel.",
+      "What you already own stays exactly as it is. And the drops you receive stay in your library for good, including after the year ends.",
+    ],
+    priceLine: "One payment of {price} for the four drops of the year. This is not a subscription.",
+    cta: "Get Reset Season for {price}",
+    guarantee: "30 day guarantee counted from your first drop, not from the purchase. The clock only starts once you have something in hand.",
+  },
+  backend: {
+    name: "The Recalibration",
+    eyebrow: "After 7 logged nights",
+    title: "The app calculates. This is someone looking",
+    promise: "Someone reads the nights you logged and writes back the window your own data is asking for.",
+    bullets: [
+      "You send nothing. Your sleep log is already in the account, and that is what gets worked on.",
+      "A person goes through your log night by night. This is not the app's automatic calculation, you already have that and you keep it.",
+      "You get back a written plan for your case: the recalculated window, what to change first, and what to stop doing.",
+      "It arrives in up to 7 working days, once. This is not ongoing coaching and there is no subscription behind it.",
+      "This is education and coaching about sleep habits. It is not a diagnosis, it is not treatment, and it does not replace a doctor.",
+    ],
+    tiers: [
+      {
+        name: "The Recalibration",
+        priceLine: "The written plan, in up to 7 working days.",
+        extra: null,
+        cta: "Ask for my recalibration for {price}",
+      },
+      {
+        name: "The Recalibration Live",
+        priceLine: "The same written plan, plus 30 minutes live to walk you through it.",
+        extra: "Thirty minutes on a call, booked after you have read the plan, for the questions that only turn up in the reading.",
+        cta: "Get the plan and the call for {price}",
+      },
+    ],
+    guarantee: "We look at your log before starting. If there are not enough nights in there to work with, we say so and refund you without having started.",
+  },
 };
 
 export default en;

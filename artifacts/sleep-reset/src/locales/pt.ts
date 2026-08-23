@@ -392,6 +392,53 @@ const pt: Dict = {
     cta: "Adicionar um segundo assento por {price}",
     guarantee: "A mesma garantia de 30 dias do protocolo.",
   },
+  // Degraus 6 e 7, texto da Sophie: marketing/esteira-degraus-4-7-copy.md.
+  // O degrau 6 abre no dia 14 e o 7 no fim da noite 7: src/lib/rung-gates.ts
+  // guarda essa ordem, porque as duas ofertas juntas comiam-se uma a outra.
+  season: {
+    name: "Reset Season",
+    eyebrow: "O ano não é plano",
+    title: "O ano tem quatro noites em que isto volta",
+    promise: "Quatro protocolos novos ao longo de um ano, nas quatro datas em que o sono costuma cair. Pago uma vez.",
+    bullets: [
+      "Quatro entregas por ano, em datas fixas: 1 de Janeiro, 1 de Abril, 1 de Julho e 1 de Outubro. São as quatro alturas em que o sono cai, e cai sempre nas mesmas.",
+      "Você recebe as quatro entregas que caem dentro dos seus doze meses. A primeira é {nextDate}.",
+      "Cada entrega é uma gravação nova mais uma página com o que fazer naquela semana. Nada de teoria e nada de curso.",
+      "Pago uma vez pelos doze meses. Sem renovação, sem cartão guardado e sem nada para cancelar.",
+      "O que você já tem continua seu, sem alteração nenhuma. E as entregas que receber ficam na sua biblioteca para sempre, mesmo depois do ano acabar.",
+    ],
+    priceLine: "Um pagamento único de {price} pelas quatro entregas do ano. Não é assinatura.",
+    cta: "Quero o Reset Season por {price}",
+    guarantee: "Garantia de 30 dias a contar da sua primeira entrega, não da compra. O prazo só começa quando você tiver alguma coisa na mão.",
+  },
+  backend: {
+    name: "The Recalibration",
+    eyebrow: "Depois de 7 noites registadas",
+    title: "A app calcula. Isto é alguém olhando",
+    promise: "Alguém lê as noites que você registou e devolve, por escrito, a janela que os seus próprios dados pedem.",
+    bullets: [
+      "Você não envia nada. O seu sleep-log já está na conta, e é sobre ele que se trabalha.",
+      "Uma pessoa passa noite a noite pelo seu registo. Não é o cálculo automático da app, esse você já tem e continua a ter.",
+      "Você recebe um plano escrito para o seu caso: a janela recalculada, o que mudar primeiro e o que parar de fazer.",
+      "Chega em até 7 dias úteis, uma vez. Não é acompanhamento contínuo e não há assinatura nenhuma por trás.",
+      "É educação e acompanhamento sobre hábitos de sono. Não é diagnóstico, não é tratamento e não substitui um médico.",
+    ],
+    tiers: [
+      {
+        name: "The Recalibration",
+        priceLine: "O plano escrito, em até 7 dias úteis.",
+        extra: null,
+        cta: "Pedir a minha recalibração por {price}",
+      },
+      {
+        name: "The Recalibration Live",
+        priceLine: "O mesmo plano escrito, e mais 30 minutos ao vivo para o percorrer consigo.",
+        extra: "Trinta minutos por chamada, marcados depois de você ler o plano, para as perguntas que só aparecem na leitura.",
+        cta: "Quero o plano e a chamada por {price}",
+      },
+    ],
+    guarantee: "Olhamos para o seu registo antes de começar. Se não houver ali noites suficientes para trabalhar, dizemos e devolvemos o dinheiro sem ter começado.",
+  },
 };
 
 export default pt;

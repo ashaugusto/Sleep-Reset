@@ -68,6 +68,7 @@ const RUNGS = [
   { rung: "seat", product: "VITE_HOTMART_PRODUCT_SEAT", off: "VITE_HOTMART_OFF_SEAT" },
   { rung: "season", product: "VITE_HOTMART_PRODUCT_SEASON", off: "VITE_HOTMART_OFF_SEASON" },
   { rung: "backend", product: "VITE_HOTMART_PRODUCT_BACKEND", off: "VITE_HOTMART_OFF_BACKEND" },
+  { rung: "backendLive", product: "VITE_HOTMART_PRODUCT_BACKEND_LIVE", off: "VITE_HOTMART_OFF_BACKEND_LIVE" },
 ];
 
 // The four sleep-type variants of the front offer. Same product, same price,
@@ -140,7 +141,16 @@ function readPromisedWarranty() {
     if (!file.endsWith(".ts") || file === "types.ts") continue;
     const text = readFileSync(join(dir, file), "utf8");
     const days = new Set();
-    for (const m of text.matchAll(/\b(\d{1,3})[\s-](?:days?|jours?|dias?|Tage)\b/gi)) days.add(Number(m[1]));
+    // Working days are not a refund window. Rung 7 promises a written plan in
+    // "up to 7 working days", and in Portuguese and French the qualifier comes
+    // after the noun ("7 dias úteis", "7 jours ouvrés"), so without this the
+    // turnaround gets read as a 7 day guarantee — below the European floor this
+    // script exists to defend.
+    const WORKING = /^\s*(?:[úu]teis|ouvr[ée]s?|ouvrables?|h[áa]biles|laborables|working|business)/i;
+    for (const m of text.matchAll(/\b(\d{1,3})[\s-](?:days?|jours?|d[íi]as?|Tage)\b/gi)) {
+      if (WORKING.test(text.slice(m.index + m[0].length))) continue;
+      days.add(Number(m[1]));
+    }
     if (days.size) byLocale[file.replace(/\.ts$/, "")] = [...days].sort((a, b) => a - b);
   }
   return byLocale;

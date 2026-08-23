@@ -15,6 +15,7 @@ import { PRICE_TODAY, PRICE_ANCHOR, BUMP_PRICE, type Profile } from "@/lib/quiz-
 //   seat      a second account, for the partner who gets woken up.
 //   season    Reset Season, four seasonal drops, paid once for the year.
 //   backend   personal recalibration, read off the buyer's own sleep log.
+//   backendLive  the same recalibration, plus thirty minutes on a call.
 //
 // The promise on the sales page is "no app, no subscription, paid once", so
 // nothing here is recurring and nothing already sold is ever revoked. Season
@@ -30,7 +31,15 @@ import { PRICE_TODAY, PRICE_ANCHOR, BUMP_PRICE, type Profile } from "@/lib/quiz-
 //
 // Rationale and pricing: marketing/flu143-esteira-hotmart.md
 
-export type Rung = "front" | "bump" | "oto1" | "downsell" | "seat" | "season" | "backend";
+export type Rung =
+  | "front"
+  | "bump"
+  | "oto1"
+  | "downsell"
+  | "seat"
+  | "season"
+  | "backend"
+  | "backendLive";
 
 export interface Offer {
   rung: Rung;
@@ -54,8 +63,25 @@ export const OFFERS: Record<Rung, Offer> = {
   downsell: { rung: "downsell", price: 9, shippable: true },
   seat: { rung: "seat", price: 17, shippable: true },
   season: { rung: "season", price: 39, shippable: false },
+  // The seventh rung is sold at two prices, so it is two rungs here rather than
+  // one rung with a second number attached. Sophie's copy has one head and two
+  // levels (locales, `backend.tiers`), and the alternative was a `priceHigh`
+  // field on a single entry — which reads smaller until you follow it through:
+  // the upper level needs its own Hotmart offer, its own checkout URL and its
+  // own entitlement, because buying it is what buys the call. Every one of
+  // those is keyed by rung. A second price on one rung would have meant a
+  // special case in `offerCode`, in `productFor`, in the webhook's offer map
+  // and in what the account is shown to own; a second rung needs none.
   backend: { rung: "backend", price: 79, shippable: false },
+  backendLive: { rung: "backendLive", price: 149, shippable: false },
 };
+
+/**
+ * The two levels of rung 7, in the order the copy lists them under
+ * `backend.tiers`. The page walks them together: `tiers[i]` is the words,
+ * `OFFERS[BACKEND_TIERS[i]]` is the price and the checkout behind them.
+ */
+export const BACKEND_TIERS = ["backend", "backendLive"] as const satisfies readonly Rung[];
 
 // ─── Where the money is taken ────────────────────────────────────────────────
 // Hotmart, and only Hotmart. Decided by Ash on 9 Aug 2026 in FLU-143: Stripe is
@@ -85,6 +111,7 @@ const ENV: Record<string, string> = {
   productSeat: String(import.meta.env.VITE_HOTMART_PRODUCT_SEAT || ""),
   productSeason: String(import.meta.env.VITE_HOTMART_PRODUCT_SEASON || ""),
   productBackend: String(import.meta.env.VITE_HOTMART_PRODUCT_BACKEND || ""),
+  productBackendLive: String(import.meta.env.VITE_HOTMART_PRODUCT_BACKEND_LIVE || ""),
   front: String(import.meta.env.VITE_HOTMART_OFF_FRONT || ""),
   frontMaintenance: String(import.meta.env.VITE_HOTMART_OFF_FRONT_MAINTENANCE || ""),
   frontOnset: String(import.meta.env.VITE_HOTMART_OFF_FRONT_ONSET || ""),
@@ -96,6 +123,7 @@ const ENV: Record<string, string> = {
   seat: String(import.meta.env.VITE_HOTMART_OFF_SEAT || ""),
   season: String(import.meta.env.VITE_HOTMART_OFF_SEASON || ""),
   backend: String(import.meta.env.VITE_HOTMART_OFF_BACKEND || ""),
+  backendLive: String(import.meta.env.VITE_HOTMART_OFF_BACKEND_LIVE || ""),
 };
 
 /**

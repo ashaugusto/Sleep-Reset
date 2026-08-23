@@ -37,6 +37,8 @@ const Kit = lazy(() => import("@/pages/kit"));
 const Protocol = lazy(() => import("@/pages/protocol"));
 const Partner = lazy(() => import("@/pages/partner"));
 const Seat = lazy(() => import("@/pages/seat"));
+const Season = lazy(() => import("@/pages/season"));
+const Recalibration = lazy(() => import("@/pages/recalibration"));
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const queryClient = new QueryClient();
@@ -105,6 +107,18 @@ function Router() {
           which is public and lives with the other unguarded routes below. */}
       <Route path="/partner">
         <AuthGuard><AppLayout><Partner /></AppLayout></AuthGuard>
+      </Route>
+      {/* Rungs 6 and 7, both sold inside the platform rather than in the
+          funnel, and both guarded because they are offered to a member and read
+          off their account. When each one is *offered* is src/lib/rung-gates.ts:
+          rung 7 at the end of night 7, rung 6 a week later on day
+          14. They used to open on the same instant, and two offers on one
+          screen is neither offer. */}
+      <Route path="/season">
+        <AuthGuard><AppLayout><Season /></AppLayout></AuthGuard>
+      </Route>
+      <Route path="/recalibration">
+        <AuthGuard><AppLayout><Recalibration /></AppLayout></AuthGuard>
       </Route>
       {/* The upsell Hotmart's sales funnel redirects to after the payment
           clears. Public and unguarded on purpose: the buyer has paid but has

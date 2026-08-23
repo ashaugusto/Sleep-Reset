@@ -1,12 +1,18 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
+import {
+  useGetUser,
+  getGetUserQueryKey,
+  useGetProgress,
+  getGetProgressQueryKey,
+} from "@workspace/api-client-react";
 import { useEntitlements } from "@/hooks/use-entitlements";
 import { PACKS, trackSrc, type Pack } from "@/lib/library";
 import { OFFERS } from "@/lib/offers";
+import { offeredAt } from "@/lib/rung-gates";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Headphones, FileText, Lock, Loader2, UserPlus } from "lucide-react";
+import { Headphones, FileText, Lock, Loader2, UserPlus, CalendarDays, Eye } from "lucide-react";
 
 // ─── The member library ──────────────────────────────────────────────────────
 // Ash asked where the Kit's member page is, and whether it is the same one as
@@ -32,6 +38,19 @@ export default function Library() {
     query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId || "") },
   });
   const { owns, isLoading } = useEntitlements();
+  // Rungs 6 and 7 are gated on where the member is, not on what they own, and
+  // the library gets one row between them rather than one each. That is the
+  // collision rule made structural: src/lib/rung-gates.ts hands back the single
+  // rung this surface may ask for right now, and from day 14 that is the
+  // season. Two offers on one screen is neither offer.
+  const { data: progress } = useGetProgress(userId || "", {
+    query: { enabled: !!userId, queryKey: getGetProgressQueryKey(userId || "") },
+  });
+  const member = {
+    loggedNights: progress?.logsCount ?? 0,
+    purchasedAt: user?.purchasedAt ? new Date(user.purchasedAt) : null,
+    owned: (["season", "backend", "backendLive"] as const).filter(owns),
+  };
 
   if (isLoading) {
     return (
@@ -47,6 +66,10 @@ export default function Library() {
   // second price tag on a file they can already play. The downsell is the only
   // one of these today: it is the Kit's 20 minute protocol on its own.
   const shown = PACKS.filter((p) => owns(p.rung) || !(p.supersededBy && owns(p.supersededBy)));
+
+  // One rung, or none. Not a list: the point of the gate is that this surface
+  // never asks two questions at once.
+  const slot = offeredAt("library", member);
 
   return (
     <div className="p-6 space-y-8 pb-24">
@@ -67,7 +90,84 @@ export default function Library() {
           a second account rather than a file. It gets a row of its own rather
           than a PackCard pretending it has tracks. */}
       <SeatRow owned={owns("seat")} />
+
+      {/* Rung 7 once it is theirs. It is asked for at the end of night 7 and
+          not here, but an account that bought it needs a way back to what it
+          bought. */}
+      {(owns("backend") || owns("backendLive")) && (
+        <OfferRow
+          icon={<Eye className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />}
+          title="The Recalibration"
+          body="Your written plan is in the weekly batch. It arrives by email in up to 7 working days, and there is nothing for you to send."
+          cta="See what you asked for"
+          href="/recalibration"
+        />
+      )}
+
+      {owns("season") && (
+        <OfferRow
+          icon={<CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />}
+          title="Reset Season"
+          body="Four drops across the year, on 1 January, 1 April, 1 July and 1 October. Each one lands in here on the day."
+          cta="See the year"
+          href="/season"
+        />
+      )}
+
+      {/* And the one rung this surface is allowed to ask for today, if any.
+          The season from day 14; before that, rung 7 for anyone who reached the
+          end of night 7 and did not decide on the spot. Never both. */}
+      {slot === "season" && (
+        <OfferRow
+          icon={<CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />}
+          title="Reset Season"
+          body="Four new protocols across the year, on the four dates sleep tends to fall over. Paid once, and nothing renews."
+          cta={`Add Reset Season \u00b7 \u20ac${OFFERS.season.price}`}
+          href="/season"
+        />
+      )}
+      {slot === "backend" && (
+        <OfferRow
+          icon={<Eye className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />}
+          title="The Recalibration"
+          body="A person reads the seven nights you logged and writes back the window your own data is asking for. The app calculates; this is somebody looking."
+          cta={`Have someone read my log \u00b7 from \u20ac${OFFERS.backend.price}`}
+          href="/recalibration"
+        />
+      )}
     </div>
+  );
+}
+
+/** A rung that delivers something other than a file: a person, a service, a
+ *  year of drops. Same row as the seat, which was the first of them. */
+function OfferRow({
+  icon,
+  title,
+  body,
+  cta,
+  href,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  cta: string;
+  href: string;
+}) {
+  const [, setLocation] = useLocation();
+  return (
+    <Card className="p-5 bg-secondary/30 border-border/50 space-y-4">
+      <div className="flex items-start gap-3">
+        {icon}
+        <div className="space-y-1">
+          <p className="text-sm font-medium">{title}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{body}</p>
+        </div>
+      </div>
+      <Button variant="outline" className="w-full" onClick={() => setLocation(href)}>
+        {cta}
+      </Button>
+    </Card>
   );
 }
 
