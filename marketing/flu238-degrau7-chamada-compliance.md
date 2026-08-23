@@ -2,26 +2,34 @@
 
 **Issue:** FLU-238 (filha da FLU-226) · **Data:** 23 de Agosto de 2026 · **Revisor:** Roger, jurídico
 **Objecto:** o nível de 149 EUR do degrau 7 do Sleep Wired, que acrescenta 30 minutos de chamada ao vivo ao plano escrito.
-**Base revista:** `marketing/esteira-degraus-4-7-copy.md`, secção "Degrau 7" (commit 36a88ad), mais `src/pages/terms.tsx` e `src/pages/privacy-policy.tsx` da app.
+**Base revista:** `marketing/esteira-degraus-4-7-copy.md`, secção "Degrau 7" (commit 36a88ad).
+**Lê-se depois de:** `marketing/flu235-degrau7-compliance.md`, o parecer da FLU-235 sobre a versão escrita. Este documento não o substitui e não o repete: assume-o. Onde os dois falarem da mesma linha, **manda o da FLU-235**.
 
 ---
 
 ## Resposta ao ponto 1, em uma linha
 
-**A linha que está escrita chega para o nível de 79 e não chega para o nível de 149.**
+**Não chega, e não chega em dois sentidos diferentes.**
 
-Não é preciso reescrever nada do que já está aprovado. A bullet actual ("É educação e acompanhamento sobre hábitos de sono. Não é diagnóstico, não é tratamento e não substitui um médico.") fica exactamente como está, nos quatro idiomas, e continua a servir os dois níveis. O que falta é texto novo em dois sítios que hoje não existem:
+Primeiro, uma correcção ao enunciado da issue. A linha citada no pedido, a que fala de "educação e acompanhamento", **já não é a linha em vigor**. O parecer da FLU-235 reprovou-a mesmo para a versão escrita e substituiu-a nos quatro idiomas, porque lhe faltava negar aconselhamento médico e porque, em EN, dizia que o serviço era `coaching` três linhas depois de a bullet anterior dizer que não era. A redacção que conta hoje é a da FLU-235, bullet 5:
 
-1. **Uma linha a mais na página de venda**, só debaixo do nível 2, a dizer o que a chamada não faz.
-2. **Um aceite no momento de marcar a chamada**, que é o ponto onde a linha da página de venda não vale nada.
+> É educação sobre hábitos de sono, entregue por escrito. Não é diagnóstico, não é tratamento, não é aconselhamento médico e não substitui uma consulta.
 
-O ponto 2 é o que interessa. Explico porquê antes de dar o texto.
+Segundo, e é a resposta à pergunta: **mesmo essa, já corrigida, não cobre a chamada.** Repare no que ela diz de si própria: "entregue por escrito". A frase foi escrita para um documento e nomeia o suporte. Uma chamada ao vivo não é entregue por escrito, e portanto a bullet que a devia cobrir exclui-a pela própria redacção.
+
+Então o nível de 149 precisa de texto próprio. Precisa de três coisas, e só a primeira é texto de página de venda:
+
+1. **Uma linha a mais na página**, só debaixo do nível 2, a dizer o que a chamada não faz. Bloco A.
+2. **Um aceite no momento de marcar a chamada.** Blocos B, C e D. É o que interessa, e é a parte que a página de venda não consegue fazer, por mais bem escrita que esteja.
+3. **Regras de conduta para quem está na chamada.** Não é texto de cliente, e é a peça sem a qual as outras duas são decoração.
+
+**Nota sobre as caixas.** A FLU-235 já criou duas caixas, e são no momento da **compra**: início antecipado do trabalho, e autorização para uma pessoa ler o sleep-log. As que proponho aqui são noutro momento, o da **marcação da chamada**, e cobrem outra coisa: o que se vai dizer ao vivo, e não o que se vai ler. São quatro caixas ao todo, em dois momentos, e nenhuma substitui a outra.
 
 ---
 
-## Porque é que a linha da página de venda não chega
+## Porque é que nenhuma linha de página de venda chega, por melhor que seja
 
-A frase actual é boa. O problema não é a frase, é onde ela vive e o que ela cobre.
+Já vimos que a bullet em vigor se auto-exclui, ao dizer que é entregue por escrito. Mas suponha que se corrigia essa palavra. Continuava a não chegar, e por quatro razões que não são de redacção nenhuma.
 
 **Primeiro: uma página de venda não é uma cláusula aceite.** A linha está numa bullet, no meio de um argumentário, numa página que a pessoa lê para decidir comprar. Nenhuma lei de consumo europeia trata uma bullet de sales page como termo contratual oponível. Serve para não induzir em erro, e nisso funciona. Não serve para fixar o que a pessoa aceitou. Enquanto o produto era um plano escrito enviado uma vez, isso chegava, porque o plano escrito é revisto antes de sair e nunca diz mais do que o autor quis dizer. Uma chamada ao vivo não tem essa protecção.
 
@@ -129,17 +137,15 @@ Caixa separada, obrigatória, não pré-marcada.
 
 **ES:** Entiendo que esta llamada es educación sobre hábitos de sueño, que no es un diagnóstico ni un tratamiento, y que en ella no se habla de medicación. Pido que la llamada tenga lugar en la fecha que elegí, y entiendo que una vez que haya ocurrido ya no puedo pedir el reembolso de los 30 minutos.
 
-## E. Ajuste à garantia do nível 2
+## E. Garantia: nada a acrescentar aqui
 
-A garantia escrita hoje ("Olhamos para o seu registo antes de começar. Se não houver ali noites suficientes para trabalhar, dizemos e devolvemos o dinheiro sem ter começado.") está bem para o nível de 79 e fica incompleta no de 149, porque não diz onde é o ponto sem retorno de um serviço humano que tem duas entregas. Uma frase resolve, a acrescentar só no nível 2:
+Escrevi de início uma frase para o ponto sem retorno do nível 2. Retirei-a: a FLU-235 já reescreveu a linha de garantia inteira, para os dois níveis, e fá-lo melhor, porque enquadra os 14 dias do direito de anular e põe o número na mesa em vez de o deixar implícito:
 
-**PT:** No nível com chamada, o plano escrito e a chamada contam separado: enquanto a chamada não acontecer, ela é reembolsável.
+> No nível com chamada, se anular depois de receber o plano e antes da chamada, devolvemos os 70 euros da chamada.
 
-**EN:** On the tier with the call, the written plan and the call count separately: as long as the call has not happened, it is refundable.
+É essa que vale. Não se acrescenta nada por causa da chamada.
 
-**FR :** Au niveau avec appel, le plan écrit et l'appel comptent séparément : tant que l'appel n'a pas eu lieu, il est remboursable.
-
-**ES:** En el nivel con llamada, el plan escrito y la llamada cuentan por separado: mientras la llamada no ocurra, es reembolsable.
+**Uma consequência que vale a pena ver.** Essa regra e o bloco D encaixam sem se contradizerem, e é de propósito: os 70 euros são reembolsáveis até a chamada acontecer, e o bloco D é o comprador a reconhecer, na marcação, que deixam de ser depois. É o mesmo facto dito nos dois sítios onde ele importa, na venda e na marcação.
 
 ---
 
@@ -163,24 +169,25 @@ O encaminhamento diz-se assim, e não de outra forma: isto é uma coisa que um m
 
 ---
 
-# O que esta revisão encontrou fora da copy, e que é mais urgente do que a copy
+# O que está fora da copy já tem issue, e não se abre mais nenhuma
 
-Ao rever o degrau fui ver o que a app já promete ao comprador. Encontrei três coisas que não são do texto do produto, mas que este degrau parte, e uma delas parte já no nível de 79, não só na chamada.
+Ao rever isto fui ver o que a app promete ao comprador, e reencontrei o que a FLU-235 já tinha nomeado. Não abro issues novas: **as três já existem e são do Diego.**
 
-**1. A política de privacidade diz hoje que os dados de sono servem só para o progresso automático.** A frase em `src/pages/privacy-policy.tsx`, secção 1, é: "This data is used solely to power your personal progress tracking." A partir do momento em que uma pessoa lê o sleep-log de um comprador e escreve um plano sobre ele, esta frase deixa de ser verdadeira. Não é um detalhe de redacção: é uma finalidade declarada que passa a ser contrariada pelo tratamento real, e é o tipo de coisa que uma autoridade de protecção de dados sanciona sem precisar de queixa de ninguém. Isto bloqueia o degrau 7 inteiro, os dois níveis, e não só a chamada. A política também não tem base legal declarada, não fala do art. 9, não identifica o responsável pelo tratamento, não menciona a nLPD suíça apesar de a Suíça ser mercado, e não tem plataforma de videochamada declarada.
+- **FLU-240**, privacidade e termos contra o degrau 7. A política diz hoje, em `artifacts/sleep-reset/src/pages/privacy-policy.tsx`, secção 1, que os dados de sono servem "solely to power your personal progress tracking". Uma pessoa a lê-los para produzir um serviço pago é finalidade nova, que a política exclui por escrito. Isto bloqueia os dois níveis, não só a chamada.
+- **FLU-241**, as duas caixas de consentimento na página de oferta, com estado guardado e repetição no email.
+- **FLU-242**, cortar o convite a texto livre no campo de notas do sleep-log.
 
-**2. Os termos descrevem um produto que já não é este, e limitam a responsabilidade a 27 euros.** `src/pages/terms.tsx`, secção 1, define o serviço como "a self-guided, 7-night digital program". Uma revisão humana e uma chamada ao vivo não cabem em "self-guided digital program", e a secção 2, o disclaimer médico, está escrita a pensar num programa que ninguém lê do outro lado. Mais grave, a secção 7 limita a responsabilidade total a "the amount you paid for the program (€27)". Quem pagar 149 tem um tecto escrito que é inferior ao que pagou e que nomeia um preço que não é o dele. Um tecto assim, num serviço humano com componente de saúde, é dos que caem à primeira: a Directiva 93/13 apanha-o por desequilíbrio, e nenhum tecto exclui responsabilidade por dano pessoal por negligência, em nenhum destes países.
+**O que a chamada acrescenta a essas três, e que fica registado aqui em vez de virar issue nova:** a FLU-240 vai mexer na política de privacidade de qualquer forma, e enquanto lá estiver deve cobrir também a chamada, que hoje não está declarada em lado nenhum. Faltam-lhe três coisas: a finalidade "conversa ao vivo sobre o registo de sono", a plataforma usada para a chamada como subcontratante, e a menção de que não há gravação. Fica escrito aqui, e vai em comentário na FLU-240, para não partir uma issue que já está bem posta em duas.
 
-**3. Os termos existem só em inglês, e o produto vende em quatro idiomas.** Para um comprador francês isto é um problema com nome: a exigência de linguagem clara e compreensível da Directiva 93/13, e o Code de la consommation, que espera francês. Enquanto o produto era 27 euros, era um risco pequeno e teórico. Com um serviço humano a 149 e dados de saúde pelo meio, deixa de ser.
-
-Nenhum destes três é copy do degrau, e por isso não os corrijo aqui. Ficam nomeados, com issue própria, porque o 1 e o 2 bloqueiam a abertura do degrau 7 e devem ser fechados antes da primeira venda.
+Sobre os termos, e é o único ponto novo meu: a secção 7 de `src/pages/terms.tsx` limita a responsabilidade total a "the amount you paid for the program (€27)". Quem pagar 149 tem um tecto escrito que é menos de um quinto do que pagou, e que nomeia um preço que não é o dele. Num serviço humano com componente de saúde, um tecto assim cai à primeira: desequilíbrio na directiva 93/13, e nenhum tecto exclui responsabilidade por dano pessoal por negligência em nenhum destes países. Cabe na FLU-240, que já vai aos termos.
 
 ---
 
 # Resumo, para quem só lê isto
 
-- **Ponto 1.** A linha chega para o nível de 79. Não chega para o de 149. Não se muda nada do que está aprovado; acrescenta-se uma linha na página, no bloco A, e faz-se um aceite na marcação, blocos B a D.
+- **Ponto 1.** Não chega. A linha citada na issue já tinha sido substituída pela FLU-235, e a substituta diz de si própria que é "entregue por escrito", o que exclui a chamada pela própria redacção. O nível de 149 leva uma linha na página, bloco A, e um aceite na marcação, blocos B a D.
 - **Ponto 2.** Um texto só, igual nos quatro idiomas. O que muda por mercado é a conduta na chamada, não a redacção. As arestas duras são a Alemanha, por via do EN, e a França. Escalar tráfego pago nesses dois pede opinião local; abrir o degrau não pede.
-- **Ponto 3.** Sim. Aviso de sintomas a ler, duas caixas separadas, uma de dados de saúde e outra de natureza do serviço mais reembolso. Separadas porque consentimento não se empacota com aceitação contratual.
+- **Ponto 3.** Sim. Aviso de sintomas a ler, e duas caixas separadas no momento de marcar, distintas das duas que a FLU-235 já pôs no momento de comprar. Separadas porque consentimento não se empacota com aceitação contratual.
 - **Texto novo:** entregue nos quatro idiomas, pronto a colar. A Sophie não precisa de traduzir nada.
-- **A sério, antes disto tudo:** a política de privacidade diz que o sleep-log só serve para o cálculo automático. Enquanto essa frase estiver lá, o degrau 7 não abre, nem a 79 nem a 149.
+- **Garantia:** não mexo. A da FLU-235 já cobre os dois níveis e já tem os 70 euros da chamada.
+- **Nada disto abre antes da FLU-240.** Enquanto a política de privacidade disser que o sleep-log só serve para o cálculo automático, o degrau 7 não vende, nem a 79 nem a 149.
