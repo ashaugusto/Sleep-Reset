@@ -215,23 +215,32 @@ Substitui a bullet 3, a bullet 5 e a linha de garantia. Acrescenta duas linhas n
 
 ---
 
-## 6. A chamada de 30 minutos, que era o facto novo
+## 6. A chamada de 30 minutos: ver a FLU-238, e uma correccao que ela nao apanhou
 
-A issue mandou o facto de volta e ele merece o veredicto separado: **uma conversa ao vivo sobre o sono de alguem nao tem o mesmo risco da leitura escrita.** O texto escrito e revisto antes de sair; a conversa nao. Aos 30 minutos, alguem vai perguntar se pode parar o comprimido, e a resposta improvisada e o unico ponto do produto inteiro onde ha exposicao pessoal a serio. Tres condicoes, e sao baratas:
+Enquanto escrevia isto, a FLU-238 tratou a chamada em separado e foi mais fundo do que este parecer precisava de ir. O texto que vale e o dela, em `marketing/flu238-degrau7-chamada-compliance.md`: linha extra na pagina de venda so no nivel 2, aviso de sintomas a ler antes de marcar, duas caixas na pagina de marcacao, e a folha de conduta de quem esta na chamada. **Nao repito nem reescrevo nada disso. Onde os dois pareceres se tocarem, manda a FLU-238.**
 
-1. **A chamada tem ambito escrito e o ambito e o plano.** Ja esta na copy actual, "para o percorrer consigo", e essa formulacao esta certa. Nao alargar nunca para tirar duvidas, responder as suas perguntas ou avaliar o seu caso.
-2. **Nao se grava.** Sem gravacao nao ha transcricao, nao ha retencao e nao ha pedido de acesso sobre a chamada. Dizer isso ao comprador tambem tranquiliza, portanto e ganho duas vezes.
-3. **PT e EN dizem chamada, FR e ES dizem `visio` e `videollamada`.** Nivelar os quatro para chamada sem video. O video acrescenta imagem, que revela estado fisico, e nao acrescenta nada ao produto. Correccao: FR `Trente minutes au telephone`, ES `Treinta minutos por llamada`.
+Duas coisas de arrumacao, para nao ficarem duas versoes a competir:
 
-Uma frase de guiao para o proprio Ash, que nao vai a copy nenhuma e que resolve o unico momento perigoso: *quando a pergunta for sobre medicacao, sintoma ou doenca, a resposta e que isso e conversa para o medico e que aqui so se fala de habitos.* Nao improvisar a partir dai.
+1. **A linha de garantia deste parecer absorve a seccao E da FLU-238.** A FLU-238 acrescentava ao nivel 2 uma frase a dizer que o plano e a chamada contam separado e que a chamada e reembolsavel enquanto nao acontecer. A garantia reescrita no ponto 5 ja diz isso, com o numero escrito, e diz alem disso os 14 dias, que e o que faltava as duas versoes. **Fica uma linha de garantia so, a do ponto 5, para os dois niveis.** A frase da seccao E nao vai a lado nenhum.
+2. **As caixas nao colidem, porque vivem em momentos diferentes.** As duas deste parecer estao na pagina de oferta e valem para os dois niveis: uma pede o inicio antecipado, outra autoriza a leitura do sleep-log para escrever o plano. As duas da FLU-238 estao na pagina de marcacao e so existem no nivel 2: uma cobre o que se fala na chamada, outra o que a chamada e e o reembolso dos 30 minutos. Quem compra o nivel 2 marca quatro caixas ao todo, em dois momentos, e nenhuma e redundante.
+
+**A unica coisa da chamada que a FLU-238 nao apanha e uma incoerencia de formato.** PT e EN dizem chamada e ao vivo. FR diz `en visio` e ES diz `por videollamada`, ou seja prometem video. Video acrescenta imagem, que revela estado fisico e cria uma segunda categoria de dado de saude na chamada, e nao acrescenta nada ao produto. Nivelar os quatro para chamada sem video: FR `Trente minutes au telephone`, ES `Treinta minutos por llamada`. As linhas PT e EN ficam como estao.
 
 ---
 
 ## 7. O que fica por fazer, e nao e copy
 
-Com as substituicoes do ponto 5, **as quatro linguas ficam publicaveis sem mais consulta juridica.** A publicacao continua bloqueada por duas coisas do Diego, e a primeira e a mais silenciosa das duas:
+Com as substituicoes do ponto 5, **as quatro linguas ficam publicaveis sem mais consulta juridica.** Fica de pe o resto, e o resto ja tem dono.
 
-1. **A politica de privacidade contradiz o degrau 7 hoje.** `artifacts/sleep-reset/src/pages/privacy-policy.tsx`, seccao 1, promete por escrito que os dados de sono servem "solely to power your personal progress tracking". Uma pessoa a le-los para produzir um servico pago e uma finalidade nova, que a politica exclui expressamente. Vender o degrau 7 sem mexer nisto e violacao da limitacao de finalidade, artigo 5, numero 1, alinea b, e torna enganosa a propria copy que acabei de corrigir. Nao ha frase de bullet que resolva isto: tem de ser a politica a mudar. Faltam tambem os 14 dias nos termos, que nao os mencionam em lado nenhum.
-2. **As duas caixas do ponto 3 tem de existir, com estado guardado e repeticao no email de confirmacao.** Sem elas, o comprador da UE fica com os 14 dias intactos mesmo depois de receber o plano, e o trabalho humano fica a descoberto.
+**Urgente, e a razao e nova.** O bloco `Pronto a colar` da FLU-226 ja foi colado nos quatro locales, `artifacts/sleep-reset/src/locales/{pt,en,fr,es}.ts`, chave `backend`. Ou seja o texto que este parecer reprova esta hoje na arvore, por commitar. A bullet 3 com `o que parar de fazer` esta la nos quatro. **As substituicoes do ponto 5 tem de entrar antes do commit do Diego, nao depois.** Nao mexi nos locales de proposito: a arvore e partilhada e o Diego esta a meio de a editar, nas FLU-236 e FLU-237.
 
-Estas duas viram issues filhas, atribuidas ao Diego.
+| O que | Onde | Issue |
+|---|---|---|
+| Aplicar as substituicoes do ponto 5 nos quatro locales | `src/locales/{pt,en,fr,es}.ts`, chave `backend` | FLU-246 |
+| A politica de privacidade promete que os dados de sono servem so para o progresso automatico, e o degrau 7 poe uma pessoa a le-los. Mais os 14 dias, que os termos nao mencionam | `privacy-policy.tsx`, `terms.tsx` | FLU-240 |
+| As duas caixas de consentimento na pagina de oferta, com estado guardado e repeticao no email | pagina de oferta do degrau 7 | FLU-241 |
+| O tecto de responsabilidade nomeia 27 EUR e o degrau 7 vende a 149. Mais a definicao `self-guided` e os termos so em ingles | `terms.tsx` | FLU-243 |
+| Cortar o convite a texto livre de saude no sleep-log | `sleep-log.tsx` | FLU-242 |
+| Tudo o que e da chamada de 30 minutos | pagina de marcacao | FLU-238 |
+
+Das seis, **duas bloqueiam a primeira venda do degrau 7 e nao so a chamada: a FLU-240 e a FLU-241.** Enquanto a politica de privacidade disser que o sleep-log serve so para o calculo automatico, o degrau 7 nao abre, nem a 79 nem a 149.

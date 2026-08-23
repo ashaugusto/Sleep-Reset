@@ -594,6 +594,16 @@ Os quatro números que faltavam já não são variáveis. Estão escritos no tex
 
 **Estado do activo:** PRODUZIR. Falta o processo, não a copy.
 
+> **STOP. O bloco `Pronto a colar` deste degrau está reprovado. Revisão do Roger a 23 de Agosto, FLU-235.**
+>
+> A bullet 5 corrige-se com uma frase nos quatro idiomas. O EN cai por contradição, `coaching` na bullet 5 contra `not ongoing coaching` na bullet 4. O FR cai por `accompagnement`, que é a palavra que aproxima o serviço do art. L4161-1 do Code de la santé publique. **A linha de garantia não aguenta em nenhum dos quatro**: cala o direito de anular de 14 dias da directiva 2011/83/UE, e não existe renúncia prévia num serviço, só perda por prestação integral. E a bullet 3 tem a linha mais perigosa do degrau, `o que parar de fazer` sem objecto, que quem toma medicação lê como instrução para a parar.
+>
+> **O texto corrigido, nos quatro idiomas, mais as duas caixas de consentimento, está em `marketing/flu235-degrau7-compliance.md`, ponto 5. Colar de lá, não daqui.** O bloco abaixo fica só como histórico.
+>
+> A chamada de 30 minutos tem parecer próprio, `marketing/flu238-degrau7-chamada-compliance.md`, e é esse que manda no que for da chamada.
+>
+> Trabalho aberto: FLU-246 (substituir nos locales, e o texto reprovado já lá está por commitar), FLU-240 e FLU-241 (bloqueiam a primeira venda), FLU-242, FLU-243.
+
 ---
 
 ### PT
