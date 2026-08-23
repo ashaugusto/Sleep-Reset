@@ -16,7 +16,11 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary Create or update user profile
+ * Requires a session, and the body id must be the signed-in user's own id.
+Accounts are created by the sign-up, webhook and magic-link routes, which
+set the session themselves; this only upserts the caller's own row.
+
+ * @summary Create or update your own user profile
  */
 export const CreateUserBody = zod.object({
   id: zod.string().describe("Clerk user ID"),
@@ -44,6 +48,7 @@ export const CreateUserResponse = zod.object({
 });
 
 /**
+ * Requires a session. A user can only read their own record.
  * @summary Get user by ID
  */
 export const GetUserParams = zod.object({
@@ -70,6 +75,7 @@ export const GetUserResponse = zod.object({
 });
 
 /**
+ * Requires a session. A user can only write their own record.
  * @summary Update sleep profile (onboarding answers)
  */
 export const UpdateSleepProfileParams = zod.object({

@@ -37,7 +37,11 @@ paths:
     post:
       operationId: createUser
       tags: [users]
-      summary: Create or update user profile
+      summary: Create or update your own user profile
+      description: |
+        Requires a session, and the body id must be the signed-in user's own id.
+        Accounts are created by the sign-up, webhook and magic-link routes, which
+        set the session themselves; this only upserts the caller's own row.
       requestBody:
         required: true
         content:
@@ -51,12 +55,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        "401":
+          description: Not signed in
+        "403":
+          description: Body id is not the signed-in user
 
   /users/{userId}:
     get:
       operationId: getUser
       tags: [users]
       summary: Get user by ID
+      description: Requires a session. A user can only read their own record.
       parameters:
         - name: userId
           in: path
@@ -70,6 +79,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        "401":
+          description: Not signed in
+        "403":
+          description: userId is not the signed-in user
         "404":
           description: User not found
 
@@ -78,6 +91,7 @@ paths:
       operationId: updateSleepProfile
       tags: [users]
       summary: Update sleep profile (onboarding answers)
+      description: Requires a session. A user can only write their own record.
       parameters:
         - name: userId
           in: path
@@ -97,6 +111,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        "401":
+          description: Not signed in
+        "403":
+          description: userId is not the signed-in user
 
   /users/{userId}/sleep-logs:
     get:

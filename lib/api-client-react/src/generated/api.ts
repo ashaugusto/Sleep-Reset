@@ -118,7 +118,11 @@ export function useHealthCheck<
 }
 
 /**
- * @summary Create or update user profile
+ * Requires a session, and the body id must be the signed-in user's own id.
+Accounts are created by the sign-up, webhook and magic-link routes, which
+set the session themselves; this only upserts the caller's own row.
+
+ * @summary Create or update your own user profile
  */
 export const getCreateUserUrl = () => {
   return `/api/users`;
@@ -137,7 +141,7 @@ export const createUser = async (
 };
 
 export const getCreateUserMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -178,13 +182,13 @@ export type CreateUserMutationResult = NonNullable<
   Awaited<ReturnType<typeof createUser>>
 >;
 export type CreateUserMutationBody = BodyType<CreateUserBody>;
-export type CreateUserMutationError = ErrorType<unknown>;
+export type CreateUserMutationError = ErrorType<void>;
 
 /**
- * @summary Create or update user profile
+ * @summary Create or update your own user profile
  */
 export const useCreateUser = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -204,6 +208,7 @@ export const useCreateUser = <
 };
 
 /**
+ * Requires a session. A user can only read their own record.
  * @summary Get user by ID
  */
 export const getGetUserUrl = (userId: string) => {
@@ -281,6 +286,7 @@ export function useGetUser<
 }
 
 /**
+ * Requires a session. A user can only write their own record.
  * @summary Update sleep profile (onboarding answers)
  */
 export const getUpdateSleepProfileUrl = (userId: string) => {
@@ -301,7 +307,7 @@ export const updateSleepProfile = async (
 };
 
 export const getUpdateSleepProfileMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -342,13 +348,13 @@ export type UpdateSleepProfileMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateSleepProfile>>
 >;
 export type UpdateSleepProfileMutationBody = BodyType<UpdateSleepProfileBody>;
-export type UpdateSleepProfileMutationError = ErrorType<unknown>;
+export type UpdateSleepProfileMutationError = ErrorType<void>;
 
 /**
  * @summary Update sleep profile (onboarding answers)
  */
 export const useUpdateSleepProfile = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<

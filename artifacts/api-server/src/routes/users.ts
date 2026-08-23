@@ -7,13 +7,16 @@ import {
   UpdateSleepProfileParams,
   UpdateSleepProfileBody,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/requireAuth";
+import { requireSelf } from "../middlewares/requireSelf";
 
 const router: IRouter = Router();
 
 // ─── What a user row is allowed to leave the process as ──────────────────────
-// These routes answer without a session — an id is the whole credential — so a
-// `db.select()` with no columns handed `password_hash` to anyone who asked, and
-// production served real bcrypt hashes until this projection landed.
+// A `db.select()` with no columns handed `password_hash` to whoever asked, and
+// production served real bcrypt hashes until this projection landed. The routes
+// below now also demand a session that owns the row, but the projection stays:
+// it is what keeps a column private by default rather than by whoever remembers.
 //
 // The list is the User schema in lib/api-spec/openapi.yaml, no more: the
 // generated client is built from it, so anything past it was never part of the
@@ -41,8 +44,22 @@ const publicUserColumns = {
   createdAt: usersTable.createdAt,
 } as const;
 
-router.post("/users", async (req, res) => {
+// ─── POST /api/users ─────────────────────────────────────────────────────────
+// Nothing in the app calls this: accounts are born in POST /auth/register, in
+// the Hotmart webhook and in the magic-link route, all of which set the session
+// themselves. What was left here was an unauthenticated write that took the id
+// from the body, so anyone holding an id could rewrite that account's email and
+// name — which is to say, point the access-link email at an inbox of their own.
+//
+// It stays in the contract and stays generated, but it is now what its name
+// always implied: you upserting your own row.
+router.post("/users", requireAuth, async (req, res) => {
   const body = CreateUserBody.parse(req.body);
+
+  if (body.id !== req.userId) {
+    res.status(403).json({ message: "Forbidden" });
+    return;
+  }
 
   const existing = await db
     .select({ id: usersTable.id })
@@ -75,7 +92,7 @@ router.post("/users", async (req, res) => {
   res.json(user);
 });
 
-router.get("/users/:userId", async (req, res) => {
+router.get("/users/:userId", requireAuth, requireSelf, async (req, res) => {
   const { userId } = GetUserParams.parse(req.params);
 
   const [user] = await db
@@ -92,7 +109,7 @@ router.get("/users/:userId", async (req, res) => {
   res.json(user);
 });
 
-router.put("/users/:userId/profile", async (req, res) => {
+router.put("/users/:userId/profile", requireAuth, requireSelf, async (req, res) => {
   const { userId } = UpdateSleepProfileParams.parse(req.params);
   const body = UpdateSleepProfileBody.parse(req.body);
 
