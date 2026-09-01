@@ -1,8 +1,25 @@
 import { useLocation } from "wouter";
 import { Moon, ArrowLeft } from "lucide-react";
+import { useTerms } from "@/locales/legal";
+
+// ─── Terms of Service ────────────────────────────────────────────────────────
+// The words are not here. They are in src/locales/legal/terms.{en,fr,es,pt}.ts,
+// one file per language, and this page is only the frame around whichever one
+// the visitor's locale picks.
+//
+// They moved out of this file in FLU-243. English-only terms were survivable
+// while the whole product was a 27 EUR download; they stopped being survivable
+// the day a human service at 149 EUR started reading health data, because
+// dir. 93/13 wants contract terms in clear and intelligible language and a
+// French buyer reading English is not that. Same locale resolution as the rest
+// of the funnel: ?lang=, then storage, then the browser.
+//
+// The renderer understands a blank line as a paragraph and **bold**, which is
+// all the terms use. Anything fancier belongs in the copy, not in here.
 
 export default function Terms() {
   const [, setLocation] = useLocation();
+  const t = useTerms();
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
@@ -22,110 +39,13 @@ export default function Terms() {
 
       <main className="max-w-2xl mx-auto px-5 py-10 space-y-8">
         <div>
-          <h1 className="text-2xl font-extrabold mb-1">Terms of Service</h1>
-          <p className="text-xs text-muted-foreground">Last updated: September 1, 2026</p>
+          <h1 className="text-2xl font-extrabold mb-1">{t.heading}</h1>
+          <p className="text-xs text-muted-foreground">{t.updated}</p>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          These Terms of Service ("Terms") govern your access to and use of the Sleep Wired platform, website, and digital program (collectively, the "Service") operated by Sleep Wired ("we", "us", or "our"). By creating an account or purchasing the program, you agree to be bound by these Terms.
-        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{t.intro}</p>
 
-        {[
-          {
-            title: "1. The Service",
-            content: `Sleep Wired provides a self-guided, 7-night digital program based on Cognitive Behavioral Therapy for Insomnia (CBT-I). The program includes:
-
-- Nightly guided content and protocols
-- Evening and morning sleep diary tools
-- Sleep efficiency score and progress tracking
-- Personal sleep profile generation
-
-The program is a digital educational product. It is not a medical treatment, therapy service, or substitute for professional medical advice.`,
-          },
-          {
-            title: "2. Medical Disclaimer",
-            content: `**This program is not a substitute for professional medical advice, diagnosis, or treatment.**
-
-CBT-I is a well-researched, evidence-based behavioral approach to improving sleep. However, Sleep Wired does not diagnose, treat, or cure any medical condition. If you have or suspect a sleep disorder (such as sleep apnea, narcolepsy, or restless leg syndrome), a mental health condition, or any other medical concern, consult a qualified healthcare professional before beginning this program.
-
-Individual results vary. We make no guarantee that the program will resolve your specific sleep issues.`,
-          },
-          {
-            title: "3. Eligibility",
-            content: `You must be at least 18 years of age to use this Service. By using the Service, you represent and warrant that you are 18 or older and have the legal capacity to enter into these Terms.`,
-          },
-          {
-            title: "4. Account & Purchase",
-            content: `To access the full program, you must:
-
-1. Create an account with a valid email address and password
-2. Complete a one-time purchase of €27 through our checkout
-
-Payments are processed by Hotmart, which acts as merchant of record for the sale. Your receipt and any applicable VAT are issued by Hotmart, and refunds are handled through them.
-
-Your account is personal and non-transferable. You are responsible for maintaining the security of your credentials. Do not share your account with others.
-
-The purchase grants you **lifetime access** to the program for your personal, non-commercial use only.`,
-          },
-          {
-            title: "5. Refund Policy — 30 nights, keep everything",
-            content: `We offer a full 30-night money-back guarantee from the date of purchase. If you don't notice a measurable improvement in your sleep within those 30 nights, you may request a full refund by emailing us at support@sleepwired.com.
-
-You keep everything: all audio sessions, the workbook, the sleep window calculator, and any bonuses already delivered remain yours regardless of refund. There is no clawback.
-
-We reserve the right to refuse refund requests where the refund policy is clearly being abused (multiple purchases under different identities, etc.).
-
-Refunds are processed within 5–10 business days to the original payment method.`,
-          },
-          {
-            title: "6. Your Right to Cancel (14 days)",
-            content: `You have 14 days to cancel your purchase and get your money back, without giving a reason. The period runs from the day the contract is concluded, which is the day your payment is approved. This right comes from Articles 9 to 14 of EU Directive 2011/83/EU. We give the same 14 days to buyers in every market we sell in, including Switzerland, whose law does not require them.
-
-To cancel, send us a clear statement that you want to cancel, at support@sleepwired.com. You do not have to use a form and you do not have to explain yourself. We refund you within 14 days of receiving that statement, to the payment method you used.
-
-**How the right is lost on a service that has already been delivered.** Under Article 16(a) of the same Directive, the right to cancel a service ends only when three things have all happened: you expressly asked us to start before the 14 days were up, you acknowledged that starting early would cost you that right once the service had been fully performed, and the service has in fact been fully performed. For The Recalibration, fully performed means your written plan has been delivered to you. We ask for that request and that acknowledgement in a box on the offer page, before you pay, and the box starts unticked. Leaving it unticked does not stop you buying: it means we start work on day 15, once the cancellation period has run out.
-
-**If you cancel after we started but before we finished.** Article 14(3) applies. You pay for the part already performed, in proportion to the whole, and we refund the rest. On the tier that includes the live call, the call is a separate part: if you cancel after the plan has been delivered but before the call has taken place, we refund the 70 euros the call costs.
-
-This section is your legal right to cancel. It sits alongside the guarantee in Section 5 and the guarantee written on each offer page, and where they differ, whichever is better for you is the one that applies.`,
-          },
-          {
-            title: "7. Intellectual Property",
-            content: `All content within the Sleep Wired platform — including but not limited to program materials, copy, audio, design, and software — is the exclusive intellectual property of Sleep Wired.
-
-Your purchase grants you a personal, non-exclusive, non-transferable licence to access and use the content for your own sleep improvement. You may not:
-
-- Copy, reproduce, or redistribute the program content
-- Resell or sublicense access to others
-- Use the content for commercial purposes without written permission`,
-          },
-          {
-            title: "8. Limitation of Liability",
-            content: `To the maximum extent permitted by applicable law, Sleep Wired shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
-
-Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program (€27).`,
-          },
-          {
-            title: "9. Termination",
-            content: `We reserve the right to suspend or terminate your account at our sole discretion if you violate these Terms, engage in abusive behaviour, or attempt to circumvent payment. In such cases, no refund will be issued.
-
-You may delete your account at any time by contacting us at support@sleepwired.com.`,
-          },
-          {
-            title: "10. Changes to Terms",
-            content: `We may update these Terms from time to time. When we do, we will update the "Last updated" date above. Continued use of the Service after changes constitutes your acceptance of the revised Terms. We will make reasonable efforts to notify users of material changes via email.`,
-          },
-          {
-            title: "11. Governing Law",
-            content: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Sleep Wired operates, without regard to conflict of law provisions. Any disputes arising from these Terms shall be resolved through good-faith negotiation, and if necessary, binding arbitration.`,
-          },
-          {
-            title: "12. Contact",
-            content: `For any questions about these Terms, contact us at:
-
-**Email:** support@sleepwired.com`,
-          },
-        ].map((section) => (
+        {t.sections.map((section) => (
           <div key={section.title} className="space-y-3">
             <h2 className="text-base font-bold text-foreground">{section.title}</h2>
             <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
@@ -145,7 +65,7 @@ You may delete your account at any time by contacting us at support@sleepwired.c
             onClick={() => setLocation("/")}
             className="text-sm text-primary hover:underline"
           >
-            ← Back to Sleep Wired
+            {t.back}
           </button>
         </div>
       </main>

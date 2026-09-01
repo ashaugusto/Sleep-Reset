@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
 
 **Usage data:** Basic technical information such as your browser type, device type, and pages visited, used to improve the product experience.
 
-**Lead data:** If you enter your email (and optionally your name and WhatsApp number) on the order form, we store it to (a) hand you over to our checkout and (b) — if you don't complete the purchase — send you up to three follow-up emails over the next 72 hours to help you finish your setup. You can stop these emails at any time by clicking the unsubscribe link in any message.
+**Lead data:** If you enter your email (and optionally your name and WhatsApp number) on the order form, we store it to (a) hand you over to our checkout and (b), if you don't complete the purchase, send you up to three follow-up emails over the next 72 hours to help you finish your setup. You can stop these emails at any time by clicking the unsubscribe link in any message.
 
 **Payment data:** Payments are processed by Hotmart, which acts as merchant of record for the sale. Your card details are entered on Hotmart's checkout and never reach our servers: we do not store your card number or any full payment details. Hotmart's privacy policy governs payment data handling.`,
           },
