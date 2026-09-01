@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { HABIT_TAGS, encodeHabitTags, decodeHabitTags, type HabitTagId } from "@/lib/habit-tags";
 import {
   format,
   startOfMonth,
@@ -38,7 +39,7 @@ function exportCsv(logs: SleepLog[]) {
   const headers = [
     "Date", "Bedtime", "Wake Time", "TST (min)",
     "TIB (min)", "SOL (min)", "WASO (min)",
-    "Sleep Efficiency %", "Sleep Score", "Quality", "Restfulness"
+    "Sleep Efficiency %", "Sleep Score", "Quality", "Restfulness", "Habits"
   ];
   const rows = logs.map((l: SleepLog) => [
     l.logDate,
@@ -52,6 +53,8 @@ function exportCsv(logs: SleepLog[]) {
     l.sleepScore ?? "",
     l.sleepQuality ?? "",
     l.restfulness ?? "",
+    // Semicolons: this row is joined with commas and the tags are stored with them.
+    decodeHabitTags(l.eveningNotes).join(";"),
   ]);
   const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
@@ -176,7 +179,7 @@ export default function SleepLog() {
   const [bedtime, setBedtime] = useState("22:00");
   const [sleepAttempt, setSleepAttempt] = useState("22:30");
   const [mood, setMood] = useState("3");
-  const [notes, setNotes] = useState("");
+  const [habits, setHabits] = useState<HabitTagId[]>([]);
 
   const [wakeTime, setWakeTime] = useState("07:00");
   const [outOfBedTime, setOutOfBedTime] = useState("07:15");
@@ -214,7 +217,7 @@ export default function SleepLog() {
           bedtimeMinutes: timeToMinutes(bedtime),
           sleepAttemptMinutes: timeToMinutes(sleepAttempt),
           eveningMood: parseInt(mood),
-          eveningNotes: notes,
+          eveningNotes: encodeHabitTags(habits),
         }
       });
       queryClient.invalidateQueries({ queryKey: getListSleepLogsQueryKey(userId) });
@@ -346,13 +349,31 @@ export default function SleepLog() {
                 <span>Relaxed</span>
               </div>
             </div>
+            {/* A closed list, not a text box. See src/lib/habit-tags.ts for why. */}
             <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <Textarea
-                placeholder="What's on your mind?"
-                value={notes} onChange={e => setNotes(e.target.value)}
-                className="resize-none h-20"
-              />
+              <Label>Anything tonight? (optional)</Label>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-1">
+                {HABIT_TAGS.map(tag => (
+                  <div key={tag.id} className="flex items-start gap-2">
+                    <Checkbox
+                      id={`habit-${tag.id}`}
+                      checked={habits.includes(tag.id)}
+                      onCheckedChange={v =>
+                        setHabits(prev =>
+                          v === true ? [...prev, tag.id] : prev.filter(id => id !== tag.id),
+                        )
+                      }
+                      className="mt-0.5 shrink-0"
+                    />
+                    <label
+                      htmlFor={`habit-${tag.id}`}
+                      className="text-xs text-muted-foreground leading-snug cursor-pointer"
+                    >
+                      {tag.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
             <Button className="w-full" onClick={handleEveningSubmit} disabled={submitting}>
               Good night
