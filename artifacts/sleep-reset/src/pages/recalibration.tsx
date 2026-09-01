@@ -7,11 +7,14 @@ import {
 } from "@workspace/api-client-react";
 import { useEntitlements } from "@/hooks/use-entitlements";
 import { useI18n, fill, money } from "@/lib/i18n";
+import type { BackendCopy } from "@/locales/types";
 import { OFFERS, BACKEND_TIERS, hotmartCheckoutUrl } from "@/lib/offers";
 import { BACKEND_MIN_LOGGED_NIGHTS } from "@/lib/rung-gates";
+import { useBackendConsent } from "@/hooks/use-backend-consent";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Eye, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Check, Eye, Loader2, Lock } from "lucide-react";
 
 // ─── Rung 7: The Recalibration ───────────────────────────────────────────────
 // A person reads the nights the buyer logged and writes back the sleep window
@@ -38,8 +41,22 @@ import { Check, Eye, Loader2 } from "lucide-react";
 // instead of showing a button.
 //
 // Delivery is a weekly batch done by one person, which is why the fourth bullet
-// says "up to 7 working days" and not "in 7 days", and why that batch day has
-// to stay fixed. Capacity is the ceiling on this rung, not copy.
+// says "up to 7 working days after you ask us to start" and not "in 7 days",
+// and why that batch day has to stay fixed. Capacity is the ceiling on this
+// rung, not copy.
+//
+// The two boxes above the prices are the other reason this page is shaped
+// unlike the rest, and they are not the same kind of box. Reading the log is
+// the service: that log is health data, GDPR art. 9 has no contract exception,
+// and explicit consent under art. 9(2)(a) is the only basis there is. Paying is
+// not consenting, so that box gates the prices. Starting early is the reverse,
+// a right being handed back, and dir. 2011/83/UE art. 16(a) only takes the 14
+// days away when it was expressly asked for. Making it a condition of buying
+// would be selling the right rather than being given it, so it gates nothing:
+// unticked buys, and the work starts on day 15.
+//
+// Both start unticked. A pre-ticked box has not been valid consent since
+// Planet49, and pre-ticking the early start one would be worse than invalid.
 
 export default function Recalibration() {
   const { t } = useI18n();
@@ -52,6 +69,7 @@ export default function Recalibration() {
     query: { enabled: !!userId, queryKey: getGetProgressQueryKey(userId || "") },
   });
   const { owns } = useEntitlements();
+  const { state: consent } = useBackendConsent(true);
 
   if (isLoading || progressLoading) {
     return (
@@ -64,6 +82,8 @@ export default function Recalibration() {
   const loggedNights = progress?.logsCount ?? 0;
   const open = loggedNights >= BACKEND_MIN_LOGGED_NIGHTS;
   const owned = owns("backend") || owns("backendLive");
+  // Only the log reading box gates the prices. The early start one never does.
+  const mayBuy = !!consent?.backend_log_reading?.granted;
 
   return (
     <div className="p-6 space-y-6 pb-24">
@@ -119,18 +139,111 @@ export default function Recalibration() {
           </p>
         </Card>
       ) : (
-        c.tiers.map((tier, i) => (
-          <TierCard
-            key={tier.name}
-            tier={tier}
-            rung={BACKEND_TIERS[i]}
-            owned={owned}
-            email={user?.email ?? undefined}
-            guarantee={c.guarantee}
-            emphasis={i === 0}
-          />
-        ))
+        <>
+          {!owned && <ConsentBoxes copy={c.consent} />}
+          {!owned && !mayBuy ? (
+            <Card className="p-5 bg-secondary/30 border-border/50">
+              <div className="flex items-start gap-2.5">
+                <Lock className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground leading-relaxed">{c.consent.blocked}</p>
+              </div>
+            </Card>
+          ) : (
+            c.tiers.map((tier, i) => (
+              <TierCard
+                key={tier.name}
+                tier={tier}
+                rung={BACKEND_TIERS[i]}
+                owned={owned}
+                email={user?.email ?? undefined}
+                guarantee={c.guarantee}
+                emphasis={i === 0}
+              />
+            ))
+          )}
+        </>
       )}
+    </div>
+  );
+}
+
+// ─── The two boxes ───────────────────────────────────────────────────────────
+// What is shown next to a ticked box is the sentence the server stored, not the
+// one in the locale file. They are the same words, kept in step by hand from
+// marketing/flu235-degrau7-compliance.md, but if they ever drift the buyer
+// should be looking at the one that is on the record.
+function ConsentBoxes({ copy }: { copy: BackendCopy["consent"] }) {
+  const { locale } = useI18n();
+  const { state, set, isSaving, failed } = useBackendConsent(true);
+
+  const reading = state?.backend_log_reading;
+  const early = state?.backend_early_start;
+
+  function when(iso: string | null | undefined): string | null {
+    if (!iso) return null;
+    try {
+      return fill(copy.recorded, {
+        when: new Date(iso).toLocaleString(locale, {
+          day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+        }),
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  return (
+    <Card className="p-5 bg-card border-card-border space-y-4">
+      <p className="text-sm font-medium">{copy.title}</p>
+
+      <Box
+        id="consent-log-reading"
+        checked={!!reading?.granted}
+        disabled={isSaving}
+        onChange={(v) => set({ logReading: v })}
+        text={reading?.granted ? reading.statement : copy.logReading}
+        note={reading?.granted ? when(reading.grantedAt) : null}
+      />
+
+      <Box
+        id="consent-early-start"
+        checked={!!early?.granted}
+        disabled={isSaving}
+        onChange={(v) => set({ earlyStart: v })}
+        text={early?.granted ? early.statement : copy.earlyStart}
+        note={early?.granted ? when(early.grantedAt) : copy.earlyStartNote}
+      />
+
+      {failed && <p className="text-xs text-destructive leading-relaxed">{copy.error}</p>}
+    </Card>
+  );
+}
+
+function Box({
+  id, checked, disabled, onChange, text, note,
+}: {
+  id: string;
+  checked: boolean;
+  disabled: boolean;
+  onChange: (value: boolean) => void;
+  text: string;
+  note: string | null;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Checkbox
+        id={id}
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={(v) => onChange(v === true)}
+        className="mt-0.5 shrink-0"
+      />
+      <div className="space-y-1">
+        <label htmlFor={id} className="text-xs text-muted-foreground leading-relaxed cursor-pointer block">
+          {text}
+        </label>
+        {note && <p className="text-[11px] text-muted-foreground/70 leading-relaxed">{note}</p>}
+      </div>
     </div>
   );
 }

@@ -425,6 +425,18 @@ const pt: Dict = {
     ],
     medical:
       "Se dorme mal há mais de três meses, se toma medicação para dormir ou se tem outra condição de saúde, fale com o seu médico. Nada no plano é motivo para mudar ou parar medicação.",
+    consent: {
+      title: "Duas coisas para autorizar antes de comprar",
+      logReading:
+        "Autorizo que uma pessoa da Sleep Wired leia o meu registo de sono para preparar o meu plano. Sei que este registo diz respeito à minha saúde e posso retirar esta autorização a qualquer momento.",
+      earlyStart:
+        "Peço que comecem a trabalhar no meu plano já, antes de acabarem os 14 dias para anular. Sei que perco o direito de anular assim que o plano me for entregue.",
+      earlyStartNote:
+        "Opcional. Se deixar por marcar, compra na mesma: o trabalho começa ao dia 15, quando acabarem os seus 14 dias para anular.",
+      blocked: "Marque a autorização acima e os preços aparecem. Ninguém lê o seu registo sem ela.",
+      recorded: "Registada {when}",
+      error: "Isto não ficou gravado. Verifique a ligação e marque outra vez.",
+    },
     tiers: [
       {
         name: "The Recalibration",

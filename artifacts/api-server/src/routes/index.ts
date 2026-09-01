@@ -13,6 +13,7 @@ import trackingRouter from "./tracking";
 import quizRouter from "./quiz";
 import hotmartRouter from "./hotmart";
 import seatsRouter from "./seats";
+import consentsRouter from "./consents";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(trackingRouter);
 router.use(quizRouter);
 router.use(hotmartRouter);
 router.use(seatsRouter);
+router.use(consentsRouter);
 
 export default router;

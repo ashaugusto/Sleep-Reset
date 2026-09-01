@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq, sql } from "drizzle-orm";
-import { db, usersTable, leadsTable, purchasesTable } from "@workspace/db";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { db, usersTable, leadsTable, purchasesTable, consentsTable } from "@workspace/db";
 import { logger } from "../lib/logger";
 import {
   CLAIM_WINDOW_HOURS,
@@ -305,6 +305,17 @@ async function fireSideEffects(args: {
   // Kit are add-ons to a sale that already sent it, and Hotmart mails its own
   // receipt for each. The email carries the magic link, which is the way in for
   // any buyer who never reaches the thank-you page.
+  // The seventh rung has its own, and it is not marketing: it is the durable
+  // medium copy of what the buyer ticked on the offer page.
+  if (rung === "backend" || rung === "backendLive") {
+    try {
+      await confirmRecalibration({ rung, email, name: args.name ?? lead?.name ?? null, transaction });
+    } catch (err) {
+      logger.error({ err, transaction }, "Hotmart: recalibration confirmation failed (non-fatal)");
+    }
+    return;
+  }
+
   if (rung !== "front" || !lead || lead.postPurchaseStep !== 0) return;
   try {
     const { sendPostPurchaseEmail } = await import("../emailService");
@@ -317,6 +328,63 @@ async function fireSideEffects(args: {
   } catch (err) {
     logger.error({ err, transaction }, "Hotmart: post-purchase email failed (non-fatal)");
   }
+}
+
+// ─── Tying the two boxes to the sale that followed them ──────────────────────
+// The boxes are ticked on our offer page, upstream of the checkout, so at tick
+// time there is no transaction to store. This is where the two ends meet: the
+// live consent rows for that email get the transaction stamped on them, and the
+// buyer gets them back in writing.
+//
+// Matching is by email, which is the only handle both sides share. A buyer who
+// pays with a different address than the one they are signed in with produces
+// no match: they get the email with both boxes shown as unticked, which says in
+// so many words that nobody has read their log and invites them to reply. That
+// is the right failure. Guessing which account a stray address belongs to and
+// reading a sleep log on the strength of the guess is not.
+async function confirmRecalibration(args: {
+  rung: "backend" | "backendLive";
+  email: string;
+  name: string | null;
+  transaction: string;
+}): Promise<void> {
+  const { rung, email, name, transaction } = args;
+  const address = email.toLowerCase().trim();
+
+  const rows = await db
+    .select()
+    .from(consentsTable)
+    .where(and(eq(consentsTable.email, address), isNull(consentsTable.withdrawnAt)))
+    .orderBy(desc(consentsTable.grantedAt));
+
+  const newest = (kind: string) => rows.find((r) => r.kind === kind) ?? null;
+  const logReading = newest("backend_log_reading");
+  const earlyStart = newest("backend_early_start");
+
+  for (const row of [logReading, earlyStart]) {
+    if (!row || row.transactionId) continue;
+    await db.update(consentsTable)
+      .set({ transactionId: transaction, updatedAt: new Date() })
+      .where(eq(consentsTable.id, row.id));
+  }
+
+  if (!logReading) {
+    logger.warn(
+      { transaction, email: maskEmail(address), rung },
+      "Hotmart: recalibration sold with no log reading consent on file",
+    );
+  }
+
+  const { sendRecalibrationConfirmationEmail } = await import("../emailService");
+  await sendRecalibrationConfirmationEmail({
+    email: address,
+    userId: logReading?.userId ?? earlyStart?.userId ?? null,
+    firstName: name?.split(" ")[0] || "there",
+    locale: logReading?.locale ?? earlyStart?.locale ?? "en",
+    tier: rung,
+    logReading: { granted: !!logReading, at: logReading?.grantedAt ?? null },
+    earlyStart: { granted: !!earlyStart, at: earlyStart?.grantedAt ?? null },
+  });
 }
 
 // ─── GET /hotmart/claim ──────────────────────────────────────────────────────

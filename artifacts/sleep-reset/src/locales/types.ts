@@ -210,7 +210,35 @@ export type BackendCopy = Omit<RungCopy, "bullets" | "priceLine" | "cta" | "decl
   bullets: [string, string, string, string, string];
   /** Sits under the bullets, above the prices. Never inside a tier card. */
   medical: string;
+  consent: ConsentCopy;
   tiers: [BackendTier, BackendTier];
+};
+
+/** ── The two boxes on the seventh rung's offer page. ──
+ *  Both start unticked and neither is decoration. `logReading` is the legal
+ *  basis for a person here opening the buyer's sleep log at all, because that
+ *  log is health data and GDPR art. 9 has no contract exception; without it
+ *  there is nothing to sell, which is why it gates the prices. `earlyStart` is
+ *  the opposite: a right being given up, and dir. 2011/83/UE art. 16(a) only
+ *  takes the 14 days away if it was asked for. So it must never gate anything.
+ *  Unticked buys perfectly well and the work starts on day 15.
+ *
+ *  These two sentences also exist server side, in
+ *  artifacts/api-server/src/lib/consent-texts.ts, and that copy is the one
+ *  stored as the record. Both come from
+ *  marketing/flu235-degrau7-compliance.md, point 5. Edit the doc first.
+ */
+export type ConsentCopy = {
+  title: string;
+  logReading: string;
+  earlyStart: string;
+  /** Under box 1: leaving it unticked is a real option, and says what follows. */
+  earlyStartNote: string;
+  /** Instead of the prices, while box 2 is unticked. */
+  blocked: string;
+  /** "Recorded {when}". */
+  recorded: string;
+  error: string;
 };
 
 export type Dict = {

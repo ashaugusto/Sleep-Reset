@@ -6,3 +6,4 @@ export * from "./leads";
 export * from "./sleep_profiles";
 export * from "./purchases";
 export * from "./seat_invites";
+export * from "./consents";

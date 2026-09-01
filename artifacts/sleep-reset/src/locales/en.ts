@@ -430,6 +430,18 @@ const en: Dict = {
     ],
     medical:
       "If you have been sleeping badly for more than three months, if you take sleep medication, or if you have another health condition, talk to your doctor. Nothing in the plan is a reason to change or stop any medication.",
+    consent: {
+      title: "Two things to agree to before you buy",
+      logReading:
+        "I allow a person at Sleep Wired to read my sleep log in order to prepare my plan. I understand this log concerns my health, and I can withdraw this permission at any time.",
+      earlyStart:
+        "I ask you to start work on my plan now, before the 14 day cancellation period ends. I understand that I lose my right to cancel as soon as the plan is delivered to me.",
+      earlyStartNote:
+        "Optional. Leave it unticked and you still buy: work starts on day 15, once your 14 day cancellation period has run out.",
+      blocked: "Tick the permission above and the prices appear. Nobody reads your log without it.",
+      recorded: "Recorded {when}",
+      error: "That did not save. Check your connection and tick it again.",
+    },
     tiers: [
       {
         name: "The Recalibration",

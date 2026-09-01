@@ -429,6 +429,18 @@ const fr: Dict = {
     ],
     medical:
       "Si vous dormez mal depuis plus de trois mois, si vous prenez un médicament pour dormir ou si vous avez un autre problème de santé, parlez-en à votre médecin. Rien dans le plan n'est une raison de modifier ou d'arrêter un traitement.",
+    consent: {
+      title: "Deux choses à accepter avant d'acheter",
+      logReading:
+        "J'autorise une personne de Sleep Wired à lire mon journal de sommeil pour préparer mon plan. Je sais que ce journal concerne ma santé et je peux retirer cette autorisation à tout moment.",
+      earlyStart:
+        "Je demande que le travail sur mon plan commence maintenant, avant la fin du délai de rétractation de 14 jours. Je sais que je perds mon droit de rétractation dès que le plan m'est remis.",
+      earlyStartNote:
+        "Facultatif. Si vous la laissez non cochée, vous achetez quand même : le travail commence au jour 15, à la fin de votre délai de rétractation de 14 jours.",
+      blocked: "Cochez l'autorisation ci-dessus et les prix apparaissent. Personne ne lit votre journal sans elle.",
+      recorded: "Enregistrée {when}",
+      error: "Cela n'a pas été enregistré. Vérifiez votre connexion et cochez à nouveau.",
+    },
     tiers: [
       {
         name: "The Recalibration",

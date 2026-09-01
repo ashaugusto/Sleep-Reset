@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { pool } from "@workspace/db";
 import { getRecoveryEmail, type RecoveryStep } from "./recoveryEmails";
 import { getPostPurchaseEmail, getMorningReminderEmail, type PostPurchaseStep } from "./postPurchaseEmails";
+import { getRecalibrationConfirmationEmail, type RecalibrationCtx } from "./recalibrationEmails";
 
 let resendClient: Resend | null = null;
 
@@ -326,6 +327,41 @@ export async function sendWelcomeEmail({
   } catch (err) {
     console.error("[email] Failed to send welcome email:", err);
     await logEmail({ email, emailType: "welcome", success: false, error: (err as Error).message?.slice(0, 500) });
+  }
+}
+
+// ─── Recalibration confirmation (the seventh rung, and its consent record) ──
+// The durable medium dir. 2011/83/UE art. 8(7) asks for. It repeats the two
+// boxes from the offer page with the time each was recorded, including the ones
+// that were left unticked, because the unticked ones are the ones that change
+// what happens next.
+//
+// Sent by the Hotmart webhook and nowhere else. If it fails the buyer still has
+// their purchase: the caller treats it as a side effect, like the pixel.
+export async function sendRecalibrationConfirmationEmail(
+  args: RecalibrationCtx & { email: string; userId?: string | null },
+): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set, skipping recalibration confirmation");
+    return false;
+  }
+  const { subject, html } = getRecalibrationConfirmationEmail(args);
+  const emailType = "recalibration_confirmation";
+  try {
+    const { data, error } = await resend.emails.send({ from: FROM, to: args.email, subject, html });
+    if (error) {
+      console.error("[email] Resend error:", error);
+      await logEmail({ email: args.email, userId: args.userId ?? null, emailType, subject, success: false, error: JSON.stringify(error).slice(0, 500) });
+      return false;
+    }
+    console.log(`[email] Recalibration confirmation sent to ${args.email}`);
+    await logEmail({ email: args.email, userId: args.userId ?? null, emailType, subject, resendId: data?.id ?? null, success: true });
+    return true;
+  } catch (err) {
+    console.error("[email] Failed to send recalibration confirmation:", err);
+    await logEmail({ email: args.email, userId: args.userId ?? null, emailType, subject, success: false, error: (err as Error).message?.slice(0, 500) });
+    return false;
   }
 }
 
