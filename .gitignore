@@ -52,6 +52,12 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+# As copias de seguranca do .env levam dentro o DATABASE_URL e as chaves da
+# Resend e da Hotmart, e a regra `.env.*.local` acima nao apanha
+# `.env.bak.FLU-151`: o nome nao acaba em .local. Ficava a um `git add .` de ir
+# para um remoto publico. A regra e por prefixo para apanhar tambem os .bak
+# seguintes, que vao existir de cada vez que alguem mexe nas envs.
+.env.bak*
 # Os episódios são renderizados, não são código, e pesam 160 MB. A regra antiga
 # só apanhava a raiz de videos/, portanto videos/eps/*.mp4 aparecia como novo em
 # todo o `git status` e estava a um `git add .` de entrar no histórico para
