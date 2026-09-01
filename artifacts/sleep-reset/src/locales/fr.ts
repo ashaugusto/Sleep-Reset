@@ -423,10 +423,12 @@ const fr: Dict = {
     bullets: [
       "Vous n'envoyez rien. Votre journal de sommeil est déjà dans le compte, et c'est là-dessus que le travail se fait.",
       "Une personne parcourt votre journal nuit par nuit. Ce n'est pas le calcul automatique de l'application, celui-là vous l'avez déjà et vous le gardez.",
-      "Vous recevez un plan écrit pour votre cas : la fenêtre recalculée, quoi changer en premier et quoi arrêter de faire.",
-      "Il arrive en 7 jours ouvrés au plus, une fois. Ce n'est pas un suivi continu et il n'y a aucun abonnement derrière.",
-      "C'est de l'éducation et de l'accompagnement sur les habitudes de sommeil. Ce n'est pas un diagnostic, pas un traitement, et cela ne remplace pas un médecin.",
+      "Vous recevez un plan écrit pour votre cas : la fenêtre recalculée, quelle habitude changer en premier et quoi arrêter de faire le soir.",
+      "Il arrive en 7 jours ouvrés au plus après votre demande de démarrage, une fois. Ce n'est pas un suivi continu et il n'y a aucun abonnement derrière.",
+      "C'est de l'éducation sur les habitudes de sommeil, remise par écrit. Ce n'est pas un diagnostic, pas un traitement, pas un avis médical, et cela ne remplace pas une consultation.",
     ],
+    medical:
+      "Si vous dormez mal depuis plus de trois mois, si vous prenez un médicament pour dormir ou si vous avez un autre problème de santé, parlez-en à votre médecin. Rien dans le plan n'est une raison de modifier ou d'arrêter un traitement.",
     tiers: [
       {
         name: "The Recalibration",
@@ -437,11 +439,12 @@ const fr: Dict = {
       {
         name: "The Recalibration Live",
         priceLine: "Le même plan écrit, et 30 minutes en direct pour le parcourir avec vous.",
-        extra: "Trente minutes en visio, fixées après votre lecture du plan, pour les questions qui n'apparaissent qu'à la lecture.",
+        extra: "Trente minutes au téléphone, fixées après votre lecture du plan, pour les questions qui n'apparaissent qu'à la lecture.",
         cta: "Je prends le plan et l'appel pour {price}",
       },
     ],
-    guarantee: "Nous regardons votre journal avant de commencer. S'il n'y a pas assez de nuits pour travailler, nous le disons et nous vous remboursons sans avoir commencé.",
+    guarantee:
+      "Vous avez 14 jours pour annuler et être remboursé, sans avoir à vous justifier. Si vous nous demandez de commencer avant, votre droit d'annuler prend fin au moment où le plan vous est remis. Avant de commencer, nous regardons votre journal : s'il n'y a pas assez de nuits pour travailler, nous le disons et nous vous remboursons entièrement sans avoir commencé. Au niveau avec l'appel, si vous annulez après le plan et avant l'appel, nous vous remboursons les 70 euros de l'appel.",
   },
 };
 

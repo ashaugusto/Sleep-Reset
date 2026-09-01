@@ -419,10 +419,12 @@ const pt: Dict = {
     bullets: [
       "Você não envia nada. O seu sleep-log já está na conta, e é sobre ele que se trabalha.",
       "Uma pessoa passa noite a noite pelo seu registo. Não é o cálculo automático da app, esse você já tem e continua a ter.",
-      "Você recebe um plano escrito para o seu caso: a janela recalculada, o que mudar primeiro e o que parar de fazer.",
-      "Chega em até 7 dias úteis, uma vez. Não é acompanhamento contínuo e não há assinatura nenhuma por trás.",
-      "É educação e acompanhamento sobre hábitos de sono. Não é diagnóstico, não é tratamento e não substitui um médico.",
+      "Você recebe um plano escrito para o seu caso: a janela recalculada, que hábito mudar primeiro e o que deixar de fazer à noite.",
+      "Chega em até 7 dias úteis depois de nos pedir para começar, uma vez. Não é acompanhamento contínuo e não há assinatura nenhuma por trás.",
+      "É educação sobre hábitos de sono, entregue por escrito. Não é diagnóstico, não é tratamento, não é aconselhamento médico e não substitui uma consulta.",
     ],
+    medical:
+      "Se dorme mal há mais de três meses, se toma medicação para dormir ou se tem outra condição de saúde, fale com o seu médico. Nada no plano é motivo para mudar ou parar medicação.",
     tiers: [
       {
         name: "The Recalibration",
@@ -437,7 +439,8 @@ const pt: Dict = {
         cta: "Quero o plano e a chamada por {price}",
       },
     ],
-    guarantee: "Olhamos para o seu registo antes de começar. Se não houver ali noites suficientes para trabalhar, dizemos e devolvemos o dinheiro sem ter começado.",
+    guarantee:
+      "Tem 14 dias para anular a compra e ser reembolsado, sem dar motivo. Se nos pedir para começarmos antes disso, o direito de anular acaba no momento em que o plano lhe for entregue. Antes de começar olhamos para o seu registo: se não houver ali noites que cheguem para trabalhar, dizemos e devolvemos tudo sem ter começado. No nível com chamada, se anular depois de receber o plano e antes da chamada, devolvemos os 70 euros da chamada.",
   },
 };
 

@@ -97,6 +97,14 @@ export default function Recalibration() {
         ))}
       </ul>
 
+      {/* Not a bullet, on purpose. A tick next to it would read as one more
+          thing you get, and this is the line that sends somebody to a doctor
+          instead of to the checkout. It stays above the prices in both tiers,
+          so it cannot be scrolled past on the way to a button. */}
+      <p className="text-xs text-muted-foreground leading-relaxed px-1 border-l-2 border-border/60 pl-3">
+        {c.medical}
+      </p>
+
       {!open ? (
         <Card className="p-5 bg-secondary/30 border-border/50 space-y-2">
           <div className="flex items-center gap-2">

@@ -191,17 +191,25 @@ export type BackendTier = {
  *  in src/lib/offers.ts under `backend` and `backendLive`, one Hotmart offer
  *  each, and the tiers below are in that same order.
  *
- *  Two lines are compliance, not style, and they are the last bullet and the
- *  guarantee: this is education and coaching, never diagnosis or treatment. The
- *  guarantee cannot be the shared 30 days either. Human work already delivered
- *  does not come back like a file, so the promise is made before the work
- *  starts: we read the log first, and if there is not enough in it we say so and
- *  refund without having begun.
+ *  Three lines are compliance, not style, and none of them is optional: the
+ *  last bullet, `medical`, and the guarantee. The last bullet says this is
+ *  education in writing and not medical advice. `medical` sits under the
+ *  bullets and sends anyone on sleep medication, or sleeping badly for over
+ *  three months, to a doctor, because the bullet above it cannot carry that
+ *  weight alone. The guarantee cannot be the shared 30 days: it has to open
+ *  with the 14 day right of withdrawal, which the buyer has to know about
+ *  before pressing the button, say how that right is lost, and only then make
+ *  the promise about reading the log first.
  *
- *  Copy from Sophie, FLU-226: marketing/esteira-degraus-4-7-copy.md.
+ *  Copy from Sophie, FLU-226: marketing/esteira-degraus-4-7-copy.md, with the
+ *  compliance substitutions of FLU-246 applied on top of it. Where the two
+ *  disagree the source of truth is marketing/flu235-degrau7-compliance.md,
+ *  point 5, and that file is the one to edit these strings from.
  */
 export type BackendCopy = Omit<RungCopy, "bullets" | "priceLine" | "cta" | "decline"> & {
   bullets: [string, string, string, string, string];
+  /** Sits under the bullets, above the prices. Never inside a tier card. */
+  medical: string;
   tiers: [BackendTier, BackendTier];
 };
 

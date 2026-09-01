@@ -419,10 +419,12 @@ const es: Dict = {
     bullets: [
       "Usted no envía nada. Su registro de sueño ya está en la cuenta, y es sobre eso que se trabaja.",
       "Una persona recorre su registro noche por noche. No es el cálculo automático de la app, ese ya lo tiene y lo sigue teniendo.",
-      "Recibe un plan escrito para su caso: la ventana recalculada, qué cambiar primero y qué dejar de hacer.",
-      "Llega en hasta 7 días hábiles, una vez. No es acompañamiento continuo y no hay ninguna suscripción detrás.",
-      "Es educación y acompañamiento sobre hábitos de sueño. No es un diagnóstico, no es un tratamiento y no sustituye a un médico.",
+      "Recibe un plan escrito para su caso: la ventana recalculada, qué hábito cambiar primero y qué dejar de hacer por la noche.",
+      "Llega en hasta 7 días hábiles después de pedirnos que empecemos, una vez. No es acompañamiento continuo y no hay ninguna suscripción detrás.",
+      "Es educación sobre hábitos de sueño, entregada por escrito. No es un diagnóstico, no es un tratamiento, no es consejo médico y no sustituye una consulta.",
     ],
+    medical:
+      "Si duerme mal desde hace más de tres meses, si toma medicación para dormir o si tiene otra condición de salud, hable con su médico. Nada del plan es motivo para cambiar o dejar una medicación.",
     tiers: [
       {
         name: "The Recalibration",
@@ -433,11 +435,12 @@ const es: Dict = {
       {
         name: "The Recalibration Live",
         priceLine: "El mismo plan escrito, y 30 minutos en directo para recorrerlo con usted.",
-        extra: "Treinta minutos por videollamada, fijados después de que usted lea el plan, para las preguntas que solo aparecen al leer.",
+        extra: "Treinta minutos por llamada, fijados después de que usted lea el plan, para las preguntas que solo aparecen al leer.",
         cta: "Quiero el plan y la llamada por {price}",
       },
     ],
-    guarantee: "Miramos su registro antes de empezar. Si no hay noches suficientes para trabajar, se lo decimos y le devolvemos el dinero sin haber empezado.",
+    guarantee:
+      "Tiene 14 días para anular la compra y recuperar su dinero, sin dar motivo. Si nos pide empezar antes, su derecho a anular termina en el momento en que se le entrega el plan. Antes de empezar miramos su registro: si no hay noches suficientes para trabajar, se lo decimos y le devolvemos todo sin haber empezado. En el nivel con llamada, si anula después del plan y antes de la llamada, le devolvemos los 70 euros de la llamada.",
   },
 };
 

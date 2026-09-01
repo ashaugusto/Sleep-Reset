@@ -424,10 +424,12 @@ const en: Dict = {
     bullets: [
       "You send nothing. Your sleep log is already in the account, and that is what gets worked on.",
       "A person goes through your log night by night. This is not the app's automatic calculation, you already have that and you keep it.",
-      "You get back a written plan for your case: the recalculated window, what to change first, and what to stop doing.",
-      "It arrives in up to 7 working days, once. This is not ongoing coaching and there is no subscription behind it.",
-      "This is education and coaching about sleep habits. It is not a diagnosis, it is not treatment, and it does not replace a doctor.",
+      "You get back a written plan for your case: the recalculated window, which habit to change first, and what to stop doing at night.",
+      "It arrives in up to 7 working days after you ask us to start, once. This is not ongoing coaching and there is no subscription behind it.",
+      "This is sleep education, in writing. It is not a diagnosis, it is not treatment, it is not medical advice, and it does not replace seeing a doctor.",
     ],
+    medical:
+      "If you have been sleeping badly for more than three months, if you take sleep medication, or if you have another health condition, talk to your doctor. Nothing in the plan is a reason to change or stop any medication.",
     tiers: [
       {
         name: "The Recalibration",
@@ -442,7 +444,8 @@ const en: Dict = {
         cta: "Get the plan and the call for {price}",
       },
     ],
-    guarantee: "We look at your log before starting. If there are not enough nights in there to work with, we say so and refund you without having started.",
+    guarantee:
+      "You have 14 days to cancel and get your money back, no reason needed. If you ask us to start before that, your right to cancel ends the moment the plan is delivered to you. Before we start we look at your log: if there are not enough nights in there to work with, we say so and refund you in full without having started. On the tier with the call, if you cancel after the plan and before the call, we refund the 70 euros for the call.",
   },
 };
 
