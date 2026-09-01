@@ -23,7 +23,7 @@ export default function Terms() {
       <main className="max-w-2xl mx-auto px-5 py-10 space-y-8">
         <div>
           <h1 className="text-2xl font-extrabold mb-1">Terms of Service</h1>
-          <p className="text-xs text-muted-foreground">Last updated: May 17, 2026</p>
+          <p className="text-xs text-muted-foreground">Last updated: September 1, 2026</p>
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -78,7 +78,19 @@ We reserve the right to refuse refund requests where the refund policy is clearl
 Refunds are processed within 5–10 business days to the original payment method.`,
           },
           {
-            title: "6. Intellectual Property",
+            title: "6. Your Right to Cancel (14 days)",
+            content: `You have 14 days to cancel your purchase and get your money back, without giving a reason. The period runs from the day the contract is concluded, which is the day your payment is approved. This right comes from Articles 9 to 14 of EU Directive 2011/83/EU. We give the same 14 days to buyers in every market we sell in, including Switzerland, whose law does not require them.
+
+To cancel, send us a clear statement that you want to cancel, at support@sleepwired.com. You do not have to use a form and you do not have to explain yourself. We refund you within 14 days of receiving that statement, to the payment method you used.
+
+**How the right is lost on a service that has already been delivered.** Under Article 16(a) of the same Directive, the right to cancel a service ends only when three things have all happened: you expressly asked us to start before the 14 days were up, you acknowledged that starting early would cost you that right once the service had been fully performed, and the service has in fact been fully performed. For The Recalibration, fully performed means your written plan has been delivered to you. We ask for that request and that acknowledgement in a box on the offer page, before you pay, and the box starts unticked. Leaving it unticked does not stop you buying: it means we start work on day 15, once the cancellation period has run out.
+
+**If you cancel after we started but before we finished.** Article 14(3) applies. You pay for the part already performed, in proportion to the whole, and we refund the rest. On the tier that includes the live call, the call is a separate part: if you cancel after the plan has been delivered but before the call has taken place, we refund the 70 euros the call costs.
+
+This section is your legal right to cancel. It sits alongside the guarantee in Section 5 and the guarantee written on each offer page, and where they differ, whichever is better for you is the one that applies.`,
+          },
+          {
+            title: "7. Intellectual Property",
             content: `All content within the Sleep Wired platform — including but not limited to program materials, copy, audio, design, and software — is the exclusive intellectual property of Sleep Wired.
 
 Your purchase grants you a personal, non-exclusive, non-transferable licence to access and use the content for your own sleep improvement. You may not:
@@ -88,27 +100,27 @@ Your purchase grants you a personal, non-exclusive, non-transferable licence to 
 - Use the content for commercial purposes without written permission`,
           },
           {
-            title: "7. Limitation of Liability",
+            title: "8. Limitation of Liability",
             content: `To the maximum extent permitted by applicable law, Sleep Wired shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, personal injury, or health outcomes.
 
 Our total liability to you for any claim arising from these Terms or use of the Service shall not exceed the amount you paid for the program (€27).`,
           },
           {
-            title: "8. Termination",
+            title: "9. Termination",
             content: `We reserve the right to suspend or terminate your account at our sole discretion if you violate these Terms, engage in abusive behaviour, or attempt to circumvent payment. In such cases, no refund will be issued.
 
 You may delete your account at any time by contacting us at support@sleepwired.com.`,
           },
           {
-            title: "9. Changes to Terms",
+            title: "10. Changes to Terms",
             content: `We may update these Terms from time to time. When we do, we will update the "Last updated" date above. Continued use of the Service after changes constitutes your acceptance of the revised Terms. We will make reasonable efforts to notify users of material changes via email.`,
           },
           {
-            title: "10. Governing Law",
+            title: "11. Governing Law",
             content: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Sleep Wired operates, without regard to conflict of law provisions. Any disputes arising from these Terms shall be resolved through good-faith negotiation, and if necessary, binding arbitration.`,
           },
           {
-            title: "11. Contact",
+            title: "12. Contact",
             content: `For any questions about these Terms, contact us at:
 
 **Email:** support@sleepwired.com`,

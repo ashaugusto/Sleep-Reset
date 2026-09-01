@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
       <main className="max-w-2xl mx-auto px-5 py-10 space-y-8">
         <div>
           <h1 className="text-2xl font-extrabold mb-1">Privacy Policy</h1>
-          <p className="text-xs text-muted-foreground">Last updated: May 17, 2026</p>
+          <p className="text-xs text-muted-foreground">Last updated: September 1, 2026</p>
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
 
 **Account data:** Email address, name (optional), and a hashed password when you create an account. We never store your password in plain text.
 
-**Sleep data:** Information you voluntarily enter through the app, including bedtime, wake time, sleep quality ratings, mood notes, and other diary entries. This data is used solely to power your personal progress tracking.
+**Sleep data:** Information you enter through the app, including bedtime, wake time, how long you took to fall asleep, how often you woke, sleep quality and rest ratings, the evening mood scale, and the habit tags you tick. We treat your sleep log as data concerning health, under Article 9 of the GDPR and Article 5(c) of the Swiss Federal Act on Data Protection, and it carries the extra protection that classification brings. It powers your personal progress tracking. It is also read by a person at Sleep Wired if, and only if, you buy The Recalibration and give explicit permission for that reading, which Section 2 sets out in full.
 
 **Usage data:** Basic technical information such as your browser type, device type, and pages visited, used to improve the product experience.
 
@@ -56,7 +56,13 @@ export default function PrivacyPolicy() {
 - Send up to 3 follow-up emails if you started a checkout but didn't complete it (opt-out anytime)
 - Measure advertising effectiveness through Meta Pixel and Conversions API (see Section 4)
 - Improve our product through aggregated, anonymised analytics
-- Comply with legal obligations`,
+- Comply with legal obligations
+
+**Human review of your sleep log.** If you buy The Recalibration, a person at Sleep Wired reads your sleep log in order to write your plan. This only happens for that purchase, only after you give explicit permission, and you can withdraw that permission at any time.
+
+The legal basis for that reading is your explicit consent under Article 9(2)(a) of the GDPR, asked for on the offer page before you pay, in a box that starts unticked. Buying alone is not enough: a contract is not a legal basis for processing health data. Withdrawing your consent stops any reading that has not happened yet; write to the address in Section 7. If you withdraw before your plan is written, we cannot write it, and you get your money back in full.
+
+Nobody outside Sleep Wired reads your log. It is not sent to a third party, it is not used to train anything, and the person reading it is not a healthcare professional, which is why the plan is education and not diagnosis or treatment.`,
           },
           {
             title: "3. Data Storage & Security",
